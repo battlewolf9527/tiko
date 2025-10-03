@@ -491,7 +491,6 @@ function ParseLogForError( _
         if NumErrors > 0 then MessageBeep(MB_ICONWARNING)
         
         ' Position the Compiler Log to the first error/warning
-        frmListView_DeleteBlankFirstLine( HWND_FRMOUTPUT_LVRESULTS )
         frmListView_SelectItem( hLV, 0 )
         
         ' if fGoodCompile is false then something unusual occurred so better show the log file by default

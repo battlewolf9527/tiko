@@ -60,31 +60,9 @@ end function
 function frmListView_DeleteAllItems( byval hLV as HWND ) as long
     dim as HWND hListBox = GetDlgItem( hLV, IDC_FRMLISTVIEW_LISTBOX )
     ListBox_ResetContent( hListBox )
-
-    'TODO: Code in ownerdraw listboxes not painting unused client space
-    'TODO: unless at least one item exists. Still investigating this.
-    dim as CWSTR wszText = "" & chr(9) & "" & chr(9) & "" & chr(9) & ""
-    ListBox_AddString( hListBox, wszText.vptr )
-
-    AfxRedrawWindow( hListBox )
-    return 0
-end function
-
-
-' ========================================================================================
-' frmListView_DeleteBlankFirstLine
-' Necessary because of the ownerdraw listbox repaint problem with empty listboxes
-' ========================================================================================
-function frmListView_DeleteBlankFirstLine( byval hLV as HWND ) as long
-    ' Only process if more than one string exists
-    dim as HWND hListBox = GetDlgItem( hLV, IDC_FRMLISTVIEW_LISTBOX )
-    if ListBox_GetCount( hListBox ) <= 1 then exit function
-
-    dim as CWSTR wszCaption = ltrim(AfxGetListBoxText(hListBox, 0), chr(9))
-    if len(wszCaption) = 0 then
-        ListBox_DeleteString( hListBox, 0 )
-    end if
-    
+    ' Hide the ownerdraw listboxes because the wm_drawitem will not fire if
+    ' no items exist thereby causing white space to show.
+    ShowWindow( hListBox, SW_HIDE )
     return 0
 end function
 

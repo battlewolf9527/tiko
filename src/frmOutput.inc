@@ -71,8 +71,6 @@ function frmOutput_UpdateToDoListview() as long
         frmListView_AddString( hLV, wszText )
     loop until pData = 0
 
-    frmListView_DeleteBlankFirstLine( hLV )
-
     function = 0
 end function
 
@@ -114,8 +112,6 @@ function frmOutput_UpdateSearchListview( byref wszResultFile as wstring ) as lon
     loop
     pStream.Close
     
-    frmListView_DeleteBlankFirstLine( hLV )
-
     AfxDeleteFile( wszResultFile )
     
     ' Show the search results
@@ -183,10 +179,17 @@ function frmOutput_ShowHideOutputControls( byval hwnd as HWND ) as LRESULT
     
     end select
     
-    SetWindowPos( hCtrl, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE or SWP_NOSIZE or SWP_SHOWWINDOW )
-    if hLV then frmListView_Refresh( hLV )
+    if hLV then 
+        ' Only display the owner drawn listview if it has items otherwise the wm_drawitem will
+        ' not fire and the whole area will display as white.
+        if frmListView_GetCount(hLV) > 0 then
+            SetWindowPos( hCtrl, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE or SWP_NOSIZE or SWP_SHOWWINDOW )
+            frmListView_Refresh( hLV )
+        end if    
+    end if
 
     if hTextBox then
+        SetWindowPos( hCtrl, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE or SWP_NOSIZE or SWP_SHOWWINDOW )
         frmOutputVScroll_calcVThumbRect( hTextBox )    
         ShowWindow( HWND_FRMOUTPUT_VSCROLL, SW_SHOW )
     end if    
@@ -1136,7 +1139,7 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
         frmListView_AddColumn( hLV, 0, "", pWindow->ScaleX(20) )
         frmListView_AddColumn( hLV, 1, L(253, "Line"), pWindow->ScaleX(75) )
         frmListView_AddColumn( hLV, 2, L(254, "File"), pWindow->ScaleX(250) )
-        frmListView_AddColumn( hLV, 3, L(255, "Description"), pWindow->ScaleX(480) )
+        frmListView_AddColumn( hLV, 3, L(255, "Description"), pWindow->ScaleX(1000) )
         HWND_FRMOUTPUT_LVRESULTS = hLV
 
     ' Search Listview
@@ -1144,7 +1147,7 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
         frmListView_AddColumn( hLV, 0, "", pWindow->ScaleX(20) )
         frmListView_AddColumn( hLV, 1, L(253, "Line"), pWindow->ScaleX(75) )
         frmListView_AddColumn( hLV, 2, L(254, "File"), pWindow->ScaleX(250) )
-        frmListView_AddColumn( hLV, 3, L(255, "Description"), pWindow->ScaleX(480) )
+        frmListView_AddColumn( hLV, 3, L(255, "Description"), pWindow->ScaleX(1000) )
         HWND_FRMOUTPUT_LVSEARCH = hLV
 
     ' TODO listview
@@ -1152,7 +1155,7 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
         frmListView_AddColumn( hLV, 0, "", pWindow->ScaleX(20) )
         frmListView_AddColumn( hLV, 1, L(253, "Line"), pWindow->ScaleX(75) )
         frmListView_AddColumn( hLV, 2, L(254, "File"), pWindow->ScaleX(250) )
-        frmListView_AddColumn( hLV, 3, L(255, "Description"), pWindow->ScaleX(480) )
+        frmListView_AddColumn( hLV, 3, L(255, "Description"), pWindow->ScaleX(1000) )
         HWND_FRMOUTPUT_LVTODO = hLV
 
     dim pWindowPanel as CPanelWindow ptr = New CPanelWindow
