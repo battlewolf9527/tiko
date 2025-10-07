@@ -332,12 +332,15 @@ function frmMain_OnCommand( _
         case IDM_MRUPROJECTBASE to (IDM_MRUPROJECTBASE + 10)
             OpenMRUProjectFile( hwnd, id )
 
-            
         ''  COMPILE MENU          
         case IDM_BUILDEXECUTE, IDM_COMPILE, IDM_REBUILDALL, IDM_QUICKRUN, _
             IDM_RUNEXE, IDM_COMMANDLINE
             OnCommand_CompileCommon( id )
 
+        ''  DEBUG MENU          
+        case IDM_DEBUG_STARTDEBUGGING, IDM_DEBUG_STEPINTO, IDM_DEBUG_STEPOVER, _
+            IDM_DEBUG_TOGGLEBREAKPOINT
+            OnCommand_DebugCommon( id )
 
         ''   HELP MENU
         case IDM_HELP_FB

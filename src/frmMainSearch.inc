@@ -241,9 +241,9 @@ function OnCommand_SearchBookmarks( _
         case IDM_BOOKMARKCLEARALLDOCS
             dim pDoc as clsDocument ptr = gApp.pDocList
             do until pDoc = 0
-            hEdit = pDoc->hWindow(0)
-            SciExec( hEdit, SCI_MARKERDELETEALL, -1, 0 )
-            pDoc = pDoc->pDocNext
+                hEdit = pDoc->hWindow(0)
+                SciExec( hEdit, SCI_MARKERDELETEALL, -1, 0 )
+                pDoc = pDoc->pDocNext
             loop
             LoadBookmarksFiles
             AfxRedrawWindow( HWND_FRMBOOKMARKS )

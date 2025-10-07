@@ -1050,6 +1050,7 @@ function clsConfig.SaveSessionFile( byref wszSessionFile as wstring ) as boolean
             pStream.WriteLine "FileType=" & pDoc->ProjectFileType
             pStream.WriteLine "TabIndex=" & -1     ' use -1 rather than true
             pStream.WriteLine "Bookmarks=" & pDoc->GetBookmarks()
+            pStream.WriteLine "BreakPoints=" & pDoc->GetBreakPoints()
             pStream.WriteLine "FoldPoints=" & pDoc->GetFoldPoints()
             pStream.WriteLine "FirstLine=" & SendMessage( pDoc->hWindow(0), SCI_GETFIRSTVISIBLELINE, 0, 0) 
             pStream.WriteLine "Position=" & SendMessage( pDoc->hWindow(0), SCI_GETCURRENTPOS, 0, 0)  
@@ -1114,6 +1115,7 @@ function clsConfig.LoadSessionFile( byref wszSessionFile as wstring ) as boolean
     dim as CWSTR wst, wKey, wData, wszFilename, wszProjectName
         
     dim as string sBookmarks
+    dim as string sBreakPoints
     dim as string sFoldPoints
     dim as long nData, i, iTab, nActiveTab, nFocusEdit
     dim as long nFileIndex = -1
@@ -1166,6 +1168,7 @@ function clsConfig.LoadSessionFile( byref wszSessionFile as wstring ) as boolean
             
             case "TabIndex":            bLoadInTab  = nData
             case "Bookmarks":           sBookmarks  = str(wData)
+            case "BreakPoints":         sBreakPoints = str(wData)
             case "FoldPoints":          sFoldPoints = str(wData)
             case "FirstLine":           nFirstLine  = nData
             case "Position":            nPosition   = nData
@@ -1193,6 +1196,7 @@ function clsConfig.LoadSessionFile( byref wszSessionFile as wstring ) as boolean
                 SciExec( pDoc->hWindow(1), SCI_GOTOPOS, nPosition1, 0) 
                 pDoc->hWndActiveScintilla = pDoc->hWindow(nFocusEdit)
                 pDoc->SetBookmarks(sBookmarks)
+                pDoc->SetBreakPoints(sBreakPoints)
                 pDoc->SetFoldPoints(sFoldPoints)
             end if
         
@@ -1298,6 +1302,7 @@ function clsConfig.ProjectSaveToFile() as boolean
             pStream.WriteLine "FileType=" & pDoc->ProjectFileType
             pStream.WriteLine "TabIndex=" & "-1"     ' use -1 rather than true
             pStream.WriteLine "Bookmarks=" & pDoc->docData.wszBookmarks
+            pStream.WriteLine "BreakPoints=" & pDoc->docData.wszBreakPoints
             pStream.WriteLine "FoldPoints=" & pDoc->docData.wszFoldPoints
             pStream.WriteLine "FirstLine=" & pDoc->docData.nFirstLine 
             pStream.WriteLine "Position=" & pDoc->docData.nPosition  
@@ -1326,6 +1331,7 @@ function clsConfig.ProjectSaveToFile() as boolean
                 pStream.WriteLine "FileType=" & pDoc->ProjectFileType
                 pStream.WriteLine "TabIndex=" & "0"
                 pStream.WriteLine "Bookmarks=" & pDoc->docData.wszBookmarks
+                pStream.WriteLine "BreakPoints=" & pDoc->docData.wszBreakPoints
                 pStream.WriteLine "FoldPoints=" & pDoc->docData.wszFoldPoints
                 pStream.WriteLine "FirstLine=" & pDoc->docData.nFirstLine 
                 pStream.WriteLine "Position=" & pDoc->docData.nPosition  
@@ -1368,6 +1374,7 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as CWSTR ) as boolean
     dim as CWSTR wst, wKey, wData, wszFilename
         
     dim sBookmarks as string
+    dim sBreakPoints as string
     dim sFoldPoints as string
     dim as long nData, i, iTab, nActiveTab, nFocusEdit
     dim as long nFileIndex = -1
@@ -1442,6 +1449,7 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as CWSTR ) as boolean
             case "File":                wszFilename             = wData
             case "FileType":            wszFileType             = wData
             case "Bookmarks":           sBookmarks              = str(wData)
+            case "BreakPoints":         sBreakPoints            = str(wData)
             case "FoldPoints":          sFoldPoints             = str(wData)
             case "TabIndex":            bLoadInTab              = nData
             case "FirstLine":           nFirstLine              = nData
@@ -1471,6 +1479,7 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as CWSTR ) as boolean
                     .wszFileType     = wszFileType
                     .bLoadInTab      = bLoadInTab
                     .wszBookmarks    = sBookmarks
+                    .wszBreakPoints  = sBreakPoints
                     .wszFoldPoints   = sFoldPoints
                     .nFirstLine      = nFirstLine
                     .nPosition       = nPosition
@@ -1484,8 +1493,8 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as CWSTR ) as boolean
 
                 nFirstLine  = 0: nPosition  = 0
                 nFirstLine1 = 0: nPosition1 = 0
-                nFocusEdit  = 0: nSplitPositionX = 0: nSplitPositionY = 0
-                nSplitMode  = 0: sBookmarks  = "": sFoldPoints = ""
+                nFocusEdit  = 0: nSplitPositionX = 0: nSplitPositionY = 0: nSplitMode  = 0:
+                sBookmarks  = "": sBreakPoints = "": sFoldPoints = ""
                 bLoadInTab    = false
             end if
             

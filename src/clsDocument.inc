@@ -147,6 +147,7 @@ function clsDocument.SetDocInfo() as long
     this.docData.bIsValidData = true
     if IsWindow(this.hWindow(0)) then    
        this.docData.wszBookmarks = this.GetBookmarks()
+       this.docData.wszBreakPoints = this.GetBreakPoints()
        this.docData.wszFoldPoints =this.GetFoldPoints()
        this.docData.nFirstLine = SendMessage( this.hWindow(0), SCI_GETFIRSTVISIBLELINE, 0, 0) 
        this.docData.nPosition = SendMessage( this.hWindow(0), SCI_GETCURRENTPOS, 0, 0)  
@@ -263,6 +264,7 @@ function clsDocument.AssignTextBuffer() as long
             this.SplitY = this.docData.nSplitPositionY
             this.EditorSplitMode = this.docData.nSplitMode
             this.SetBookmarks(this.docData.wszBookmarks)
+            this.SetBreakPoints(this.docData.wszBreakPoints)
             this.SetFoldPoints(this.docData.wszFoldPoints)
             SciExec( this.hWindow(0), SCI_SETFIRSTVISIBLELINE, this.docData.nFirstLine, 0) 
             SciExec( this.hWindow(0), SCI_GOTOPOS, this.docData.nPosition, 0) 
@@ -694,18 +696,18 @@ function clsDocument.SetMarkerHighlight() as long
     ' search results are colored using the normal highlight colors so we need them
     ' to stand out from the selected range.
     dim as any ptr pSci = this.GetActiveScintillaPtr()
-    SciMsg( pSci, SCI_MARKERDELETEALL, 10, 0) ' Remove any existing before drawing the new highlight
+    SciMsg( pSci, SCI_MARKERDELETEALL, MARKER_OCCURRENCES, 0) ' Remove any existing before drawing the new highlight
     dim as long startPos, endPos, startLine, endLine
     this.GetSelectedLineRange( startLine, endLine, startPos, endPos )
     if endLine <> startLine then
-        SciMsg( pSci, SCI_MARKERDEFINE, 10, SC_MARK_BACKGROUND )  ' define as marker #10
+        SciMsg( pSci, SCI_MARKERDEFINE, MARKER_OCCURRENCES, SC_MARK_BACKGROUND )  ' define as marker #10
         SciMsg( pSci, SCI_SETMARGINMASKN, 4, &H400 )   ' set margin mask to allow SC_MARK_BACKGROUND 
         for i as long = startLine to endLine
-            function = SciMsg( pSci, SCI_MARKERADD, i, 10)    ' add defined marker #10 to each line
+            function = SciMsg( pSci, SCI_MARKERADD, i, MARKER_OCCURRENCES)    ' add defined marker #10 to each line
         next
-        ' set backcolor of marker #10 
+        ' set backcolor of marker MARKER_OCCURRENCES
         dim as COLORREF clr = ghEditor.BackColorSelection
-        SciMsg( pSci, SCI_MARKERSETBACK, 10, clr) 
+        SciMsg( pSci, SCI_MARKERSETBACK, MARKER_OCCURRENCES, clr) 
     end if
 end function
 
@@ -715,7 +717,7 @@ function clsDocument.RemoveMarkerHighlight() as long
     ' Remove any markers that were set in the document that signify a highlighted range.
     ' This is used when we are attempting to search a selection. 
     dim as any ptr pSci = this.GetActiveScintillaPtr()
-    function = SciMsg( pSci, SCI_MARKERDELETEALL, 10, 0)  ' delete all marker #10
+    function = SciMsg( pSci, SCI_MARKERDELETEALL, MARKER_OCCURRENCES, 0)  ' delete all marker #10
 end function
 
 ''
@@ -724,7 +726,7 @@ function clsDocument.FirstMarkerHighlight() as long
     ' Get the first line with marker #10 highlight
     dim as any ptr pSci = this.GetActiveScintillaPtr()
     dim as long markerMask 
-    markerMask = bitset(markerMask, 10)
+    markerMask = bitset(markerMask, MARKER_OCCURRENCES)
     function = SciMsg( pSci, SCI_MARKERNEXT, 0, markerMask)
 end function
 
@@ -736,7 +738,7 @@ function clsDocument.LastMarkerHighlight() as long
     dim as long nLastPos = SciMsg( pSci, SCI_GETTEXTLENGTH, 0, 0)
     dim as long nLastLine = SciMsg( pSci, SCI_LINEFROMPOSITION, nLastPos, 0)
     dim as long markerMask 
-    markerMask = bitset(markerMask, 10)
+    markerMask = bitset(markerMask, MARKER_OCCURRENCES)
     function = SciMsg( pSci, SCI_MARKERPREVIOUS, nLastLine, markerMask)
 end function
 
@@ -1236,16 +1238,32 @@ end function
 
 ''
 ''
-function clsDocument.ToggleBookmark( byval nLine as long ) as long
+function clsDocument.ToggleMarker( byval nLine as long, byval MarkerType as long ) as long
     dim as any ptr pSci = this.GetActiveScintillaPtr()
-    dim fMark as long  ' must be a 32 bit value
-    fMark = SciMsg( pSci, SCI_MARKERGET, nLine, 0 ) 
-    if bit(fMark, 0) = -1 then
-        SciMsg( pSci, SCI_MARKERDELETE, nLine, 0 )
+    dim markers as long  ' must be a 32 bit value
+    markers = SciMsg( pSci, SCI_MARKERGET, nLine, 0 ) 
+    
+    ' check if bookmark marker is present (bit mask check)
+    if (markers and (1 shl MarkerType)) then
+        ' bookmark exists, remove it
+        SciMsg( pSci, SCI_MARKERDELETE, nLine, MarkerType )
     else
-        SciMsg( pSci, SCI_MARKERADD, nLine, 0 )
+        ' bookmark doesn't exist, add it
+        SciMsg( pSci, SCI_MARKERADD, nLine, MarkerType )
     end if
     function = 0
+end function
+
+''
+''
+function clsDocument.ToggleBookmark( byval nLine as long ) as long
+    return this.ToggleMarker( nLine, MARKER_BOOKMARK )
+end function
+
+''
+''
+function clsDocument.ToggleBreakPoint( byval nLine as long ) as long
+    return this.ToggleMarker( nLine, MARKER_BREAKPOINT )
 end function
 
 ''
@@ -1255,7 +1273,7 @@ function clsDocument.NextBookmark() as long
     dim fMark as long  ' 32 bit value
     dim nCurLine as long = this.GetCurrentLineNumber() 
     dim nLine as long = this.GetCurrentLineNumber() + 1  ' start line
-    fMark = bitset(fMark, 0)
+    fMark = bitset(fMark, MARKER_BOOKMARK)
     nLine = SciMsg( pSci, SCI_MARKERNEXT, nLine, fMark)
     if nLine > -1 then
         SciMsg( pSci, SCI_GOTOLINE, nLine, 0)
@@ -1279,7 +1297,7 @@ function clsDocument.PrevBookmark() as long
     dim nCurLine as long = this.GetCurrentLineNumber() 
     dim nLine  as long = this.GetCurrentLineNumber() - 1   ' start line
     dim nLines as long = SciMsg( pSci, SCI_GETLINECOUNT, 0, 0) - 1
-    fMark = bitset(fMark, 0)
+    fMark = bitset(fMark, MARKER_BOOKMARK)
     nLine = SciMsg( pSci, SCI_MARKERPREVIOUS, nLine, fMark)
     if nLine > -1 then
         SciMsg( pSci, SCI_GOTOLINE, nLine, 0)
@@ -1543,6 +1561,13 @@ function clsDocument.ApplyProperties() as long
         SciMsg( pSci(i), SCI_STYLESETSIZE, STYLE_AUTOCOMPLETE, pWindow->DefaultFontSize)
         SciMsg( pSci(i), SCI_STYLESETCHARACTERSET, STYLE_AUTOCOMPLETE, GetFontCharSetID(gConfig.EditorFontCharset) )
 
+        ' define bookmark marker (white circle)
+        SciMsg( pSci(i), SCI_MARKERDEFINE, MARKER_BOOKMARK, SC_MARK_VERTICALBOOKMARK )
+        
+        ' define breakpoint marker (red circle)
+        SciMsg( pSci(i), SCI_MARKERDEFINE, MARKER_BREAKPOINT, SC_MARK_CIRCLE )
+        SciMsg( pSci(i), SCI_MARKERSETFORE, MARKER_BREAKPOINT, BGR(196, 68, 80) )
+        SciMsg( pSci(i), SCI_MARKERSETBACK, MARKER_BREAKPOINT, BGR(196, 68, 80) )
         ''
         ''  MARGIN 0: Line Numbering (defaults to width 0)
         nPixels = SciMsg( pSci(i), SCI_TEXTWIDTH, 0, cast(LPARAM, @"_99999"))
@@ -1846,9 +1871,9 @@ end function
 
 ''
 ''
-function clsDocument.GetBookmarks() as string
+function clsDocument.GetMarkers( byval MarkerType as long ) as string
     dim as any ptr pSci = this.GetActiveScintillaPtr()
-    ' Retrieve all bookmark positions in the document and return it
+    ' Retrieve all marker positions in the document and return it
     ' as a comma delimited string to be saved to project file.
     dim as string buffer
     dim as long fMark  ' 32 bit value
@@ -1856,7 +1881,7 @@ function clsDocument.GetBookmarks() as string
 
     for i as long = 0 to nLines - 1
         fMark = SciMsg( pSci, SCI_MARKERGET, i, 0)
-        if bit(fMark, 0) then
+        if bit(fMark, MarkerType) then
             buffer = buffer & i & ","
         end if
     next
@@ -1867,23 +1892,47 @@ end function
 
 ''
 ''
-function clsDocument.SetBookmarks( byval sBookmarks as string ) as long
+function clsDocument.GetBookmarks() as string
+    return this.GetMarkers( MARKER_BOOKMARK )
+end function
+
+''
+''
+function clsDocument.GetBreakPoints() as string
+    return this.GetMarkers( MARKER_BREAKPOINT )
+end function
+
+''
+''
+function clsDocument.SetMarkers( byval sMarkers as string, byval MarkerType as long ) as long
     dim as any ptr pSci = this.GetActiveScintillaPtr()
-    ' Set all bookmark positions in the document and based on the 
+    ' Set all marker positions in the document and based on the 
     ' incoming comma delimited string retrieved from a project file.
-    sBookmarks = trim(sBookmarks)
-    if len(sBookmarks) = 0 then exit function
+    sMarkers = trim(sMarkers)
+    if len(sMarkers) = 0 then exit function
     
-    dim as long nCount = AfxStrParseCount(sBookmarks, ",")
+    dim as long nCount = AfxStrParseCount(sMarkers, ",")
     dim as long nLine
     
     for i as long = 1 to nCount
-        nLine = val( AfxStrParse(sBookmarks, i, ",") )
-        SciMsg( pSci, SCI_MARKERADD, nLine, 0)
+        nLine = val( AfxStrParse(sMarkers, i, ",") )
+        SciMsg( pSci, SCI_MARKERADD, nLine, MarkerType )
     next
 
     function = 0
 
+end function
+
+''
+''
+function clsDocument.SetBookmarks( byval sBookmarks as string ) as long
+    return this.SetMarkers( sBookmarks, MARKER_BOOKMARK )
+end function
+
+''
+''
+function clsDocument.SetBreakPoints( byval sBreakPoints as string ) as long
+    return this.SetMarkers( sBreakPoints, MARKER_BREAKPOINT )
 end function
 
 ''

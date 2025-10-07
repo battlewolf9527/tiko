@@ -129,6 +129,7 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "frmMainView.inc"
 #include once "frmMainProject.inc"
 #include once "frmMainCompile.inc"
+#include once "frmMainDebug.inc"
 #include once "frmMain.inc"
 
 

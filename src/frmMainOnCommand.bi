@@ -79,6 +79,7 @@ declare function OnCommand_ProjectSetFileType( byval id as long, byval pDoc as c
 declare function OnCommand_ProjectRemove( byval id as long, byval pDoc as clsDocument ptr ) as LRESULT
 
 declare function OnCommand_CompileCommon( byval id as long ) as LRESULT
+declare function OnCommand_DebugCommon( byval id as long ) as LRESULT
 
 declare function frmMain_OnCommand( byval hwnd as HWND, _
                                     byval id as Long, _

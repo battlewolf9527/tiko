@@ -29,6 +29,11 @@
 #define FILETYPE_RESOURCE         "4"
 #define FILETYPE_HEADER           "5"
 
+' define marker numbers (0-31 available)
+#define MARKER_BOOKMARK            1
+#define MARKER_BREAKPOINT          2
+#define MARKER_OCCURRENCES         3
+
 
 ' Structure that holds all of the user embedded compiler directives
 ' in the source code. Currently, only the main source file is searched
@@ -58,6 +63,7 @@ type PROJECT_FILELOAD_DATA
     wszFilename     as CWSTR        ' full path and filename
     wszFiletype     as CWSTR        ' pDoc->ProjectFileType
     wszBookmarks    as CWSTR        ' pDoc->GetBookmarks()
+    wszBreakPoints  as CWSTR        ' pDoc->GetBreakPoints()
     wszFoldPoints   as CWSTR        ' pDoc->GetFoldPoints()
     nFirstLine      as long         ' first line of main view 
     nPosition       as long         ' current position of main view
@@ -174,9 +180,17 @@ type clsDocument
     declare function CurrentLineDown() as long
     declare function MoveCurrentLines( byval flagMoveDown as boolean ) as long
     declare function NewLineBelowCurrent() as long
+    declare function ToggleMarker( byval nLine as long, byval MarkerType as long ) as long
     declare function ToggleBookmark( byval nLine as long ) as long
     declare function NextBookmark() as long 
     declare function PrevBookmark() as long 
+    declare function GetMarkers( byval MarkerType as long ) as string
+    declare function SetMarkers( byval sMarkers as string, byval MarkerType as long ) as long
+    declare function GetBookmarks() as string
+    declare function SetBookmarks( byval sBookmarks as string ) as long
+    declare function GetBreakPoints() as string
+    declare function SetBreakPoints( byval sBreakPoints as string ) as long
+    declare function ToggleBreakPoint( byval nLine as long ) as long
     declare function FoldToggle( byval nLine as long ) as long
     declare function FoldAll() as long
     declare function UnFoldAll() as long
@@ -184,8 +198,6 @@ type clsDocument
     declare function ConvertEOL( byval nMode as long) as long
     declare function TabsToSpaces() as long
     declare function GetWord( byval curPos as long = -1 ) as string
-    declare function GetBookmarks() as string
-    declare function SetBookmarks( byval sBookmarks as string ) as long
     declare function GetFoldPoints() as string
     declare function SetFoldPoints( byval sFoldPoints as string ) as long
     declare function GetCurrentFunctionName( byref sFunctionName as string, byref nGetSet as ClassProperty ) as long
