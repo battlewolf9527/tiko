@@ -302,7 +302,7 @@ function frmMain_OnCommand( _
         case IDM_FOLDTOGGLE, IDM_FOLDBELOW, IDM_FOLDALL, IDM_UNFOLDALL
             OnCommand_ViewFold( id, pDoc )
 
-        case IDM_ZOOMIN, IDM_ZOOMOUT
+        case IDM_ZOOMIN, IDM_ZOOMOUT, IDM_ZOOMRESET
             OnCommand_ViewZoom( id, pDoc )
 
         case IDM_SPLITLEFTRIGHT, IDM_SPLITTOPBOTTOM

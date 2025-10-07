@@ -43,8 +43,9 @@ function OnCommand_ViewZoom( _
     
     dim as HWND hEdit = pDoc->hWndActiveScintilla
     select case id      
-        Case IDM_ZOOMIN:  SciExec(hEdit, SCI_ZOOMIN, 0, 0)
-        Case IDM_ZOOMOUT: SciExec(hEdit, SCI_ZOOMOUT, 0, 0)
+        case IDM_ZOOMIN:    SciExec(hEdit, SCI_ZOOMIN, 0, 0)
+        case IDM_ZOOMOUT:   SciExec(hEdit, SCI_ZOOMOUT, 0, 0)
+        case IDM_ZOOMRESET: SciExec(hEdit, SCI_SETZOOM, 0, 0)   ' reset to zero zoom
     end select
     
     function = 0

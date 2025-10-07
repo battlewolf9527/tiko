@@ -1,5 +1,8 @@
-Version 1.2.7
+Version 1.3.0
+- Added: Debugger.
+- Added: New "Zoom Reset" menu option located under the "View" menu.
 - Added: New "spinner" animation in the status bar during compiling.
+- Changed: "View Explorer" is now Ctrl+F4 rather than F9 which is now used for "Toggle Breakpoint".
 - Changed: Tiko exe is now compiled using gcc with -O2 optimization. Results in smaller exe.
 - Changed: Made the "Description" column wider in "Compiler Results", "Search Results", and "Todo" grids.
 - Fixed: Removed the ownerdraw listbox hack used to ensure correct painting of empty listboxes.

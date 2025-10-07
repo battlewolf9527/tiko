@@ -159,12 +159,13 @@ function frmKeyboard_CreateDefaultKeyBindings() as long
 
     '' VIEW MENU
     frmKeyBoard_AddKeyBinding( "View", IDM_VIEWSIDEPANEL, "IDM_VIEWSIDEPANEL", "View Side Panel", "Ctrl+B", "", false )
-    frmKeyBoard_AddKeyBinding( "View", IDM_VIEWEXPLORER, "IDM_VIEWEXPLORER", "View Explorer window", "F9", "", false )
+    frmKeyBoard_AddKeyBinding( "View", IDM_VIEWEXPLORER, "IDM_VIEWEXPLORER", "View Explorer window", "Ctrl+F4", "", false )
     frmKeyBoard_AddKeyBinding( "View", IDM_VIEWOUTPUT, "IDM_VIEWOUTPUT", "View Output window", "Ctrl+F9", "", false )
     frmKeyBoard_AddKeyBinding( "View", IDM_FUNCTIONLIST, "IDM_FUNCTIONLIST", "View function List", "F4", "", false )
     frmKeyBoard_AddKeyBinding( "View", IDM_BOOKMARKSLIST, "IDM_BOOKMARKSLIST", "View Bookmarks List", "Shift+F4", "", false )
-    frmKeyBoard_AddKeyBinding( "View", IDM_ZOOMIN, "IDM_ZOOMIN", "Zoom in", "Ctrl+Plus", "", false )     ' VK_OEM_PLUS
-    frmKeyBoard_AddKeyBinding( "View", IDM_ZOOMOUT, "IDM_ZOOMOUT", "Zoom out", "Ctrl+Minus", "", false )   ' VK_OEM_MINUS
+    frmKeyBoard_AddKeyBinding( "View", IDM_ZOOMIN, "IDM_ZOOMIN", "Zoom In", "Ctrl+Plus", "", false )     ' VK_OEM_PLUS
+    frmKeyBoard_AddKeyBinding( "View", IDM_ZOOMOUT, "IDM_ZOOMOUT", "Zoom Out", "Ctrl+Minus", "", false )   ' VK_OEM_MINUS
+    frmKeyBoard_AddKeyBinding( "View", IDM_ZOOMRESET, "IDM_ZOOMRESET", "Zoom Reset", "Ctrl+0", "", false )   ' Ctrl+ZERO
     frmKeyBoard_AddKeyBinding( "View", IDM_SPLITLEFTRIGHT, "IDM_SPLITLEFTRIGHT", "Toggle Split Editor Left/Right", "Ctrl+\", "", false )
     frmKeyBoard_AddKeyBinding( "View", IDM_SPLITTOPBOTTOM, "IDM_SPLITTOPBOTTOM", "Toggle Split Editor Top/Bottom", "Ctrl+Shift+\", "", false )
     frmKeyBoard_AddKeyBinding( "View", IDM_FOLDTOGGLE, "IDM_FOLDTOGGLE", "Toggle current fold point", "F8", "", false )
@@ -203,7 +204,7 @@ function frmKeyboard_CreateDefaultKeyBindings() as long
     frmKeyBoard_AddKeyBinding( "Debug", IDM_DEBUG_STARTDEBUGGING, "IDM_DEBUG_STARTDEBUGGING", "Start Debugging", "F6", "", false )
     frmKeyBoard_AddKeyBinding( "Debug", IDM_DEBUG_STEPINTO, "IDM_DEBUG_STEPINTO", "Step Into", "F11", "", false )
     frmKeyBoard_AddKeyBinding( "Debug", IDM_DEBUG_STEPOVER, "IDM_DEBUG_STEPOVER", "Step Over", "F10", "", false )
-    frmKeyBoard_AddKeyBinding( "Debug", IDM_DEBUG_STEPOVER, "IDM_DEBUG_TOGGLEBREAKPOINT", "Toggle Breakpoint", "F10", "", false )
+    frmKeyBoard_AddKeyBinding( "Debug", IDM_DEBUG_TOGGLEBREAKPOINT, "IDM_DEBUG_TOGGLEBREAKPOINT", "Toggle Breakpoint", "F9", "", false )
 
     '' HELP MENU
     frmKeyBoard_AddKeyBinding( "Help", IDM_HELP_FB, "IDM_HELP_FB", "FreeBasic Help (context sensitive help)", "F1", "", false )
