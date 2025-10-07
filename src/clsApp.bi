@@ -41,6 +41,10 @@ type clsApp
         wszLastOpenFolder          as CWSTR             ' remembers the last opened folder for the Open Dialog
         wszQuickRunFilename        as CWSTR
         
+        bShowSpinner               as boolean           ' Display the loading/compiling spinner
+        SpinnerCurrentFrame        as long = 0          ' The index of the icon to use when timer fires.
+        SpinnerTimerID             as long = 0          ' Returned from SetTimer when Spinner is created.
+        
         IsSessionActive            as boolean
         SessionName                as CWSTR
         SessionFilename            as CWSTR

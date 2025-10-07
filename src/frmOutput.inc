@@ -834,14 +834,15 @@ function frmOutputTabs_SubclassProc ( _
         case WM_LBUTTONUP
             if isMouseOverRECT( hWin, gOutputCloseRect ) = true then
                 OnCommand_ViewOutput()   ' toggle the Output window off
-            else
-                dim as long idx = frmOutputTabs_getHotTabHitTest( hWin )
-                if idx = -1 then exit function
-                frmOutput_RestorePanel()
-                gOutputTabsCurSel = idx
-                AfxRedrawWindow(hWin)   
-                frmOutput_ShowHideOutputControls( HWND_FRMOUTPUT )
             end if
+            
+        case WM_LBUTTONDOWN
+            dim as long idx = frmOutputTabs_getHotTabHitTest( hWin )
+            if idx = -1 then exit function
+            frmOutput_RestorePanel()
+            gOutputTabsCurSel = idx
+            AfxRedrawWindow(hWin)   
+            frmOutput_ShowHideOutputControls( HWND_FRMOUTPUT )
 
         case WM_LBUTTONDBLCLK
             ' One of the Output window tabs has been doubleclicked.

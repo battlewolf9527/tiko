@@ -28,9 +28,38 @@ function SetCompileStatusBarMessage( _
             byref wszText as wstring, _
             byval hIconCompile as long _
             ) as LRESULT
+    dim as boolean bIsSpinner = iif( left(wszText, 1) = "#", true, false )
+            
     gApp.wszPanelText = wszText
+    
+    if bIsSpinner then
+        ' Current message includes the Spinner so if a spinner is not
+        ' already active then start the timer now.
+        if gApp.bShowSpinner = false then
+            gApp.SpinnerTimerID = 101
+            SetTimer(HWND_FRMMAIN, gApp.SpinnerTimerID, 80, null)   ' 80 ms
+print "Spinner ACTIVE  SetTimer: "; gApp.SpinnerTimerID
+        end if
+        gApp.bShowSpinner = true
+        gApp.wszPanelText = mid(wszText, 2)
+        
+    else
+        ' Current message does not include the Spinner so if a spinner is
+        ' already active then stop the timer now.
+        if gApp.bShowSpinner = true then
+'            KillTimer( HWND_FRMMAIN, gApp.SpinnerTimerID )
+            KillTimer( HWND_FRMMAIN, gApp.SpinnerTimerID )
+print "KillTimer"
+        end if
+        gApp.bShowSpinner = false
+        gApp.SpinnerCurrentFrame = 0
+        gApp.SpinnerTimerID = 0
+
+    end if
+
     gApp.hIconPanel = hIconCompile
     frmMain_SetStatusbar
+
     function = 0
 end function
 
@@ -60,8 +89,8 @@ end function
 ''
 ''
 function RedirConsoleToFile( _
-            byref wszExe as wstring, _
-            byref wszCmdLine as wstring, _
+            byval wszExe as CWSTR, _
+            byval wszCmdLine as CWSTR, _
             byref sConsoleText as string _
             ) as long
 
@@ -155,6 +184,18 @@ function RedirConsoleToFile( _
 
     function = 0
 end function
+
+
+sub compile_thread( byval userdata as any ptr )
+    dim as CompileThreadParams ptr ctp = cast(CompileThreadParams ptr, userdata)
+    
+    dim as string sConsoleText = ctp->sConsoleText
+    
+    RedirConsoleToFile( ctp->wszExe, ctp->wszCmdLine, sConsoleText )
+            
+    ctp->sConsoleText = sConsoleText
+    gCompile.bCompileThreadComplete = true
+end sub
 
 
 ''

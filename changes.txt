@@ -1,7 +1,8 @@
 Version 1.2.7
+- Added: New "spinner" animation in the status bar during compiling.
 - Changed: Tiko exe is now compiled using gcc with -O2 optimization. Results in smaller exe.
 - Changed: Made the "Description" column wider in "Compiler Results", "Search Results", and "Todo" grids.
-- Fixed: Finally removed the ownerdraw listbox hack used to ensure correct painting of empty listboxes.
+- Fixed: Removed the ownerdraw listbox hack used to ensure correct painting of empty listboxes.
 
 
 Version 1.2.6 (September 20, 2025)

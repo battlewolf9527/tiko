@@ -243,6 +243,26 @@ end function
 ' ========================================================================================
 ' Enable/Disable top menu items depending on application state
 ' ========================================================================================
+function frmMain_DebugTopMenuStates() as long
+    
+    ' Start off by disabling everything in order to make things easier. 
+    for idMenu as long = IDM_DEBUG_START to IDM_DEBUG_END
+        EnableTopMenuItem( idMenu, false )
+    next
+
+    dim as boolean fEnabled = iif( gApp.IsProjectActive orelse cbool(gTTabCtl.GetItemCount), true, false )
+    EnableTopMenuItem( IDM_DEBUG_STARTDEBUGGING, fEnabled )
+    EnableTopMenuItem( IDM_DEBUG_STEPINTO, fEnabled )
+    EnableTopMenuItem( IDM_DEBUG_STEPOVER, fEnabled )
+    EnableTopMenuItem( IDM_DEBUG_TOGGLEBREAKPOINT, fEnabled )
+
+    function = 0
+end function
+
+
+' ========================================================================================
+' Enable/Disable top menu items depending on application state
+' ========================================================================================
 function frmMain_HelpTopMenuStates() as long
     
     ' All Help menu items are always enabled
@@ -266,6 +286,7 @@ function frmMain_ChangeTopMenuStates() as long
         case IDC_MENUBAR_VIEW:     frmMain_ViewTopMenuStates()
         case IDC_MENUBAR_PROJECT:  frmMain_ProjectTopMenuStates()
         case IDC_MENUBAR_COMPILE:  frmMain_CompileTopMenuStates()
+        case IDC_MENUBAR_DEBUG:    frmMain_DebugTopMenuStates()
         case IDC_MENUBAR_HELP:     frmMain_HelpTopMenuStates()
     end select
     
@@ -508,6 +529,8 @@ function CreateScintillaContextMenu() as HMENU
     AppendMenu hPopupMenu, MF_ENABLED, IDM_CUT, L(17,"Cut")
     AppendMenu hPopupMenu, MF_ENABLED, IDM_COPY, L(18,"Copy")
     AppendMenu hPopupMenu, MF_ENABLED, IDM_PASTE, L(19,"Paste")
+    AppendMenu hPopupMenu, MF_SEPARATOR, 0, ""
+    AppendMenu hPopupMenu, MF_ENABLED, IDM_DEBUG_TOGGLEBREAKPOINT, L(313,"Toggle Breakpoint") 
     AppendMenu hPopupMenu, MF_SEPARATOR, 0, ""
     AppendMenu hPopupMenu, MF_ENABLED, IDM_INDENTBLOCK, L(23,"Block Indent") 
     AppendMenu hPopupMenu, MF_ENABLED, IDM_UNINDENTBLOCK, L(24,"Block Unindent")

@@ -19,7 +19,8 @@
 #define IDC_MENUBAR_VIEW      1003
 #define IDC_MENUBAR_PROJECT   1004
 #define IDC_MENUBAR_COMPILE   1005
-#define IDC_MENUBAR_HELP      1006
+#define IDC_MENUBAR_DEBUG     1006  
+#define IDC_MENUBAR_HELP      1007
 
 ''  Menu message identifiers
 enum
@@ -105,6 +106,15 @@ enum
     IDM_COMPILE_START
     IDM_BUILDEXECUTE, IDM_COMPILE, IDM_REBUILDALL, IDM_RUNEXE, IDM_QUICKRUN, IDM_COMMANDLINE
     IDM_COMPILE_END
+    
+    '' DEBUG
+    IDM_DEBUG_START
+    IDM_DEBUG_STARTDEBUGGING
+    IDM_DEBUG_STEPINTO
+    IDM_DEBUG_STEPOVER
+    IDM_DEBUG_TOGGLEBREAKPOINT
+    IDM_DEBUG_END
+    
     
     '' HELP
     IDM_HELP_START
@@ -274,7 +284,6 @@ enum SPLIT_MODE
     SplitTopBottom  = 2
 end enum
 
-
 type TOPMENU_TYPE
     nParentID   as long
     nID         as long
@@ -294,6 +303,18 @@ dim shared as wstring * 10 _
     wszIconSplitEditor, wszIconSplitLeftRight, wszIconSplitTopBottom, wszIconThemes, _
     wszIconSettings, wszIconCheckBoxEmpty, wszIconCheckBoxMarked
 
+
+' Braille spinner patterns - large clockwise rotation
+dim shared spinner(0 to 7) as wstring * 2 => { _
+    wstr(!"\u28F4"), _ ' ⠾
+    wstr(!"\u28F2"), _ ' ⠽
+    wstr(!"\u28B6"), _ ' ⠻
+    wstr(!"\u2837"), _ ' ⠷
+    wstr(!"\u282F"), _ ' ⠯
+    wstr(!"\u281F"), _ ' ⠟
+    wstr(!"\u28D4"), _ ' ⠮
+    wstr(!"\u28F0")  _ ' ⠼
+}
 ' Symbol characters display in top menus, frmExplorer, and tab control
 
 '"Segoe Fluent Icons"

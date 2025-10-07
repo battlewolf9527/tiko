@@ -51,6 +51,7 @@ Function getMenuText( byval idMenu as long ) As CWSTR
         case IDC_MENUBAR_VIEW: wszText = L(54,"View")
         case IDC_MENUBAR_PROJECT: wszText = L(63,"Project")
         case IDC_MENUBAR_COMPILE: wszText = L(64,"Compile")
+        case IDC_MENUBAR_DEBUG: wszText = L(309,"Debug")
         case IDC_MENUBAR_HELP: wszText = L(73,"Help")
         case IDM_FILENEW: wszText = L(3,"New")
         case IDM_FILEOPEN: wszText = L(4,"Open") & "..." 
@@ -158,6 +159,11 @@ Function getMenuText( byval idMenu as long ) As CWSTR
         case IDM_QUICKRUN: wszText = L(285,"Quick Run")
         case IDM_RUNEXE: wszText = L(67,"Run Executable")
         case IDM_COMMANDLINE: wszText = L(68,"Command Line") & "..."
+
+        case IDM_DEBUG_STARTDEBUGGING: wszText = L(310,"Start Debugging")
+        case IDM_DEBUG_STEPINTO: wszText = L(311,"Step Into")
+        case IDM_DEBUG_STEPOVER: wszText = L(312,"Step Over")
+        case IDM_DEBUG_TOGGLEBREAKPOINT: wszText = L(313,"Toggle Breakpoint")
 
         case IDM_HELP_FB: wszText = "FreeBASIC " & L(73,"Help")
         case IDM_HELP_TIKO: wszText = APPNAME & " " & L(73,"Help")
@@ -356,6 +362,13 @@ function buildTopMenuDefinitions() as long
     setTopMenuItem( IDC_MENUBAR_COMPILE, IDM_RUNEXE, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_COMPILE, 0, 0, false, true )
     setTopMenuItem( IDC_MENUBAR_COMPILE, IDM_COMMANDLINE, 0, false, false )
+
+    setTopMenuItem( IDC_MENUBAR_DEBUG, IDM_DEBUG_STARTDEBUGGING, 0, false, false )
+    setTopMenuItem( IDC_MENUBAR_DEBUG, 0, 0, false, true )
+    setTopMenuItem( IDC_MENUBAR_DEBUG, IDM_DEBUG_STEPINTO, 0, false, false )
+    setTopMenuItem( IDC_MENUBAR_DEBUG, IDM_DEBUG_STEPOVER, 0, false, false )
+    setTopMenuItem( IDC_MENUBAR_DEBUG, 0, 0, false, true )
+    setTopMenuItem( IDC_MENUBAR_DEBUG, IDM_DEBUG_TOGGLEBREAKPOINT, 0, false, false )
 
     setTopMenuItem( IDC_MENUBAR_HELP, IDM_HELP_FB, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_HELP, IDM_HELP_TIKO, 0, false, false )

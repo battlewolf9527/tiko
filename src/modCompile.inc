@@ -310,6 +310,7 @@ function code_Compile( byval wID as long ) as boolean
                     nFileCount = nFileCount + 1
                     if (nFileCount mod 5) = 0 then AfxDoEvents
                     
+                    ' Prepend with # so that spinner shows
                     wst = L(203, "Compiling") + "... " + AfxStrPathname("NAMEX", pDoc->DiskFilename) 
                     SetCompileStatusBarMessage( wst, 0 )
         
@@ -391,16 +392,31 @@ function code_Compile( byval wID as long ) as boolean
         AfxDeleteFile( gCompile.OutputFilename )
     end if
 
-    wst = L(203, "Compiling") + "... " + AfxStrPathname("NAMEX", gCompile.MainFilename) 
+    ' Prepend with # so that spinner shows
+    wst = "#" + L(203, "Compiling") + "... " + AfxStrPathname("NAMEX", gCompile.MainFilename) 
     SetCompileStatusBarMessage( wst, 0 )
     SetCursor( LoadCursor(0, IDC_WAIT) )
 
-
     sConsoleText = ""
     wszCommand = gCompile.CompilerPath
-    RedirConsoleToFile( wszCommand, wszParams, sConsoleText )
+    
+    dim as CompileThreadParams ctp
+    ctp.wszExe = wszCommand
+    ctp.wszCmdLine = wszParams
+    ctp.sConsoleText = ""
+
+    ' Do the compile in a separate thread so that the main thread GUI can display
+    ' the spinner in the statusbar.
+    gCompile.bCompileThreadComplete = false
+    dim as any ptr pThread = ThreadCreate( @compile_thread, @ctp )
+    
+    do until gCompile.bCompileThreadComplete = true
+        AfxDoEvents()
+    loop    
+    
     gCompile.wszFullCommandLine = wszCommand & " " & wszParams
-    gCompile.wszFullLogFile = sConsoleText
+    gCompile.wszFullLogFile = ctp.sConsoleText
+    sConsoleText = ctp.sConsoleText
                 
 
     ' Attempt to fix the random problem whereby the spinning mouse wait cursor is not reset

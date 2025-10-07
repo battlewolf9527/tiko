@@ -128,7 +128,7 @@ function frmMain_SetStatusbar() as long
         frmEditorVScroll_calcVThumbRect(pDoc)
         AfxRedrawWindow( iif( hEdit = pDoc->hWindow(0), HWND_FRMEDITOR_VSCROLLBAR(0), HWND_FRMEDITOR_VSCROLLBAR(1)) )
         
-        ' PANEL Line/Col/Sel -or- VD coordinates
+        ' PANEL Line/Col/Sel
         gSBPanels(GOTO_PANEL).wszText = wszText
 
         ' PANEL Themes dialog
@@ -1130,6 +1130,10 @@ function frmMain_OnDestroy( byval hwnd as HWND ) as LRESULT
     ' default filename as tested for in wm_create.
     if AfxFileExists(gApp.wszQuickRunFilename) then AfxDeleteFile( gApp.wszQuickRunFilename )
     
+    if gApp.SpinnerTimerID <> 0 then
+        KillTimer( HWND_FRMMAIN, gApp.SpinnerTimerID )
+    end if
+
     ' Disable drag and drop files
     DragAcceptFiles hwnd, false
     
@@ -1402,7 +1406,15 @@ function frmMain_WndProc( _
                 frmTopTabs_ShowShadow()
             end if
                 
-        
+        case WM_TIMER
+            ' Handle any Spinner (used when compiling)
+            if wParam = gApp.SpinnerTimerID then
+                ' Update Spinner display frame 
+                gApp.SpinnerCurrentFrame = (gApp.SpinnerCurrentFrame + 1) mod 8
+                frmMain_SetStatusbar
+                AfxRedrawWindow( HWND_FRMMAIN_STATUSBAR )
+            end if
+            
         case WM_NCACTIVATE
             ' if wParam is false then the system wants to draw an inactive title bar. we
             ' will prevent this action if a popup menu from the menubar is active.

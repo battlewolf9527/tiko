@@ -28,7 +28,7 @@ function frmMenuBar_PositionWindows() as LRESULT
     dim id( 0 to ... ) as long = _
         { _
         IDC_MENUBAR_FILE, IDC_MENUBAR_EDIT, IDC_MENUBAR_SEARCH, IDC_MENUBAR_VIEW, _
-        IDC_MENUBAR_PROJECT, IDC_MENUBAR_COMPILE, IDC_MENUBAR_HELP _
+        IDC_MENUBAR_PROJECT, IDC_MENUBAR_COMPILE, IDC_MENUBAR_DEBUG, IDC_MENUBAR_HELP _
         }
 
     redim gMenuBar(ubound(id)) as MENUBAR_ITEM

@@ -308,21 +308,33 @@ function frmStatusBar_WndProc( _
             b.PaintText( gSBPanels(i).wszText, @gSBPanels(i).rc, DT_CENTER, bHitTest )
             
             ' if this is the compile result panel then display the green/success or red/failure "icon"
+            ' also check if Spinner is active. 
             if i = COMPILE_STATUS_PANEL then
                 if (gApp.IsProjectLoading = false) andalso (gApp.IsFileLoading = false) then
-                    dim as COLORREF clr = ghStatusBar.BackColor
-                    if gApp.hIconPanel = ghIconGood then clr = ghGeneral.iconsuccess
-                    if gApp.hIconPanel = ghIconBad then clr = ghGeneral.iconfail
-                    b.SetForeColors( clr, ghStatusBar.ForeColorHot )
-                    b.SetBackColors( ghStatusBar.BackColor, ghStatusBar.BackColorHot )
                     if pWindow then
+                        dim as COLORREF clr = ghStatusBar.BackColor
+                        if gApp.hIconPanel = ghIconGood then clr = ghGeneral.iconsuccess
+                        if gApp.hIconPanel = ghIconBad then clr = ghGeneral.iconfail
+                        b.SetForeColors( clr, ghStatusBar.ForeColorHot )
+                        b.SetBackColors( ghStatusBar.BackColor, ghStatusBar.BackColorHot )
                         dim as long txtWidth = getTextWidth( HWND_FRMMAIN_STATUSBAR, gSBPanels(i).wszText, GUIFONT_9 ) 
                         dim as RECT rcBitmap = gSBPanels(i).rc
                         dim as long halfWidth = (rcBitmap.right-rcBitmap.left) / 2
                         rcBitmap.right = rcBitmap.left + halfWidth - pWindow->ScaleX((txtWidth / 2))
                         rcBitmap.left = rcBitmap.right - pWindow->ScaleX(16)
+                        dim as CWSTR wszText = wszIconCompileResult
+                        
+                        ' If a Spinner is active then that will take precedence over the good/bad compile icon.
+                        if gApp.bShowSpinner then
+                            b.SetForeColors( ghStatusBar.ForeColor, ghStatusBar.ForeColorHot )
+                            b.SetBackColors( ghStatusBar.BackColor, ghStatusBar.BackColorHot )
+                            wszText = @spinner(gApp.SpinnerCurrentFrame)
+                            rcBitmap.top = rcBitmap.top - pWindow->ScaleY(4)
+                            rcBitmap.left = rcBitmap.left - pWindow->ScaleY(2)
+                        end if
+                    
                         b.SetFont( SYMBOLFONT_9 )
-                        b.PaintText( wszIconCompileResult, @rcBitmap, DT_CENTER )
+                        b.PaintText( wszText, @rcBitmap, DT_CENTER )
                     end if
                 end if
             end if   
