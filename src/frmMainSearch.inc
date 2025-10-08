@@ -239,10 +239,14 @@ function OnCommand_SearchBookmarks( _
             AfxRedrawWindow( HWND_FRMBOOKMARKS )
 
         case IDM_BOOKMARKCLEARALLDOCS
+            if MessageBox( HWND_FRMMAIN, L(316,"Do you want to delete all bookmarks?"), L(276,"Confirm"), _
+                        MB_YESNOCANCEL or MB_ICONQUESTION or MB_DEFBUTTON1 ) <> IDYES then
+                return true
+            end if            
             dim pDoc as clsDocument ptr = gApp.pDocList
             do until pDoc = 0
                 hEdit = pDoc->hWindow(0)
-                SciExec( hEdit, SCI_MARKERDELETEALL, -1, 0 )
+                SciExec( hEdit, SCI_MARKERDELETEALL, MARKER_BOOKMARK, 0 )
                 pDoc = pDoc->pDocNext
             loop
             LoadBookmarksFiles

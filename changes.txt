@@ -2,6 +2,7 @@ Version 1.3.0
 - Added: Debugger.
 - Added: New "Zoom Reset" menu option located under the "View" menu.
 - Added: New "spinner" animation in the status bar during compiling.
+- Added: Confirmation popup message for confirmation to clear all bookmarks.
 - Changed: Clicking in editor left margin now toggles BreakPoint rather than Bookmark.
 - Changed: Bookmark icon changed from circle (which is now used for BreakPoints).
 - Changed: "View Explorer" is now Ctrl+F4 rather than F9 which is now used for "Toggle Breakpoint".

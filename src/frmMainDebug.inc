@@ -12,6 +12,7 @@
 '    GNU General Public License for more details.
 
 #include once "frmMain.bi"
+#include once "frmDebug.bi"
 #include once "clsDocument.bi"
 
 
@@ -27,13 +28,26 @@ function OnCommand_DebugCommon( byval id as long ) as LRESULT
 
     select case id
         case IDM_DEBUG_STARTDEBUGGING
-        
+            frmDebug_Show( HWND_FRMMAIN )
+            
         case IDM_DEBUG_STEPINTO
             
         case IDM_DEBUG_STEPOVER
 
         case IDM_DEBUG_TOGGLEBREAKPOINT
             pDoc->ToggleBreakPoint( pDoc->GetCurrentLineNumber )
+            
+        case IDM_DEBUG_DELETEALLBREAKPOINTS
+            if MessageBox( HWND_FRMMAIN, L(315,"Do you want to delete all breakpoints?"), L(276,"Confirm"), _
+                        MB_YESNOCANCEL or MB_ICONQUESTION or MB_DEFBUTTON1 ) <> IDYES then
+                return true
+            end if            
+            dim pDoc as clsDocument ptr = gApp.pDocList
+            do until pDoc = 0
+                hEdit = pDoc->hWindow(0)
+                SciExec( hEdit, SCI_MARKERDELETEALL, MARKER_BREAKPOINT, 0 )
+                pDoc = pDoc->pDocNext
+            loop
 
     end select
     

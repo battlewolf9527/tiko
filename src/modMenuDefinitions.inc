@@ -165,6 +165,7 @@ Function getMenuText( byval idMenu as long ) As CWSTR
         case IDM_DEBUG_STEPINTO: wszText = L(311,"Step Into")
         case IDM_DEBUG_STEPOVER: wszText = L(312,"Step Over")
         case IDM_DEBUG_TOGGLEBREAKPOINT: wszText = L(313,"Toggle Breakpoint")
+        case IDM_DEBUG_DELETEALLBREAKPOINTS: wszText = L(314,"Delete All Breakpoints")
 
         case IDM_HELP_FB: wszText = "FreeBASIC " & L(73,"Help")
         case IDM_HELP_TIKO: wszText = APPNAME & " " & L(73,"Help")
@@ -370,6 +371,7 @@ function buildTopMenuDefinitions() as long
     setTopMenuItem( IDC_MENUBAR_DEBUG, IDM_DEBUG_STEPOVER, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_DEBUG, 0, 0, false, true )
     setTopMenuItem( IDC_MENUBAR_DEBUG, IDM_DEBUG_TOGGLEBREAKPOINT, 0, false, false )
+    setTopMenuItem( IDC_MENUBAR_DEBUG, IDM_DEBUG_DELETEALLBREAKPOINTS, 0, false, false )
 
     setTopMenuItem( IDC_MENUBAR_HELP, IDM_HELP_FB, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_HELP, IDM_HELP_TIKO, 0, false, false )

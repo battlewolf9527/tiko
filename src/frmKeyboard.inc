@@ -205,6 +205,7 @@ function frmKeyboard_CreateDefaultKeyBindings() as long
     frmKeyBoard_AddKeyBinding( "Debug", IDM_DEBUG_STEPINTO, "IDM_DEBUG_STEPINTO", "Step Into", "F11", "", false )
     frmKeyBoard_AddKeyBinding( "Debug", IDM_DEBUG_STEPOVER, "IDM_DEBUG_STEPOVER", "Step Over", "F10", "", false )
     frmKeyBoard_AddKeyBinding( "Debug", IDM_DEBUG_TOGGLEBREAKPOINT, "IDM_DEBUG_TOGGLEBREAKPOINT", "Toggle Breakpoint", "F9", "", false )
+    frmKeyBoard_AddKeyBinding( "Debug", IDM_DEBUG_DELETEALLBREAKPOINTS, "IDM_DEBUG_DELETEALLBREAKPOINTS", "Delete All Breakpoints", "Ctrl+Shift+F9", "", false )
 
     '' HELP MENU
     frmKeyBoard_AddKeyBinding( "Help", IDM_HELP_FB, "IDM_HELP_FB", "FreeBasic Help (context sensitive help)", "F1", "", false )

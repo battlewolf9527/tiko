@@ -81,9 +81,8 @@ function frmUserTools_ExecuteUserTool( byval nToolNum as long ) as long
     dim wszWorkingFolder as CWSTR 
     dim sCurrentDir      as string
     
-    dim nWndStyle      as long = SW_SHOWNORMAL
+    dim nWndStyle        as long = SW_SHOWNORMAL
 
-    
     ' Make sure that the incoming Tool Number is valid
     if (nToolNum < lbound(gConfig.Tools)) orelse (nToolNum > ubound(gConfig.Tools)) then exit function
         

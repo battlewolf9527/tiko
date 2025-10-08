@@ -86,6 +86,7 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "modCodetips.inc"
 #include once "modMenuDefinitions.inc"
 #include once "modMRU.inc"
+#include once "modDebugGDB.bi"
 
 #include once "frmAbout.inc" 
 #include once "frmPopupMenu.inc"
@@ -130,6 +131,7 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "frmMainProject.inc"
 #include once "frmMainCompile.inc"
 #include once "frmMainDebug.inc"
+#include once "frmDebug.inc"
 #include once "frmMain.inc"
 
 

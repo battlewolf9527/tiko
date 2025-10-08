@@ -339,7 +339,7 @@ function frmMain_OnCommand( _
 
         ''  DEBUG MENU          
         case IDM_DEBUG_STARTDEBUGGING, IDM_DEBUG_STEPINTO, IDM_DEBUG_STEPOVER, _
-            IDM_DEBUG_TOGGLEBREAKPOINT
+            IDM_DEBUG_TOGGLEBREAKPOINT, IDM_DEBUG_DELETEALLBREAKPOINTS
             OnCommand_DebugCommon( id )
 
         ''   HELP MENU

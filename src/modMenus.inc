@@ -255,6 +255,7 @@ function frmMain_DebugTopMenuStates() as long
     EnableTopMenuItem( IDM_DEBUG_STEPINTO, fEnabled )
     EnableTopMenuItem( IDM_DEBUG_STEPOVER, fEnabled )
     EnableTopMenuItem( IDM_DEBUG_TOGGLEBREAKPOINT, fEnabled )
+    EnableTopMenuItem( IDM_DEBUG_DELETEALLBREAKPOINTS, fEnabled )
 
     function = 0
 end function
