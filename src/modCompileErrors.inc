@@ -38,7 +38,6 @@ function SetCompileStatusBarMessage( _
         if gApp.bShowSpinner = false then
             gApp.SpinnerTimerID = 101
             SetTimer(HWND_FRMMAIN, gApp.SpinnerTimerID, 80, null)   ' 80 ms
-print "Spinner ACTIVE  SetTimer: "; gApp.SpinnerTimerID
         end if
         gApp.bShowSpinner = true
         gApp.wszPanelText = mid(wszText, 2)
@@ -47,9 +46,7 @@ print "Spinner ACTIVE  SetTimer: "; gApp.SpinnerTimerID
         ' Current message does not include the Spinner so if a spinner is
         ' already active then stop the timer now.
         if gApp.bShowSpinner = true then
-'            KillTimer( HWND_FRMMAIN, gApp.SpinnerTimerID )
             KillTimer( HWND_FRMMAIN, gApp.SpinnerTimerID )
-print "KillTimer"
         end if
         gApp.bShowSpinner = false
         gApp.SpinnerCurrentFrame = 0

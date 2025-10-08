@@ -17,4 +17,4 @@
 
 
 
-declare function frmDebug_Show( byval hWndParent as HWND ) as LRESULT
+declare function frmDebug_Show( byval hWndParent as HWND, byval executable as string ) as LRESULT

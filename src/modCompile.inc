@@ -26,6 +26,7 @@
 #include once "modCompile.bi"
 #include once "modCompileErrors.bi"
 #include once "frmUserTools.bi"
+#include once "frmDebug.bi"
 #include once "frmOutput.bi"
 
 dim shared gCompile as COMPILE_TYPE
@@ -162,6 +163,10 @@ function code_Compile( byval wID as long ) as boolean
     
     gCompile.ResourceFile = ""    ' default that there is no resource
     gCompile.CompileFlags = gConfig.Builds(idxBuild).wszOptions
+    
+    if gCompile.CompileID = IDM_DEBUG_STARTDEBUGGING then
+        gCompile.CompileFlags = gCompile.CompileFlags & " -g "
+    end if
 
     ' Iterate the optional semi colon separated list of compiler include paths
     gCompile.CompileIncludes = ""
@@ -434,6 +439,8 @@ function code_Compile( byval wID as long ) as boolean
         AfxDeleteFile( gCompile.MainFilename )
     end if    
     
+    gApp.IsCompiling = false
+
     if ParseLogForError(sConsoleText, true, gCompile.CompileID, fCompile64, false) = true then 
         ' Error was found. Editor has now been set to the error position. Nothing
         ' more we can do now but exit out. 
@@ -446,13 +453,17 @@ function code_Compile( byval wID as long ) as boolean
             end if   
         next
         
-        if gCompile.RunAfterCompile then 
-            ' if gCompile.OutputFilename is a relative filename then convert it to full filename.
-            gCompile.OutputFilename = AfxStrReplace( gCompile.OutputFilename, "/", "\" )
-            if AfxPathIsRelative( gCompile.OutputFilename ) then 
-                gCompile.OutputFilename = AfxPathCombine( gCompile.MainFolder, gCompile.OutputFilename )
-            end if
+        ' if gCompile.OutputFilename is a relative filename then convert it to full filename.
+        gCompile.OutputFilename = AfxStrReplace( gCompile.OutputFilename, "/", "\" )
+        if AfxPathIsRelative( gCompile.OutputFilename ) then 
+            gCompile.OutputFilename = AfxPathCombine( gCompile.MainFolder, gCompile.OutputFilename )
+        end if
 
+        if gCompile.CompileID = IDM_DEBUG_STARTDEBUGGING then
+           frmDebug_Show( HWND_FRMMAIN, gCompile.OutputFilename )
+        end if
+        
+        if gCompile.RunAfterCompile then 
             RunEXE( _
                 pDocMain, _
                 gCompile.OutputFilename,    _
@@ -461,8 +472,6 @@ function code_Compile( byval wID as long ) as boolean
         end if
     
     end if
-    
-    gApp.IsCompiling = false
 
     function = true   ' successful
 End function

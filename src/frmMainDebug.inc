@@ -28,7 +28,7 @@ function OnCommand_DebugCommon( byval id as long ) as LRESULT
 
     select case id
         case IDM_DEBUG_STARTDEBUGGING
-            frmDebug_Show( HWND_FRMMAIN )
+            code_Compile(id)
             
         case IDM_DEBUG_STEPINTO
             

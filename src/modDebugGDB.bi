@@ -31,7 +31,7 @@ type GDBSession
 end type
 
 type GDBThreadData
-    session         as GDBSession ptr
+    session         as GDBSession
     command_queue   as string 
     response_queue  as string
     mutex           as any ptr
@@ -43,10 +43,10 @@ type GDBThreadData
 end type
 
 
-declare function gdb_init( byval session as GDBSession ptr, byval executable as CWSTR = "") as boolean
-declare function gdb_send( byval session as GDBSession ptr, byref cmd as string) as boolean
-declare function gdb_receive( byval session as GDBSession ptr, byref response as string, byval timeout_ms as integer = 500 ) as boolean
-declare sub      gdb_close( byval session as GDBSession ptr )
+declare function gdb_init( byref session as GDBSession, byval executable as CWSTR = "") as boolean
+declare function gdb_send( byref session as GDBSession, byref cmd as string) as boolean
+declare function gdb_receive( byref session as GDBSession, byref response as string, byval timeout_ms as integer = 500 ) as boolean
+declare sub      gdb_close( byref session as GDBSession )
 declare function gdb_thread_init( byval thread_data as GDBThreadData ptr, byval hwnd as HWND, byval executable as CWSTR = "" ) as boolean
 declare sub      gdb_thread_proc( byval param as any ptr ) 
 declare function gdb_thread_send( byval thread_data as GDBThreadData ptr, byref cmd as string) as boolean
@@ -71,7 +71,7 @@ declare function gdb_parse_signal_name( byref response as string ) as string
 
 
 ' Initialize GDB session
-function gdb_init( byval session as GDBSession ptr, byval executable as CWSTR = "") as boolean
+function gdb_init( byref session as GDBSession, byval executable as CWSTR = "") as boolean
     dim as SECURITY_ATTRIBUTES sa
     dim as HANDLE hStdInRead, hStdInWrite
     dim as HANDLE hStdOutRead, hStdOutWrite
@@ -106,17 +106,19 @@ function gdb_init( byval session as GDBSession ptr, byval executable as CWSTR = 
     si.dwFlags      = STARTF_USESTDHANDLES or STARTF_USESHOWWINDOW
     si.wShowWindow  = SW_HIDE
     
+    dim as string gdbFilename = AfxGetExePathName & "bin\gdb\gdb.exe" 
+
     ' Build command line
     if len(executable) > 0 then
-        cmdline = "gdb.exe -q -i=mi " & chr(34) & executable & chr(34)
+        cmdline = gdbFilename & " -q -i=mi " & chr(34) & executable & chr(34)
     else
-        cmdline = "gdb.exe -q -i=mi"
+        cmdline = gdbFilename & " -q -i=mi"
     end if
     
     ' Create the GDB process
     ret = CreateProcess( NULL, cmdline, NULL, NULL, TRUE, _
                          CREATE_NO_WINDOW, NULL, NULL, @si, @pi )
-    
+
     if ret = 0 then
         dim as DWORD err_code = GetLastError()
         print "CreateProcess failed with error code: "; err_code
@@ -151,34 +153,34 @@ function gdb_init( byval session as GDBSession ptr, byval executable as CWSTR = 
     CloseHandle(hStdErrWrite)
     
     ' Store session info
-    session->hProcess    = pi.hProcess
-    session->hThread     = pi.hThread
-    session->hStdInWrite = hStdInWrite
-    session->hStdOutRead = hStdOutRead
-    session->hStdErrRead = hStdErrRead
-    session->dwProcessId = pi.dwProcessId
-    session->initialized = true
+    session.hProcess    = pi.hProcess
+    session.hThread     = pi.hThread
+    session.hStdInWrite = hStdInWrite
+    session.hStdOutRead = hStdOutRead
+    session.hStdErrRead = hStdErrRead
+    session.dwProcessId = pi.dwProcessId
+    session.initialized = true
     
     return true
 end function
 
 
-function gdb_send( byval session as GDBSession ptr, byref cmd as string) as boolean
-    if session->initialized = false then return 0
+function gdb_send( byref session as GDBSession, byref cmd as string) as boolean
+    if session.initialized = false then return 0
     
     dim as string full_cmd = cmd + chr(13) + chr(10)
     dim as DWORD bytes_written
     dim as integer ret
     
-    ret = WriteFile( session->hStdInWrite, strptr(full_cmd), len(full_cmd), @bytes_written, NULL )
-    FlushFileBuffers( session->hStdInWrite )
+    ret = WriteFile( session.hStdInWrite, strptr(full_cmd), len(full_cmd), @bytes_written, NULL )
+    FlushFileBuffers( session.hStdInWrite )
     
     return iif(ret <> 0 andalso bytes_written > 0, true, false)
 end function
 
 
-function gdb_receive( byval session as GDBSession ptr, byref response as string, byval timeout_ms as integer = 500 ) as boolean
-    if session->initialized = false then return 0
+function gdb_receive( byref session as GDBSession, byref response as string, byval timeout_ms as integer = 500 ) as boolean
+    if session.initialized = false then return 0
     
     dim as string buffer = space(4096)
     dim as DWORD bytes_read, bytes_avail
@@ -188,12 +190,12 @@ function gdb_receive( byval session as GDBSession ptr, byref response as string,
     response = ""
     
     do
-        ret = PeekNamedPipe( session->hStdOutRead, NULL, 0, NULL, @bytes_avail, NULL )
+        ret = PeekNamedPipe( session.hStdOutRead, NULL, 0, NULL, @bytes_avail, NULL )
         
         if ret <> 0 andalso bytes_avail > 0 then
             if bytes_avail > 4096 then bytes_avail = 4096
             
-            ret = ReadFile( session->hStdOutRead, strptr(buffer), bytes_avail, @bytes_read, NULL )
+            ret = ReadFile( session.hStdOutRead, strptr(buffer), bytes_avail, @bytes_read, NULL )
             
             if ret <> 0 andalso bytes_read > 0 then
                 response += left(buffer, bytes_read)
@@ -216,25 +218,24 @@ function gdb_receive( byval session as GDBSession ptr, byref response as string,
 end function
 
 
-sub gdb_close( byval session as GDBSession ptr )
-    if session->initialized then
+sub gdb_close( byref session as GDBSession )
+    if session.initialized then
         gdb_send(session, "quit")
         sleep 200
         
         dim as DWORD exit_code
-        if GetExitCodeProcess(session->hProcess, @exit_code) <> 0 then
+        if GetExitCodeProcess(session.hProcess, @exit_code) <> 0 then
             if exit_code = STILL_ACTIVE then
-                TerminateProcess(session->hProcess, 0)
+                TerminateProcess(session.hProcess, 0)
             end if
         end if
         
-        CloseHandle(session->hStdInWrite)
-        CloseHandle(session->hStdOutRead)
-        CloseHandle(session->hStdErrRead)
-        CloseHandle(session->hProcess)
-        ThreadDetach(session->hThread)
-        
-        session->initialized = false
+        CloseHandle(session.hStdInWrite)
+        CloseHandle(session.hStdOutRead)
+        CloseHandle(session.hStdErrRead)
+        CloseHandle(session.hProcess)
+
+        session.initialized = false
     end if
 end sub
 
@@ -389,6 +390,7 @@ sub gdb_thread_close( byval thread_data as GDBThreadData ptr )
     sleep 200
     
     gdb_close(thread_data->session)
+
     mutexdestroy(thread_data->mutex)
     conddestroy(thread_data->command_cond)
     conddestroy(thread_data->response_cond)
