@@ -24,6 +24,10 @@ function frmDebug_OnCommand( _
             byval codeNotify as UINT _
             ) as LRESULT
 
+    dim pWindow as CWindow ptr = AfxCWindowPtr(hwnd)
+    dim as GDBThreadData ptr gdb_data 
+    if pWindow then gdb_data = cast(GDBThreadData ptr, pWindow->UserData(0))
+
     select case id
         
         case IDC_FRMDEBUG_CMDOK
@@ -38,6 +42,41 @@ function frmDebug_OnCommand( _
                 exit function
             end if
     
+        case IDC_BTN_RUN
+            if codeNotify = BN_CLICKED then
+                gdb_thread_send(gdb_data, "run")
+            end if
+                
+        case IDC_BTN_CONTINUE
+            if codeNotify = BN_CLICKED then
+                gdb_thread_send(gdb_data, "continue")
+            end if
+        
+        case IDC_BTN_BREAK
+            if codeNotify = BN_CLICKED then
+                gdb_thread_send(gdb_data, "interrupt")
+            end if
+        
+        case IDC_BTN_STOP
+            if codeNotify = BN_CLICKED then
+                gdb_thread_send(gdb_data, "kill")
+            end if
+        
+        case IDC_BTN_STEP_OVER
+            if codeNotify = BN_CLICKED then
+                gdb_thread_send(gdb_data, "next")
+            end if
+        
+        case IDC_BTN_STEP_INTO
+            if codeNotify = BN_CLICKED then
+                gdb_thread_send(gdb_data, "step")
+            end if
+        
+        case IDC_BTN_STEP_OUT
+            if codeNotify = BN_CLICKED then
+                gdb_thread_send(gdb_data, "finish")
+            end if
+
     end select
 
     function = 0
@@ -73,6 +112,8 @@ function frmDebug_WndProc( _
         case WM_DESTROY
             if pWindow then 
                 if (gdb_data <> 0) andalso (gdb_data->session.initialized = true) then 
+                    gdb_thread_send(gdb_data, "kill")
+                    sleep 100
                     gdb_thread_close(gdb_data)
                 end if
             end if
@@ -83,8 +124,8 @@ function frmDebug_WndProc( _
             dim as string console_out
             if gdb_thread_get_response(gdb_data, response) then
                 console_out = gdb_parse_console_output(response)
-print "WM_GDB_RESPONSE"
-print "Response: "; response
+'print "WM_GDB_RESPONSE"
+'print "Response: "; response
 print "console_out: "; console_out
                 if len(console_out) > 0 then
 '                    append_output(console_out)
@@ -154,13 +195,16 @@ function frmDebug_SetInitialBreakpoints( byval gdb_data as GDBThreadData ptr ) a
             nCount = AfxStrParseCount( sBreakpoints, "," )
             for i as long = 1 to nCount
                 bp_line = AfxStrParse( sBreakpoints, i, "," )
-                bp_cmd = "break " & chr(34) & bp_file & chr(34) & ":" & bp_line
-                gdb_thread_send( gdb_data, bp_cmd )
+                bp_cmd = bp_cmd & "break " & chr(34) & bp_file & chr(34) & ":" & bp_line & chr(10)
             next
         end if
             
         pDoc = pDoc->pDocNext
     loop
+
+    bp_cmd = rtrim(bp_cmd, chr(10))
+print "BREAKPOINT: "; bp_cmd
+    gdb_thread_send( gdb_data, bp_cmd )
 
     function = 0    
 end function
@@ -184,8 +228,32 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as string ) a
     dim as GDBThreadData ptr gdb_data = new GDBThreadData
     pWindow->UserData(0) = cast(LONG_PTR, gdb_data)
         
-    pWindow->AddControl("BUTTON", , IDC_FRMDEBUG_CMDOK, L(0,"&OK"), 450, 417, 74, 28, _
-        WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_DEFPUSHBUTTON or BS_NOTIFY or BS_CENTER or BS_VCENTER, _
+    pWindow->AddControl("BUTTON", , IDC_BTN_RUN, "RUN", 5, 5, 75, 28, _
+        WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_PUSHBUTTON or BS_NOTIFY or BS_CENTER or BS_VCENTER, _
+        WS_EX_LEFT or WS_EX_LTRREADING)
+
+    pWindow->AddControl("BUTTON", , IDC_BTN_CONTINUE, "RUN", 82, 5, 75, 28, _
+        WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_PUSHBUTTON or BS_NOTIFY or BS_CENTER or BS_VCENTER, _
+        WS_EX_LEFT or WS_EX_LTRREADING)
+
+    pWindow->AddControl("BUTTON", , IDC_BTN_BREAK, "BREAK", 159, 5, 75, 28, _
+        WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_PUSHBUTTON or BS_NOTIFY or BS_CENTER or BS_VCENTER, _
+        WS_EX_LEFT or WS_EX_LTRREADING)
+
+    pWindow->AddControl("BUTTON", , IDC_BTN_STOP, "STOP", 236, 5, 75, 28, _
+        WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_PUSHBUTTON or BS_NOTIFY or BS_CENTER or BS_VCENTER, _
+        WS_EX_LEFT or WS_EX_LTRREADING)
+
+    pWindow->AddControl("BUTTON", , IDC_BTN_STEP_OVER, "STEP OVER", 5, 35, 75, 28, _
+        WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_PUSHBUTTON or BS_NOTIFY or BS_CENTER or BS_VCENTER, _
+        WS_EX_LEFT or WS_EX_LTRREADING)
+
+    pWindow->AddControl("BUTTON", , IDC_BTN_STEP_INTO, "STEP INTO", 82, 35, 75, 28, _
+        WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_PUSHBUTTON or BS_NOTIFY or BS_CENTER or BS_VCENTER, _
+        WS_EX_LEFT or WS_EX_LTRREADING)
+
+    pWindow->AddControl("BUTTON", , IDC_BTN_STEP_OUT, "STEP OUT", 159, 35, 75, 28, _
+        WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_PUSHBUTTON or BS_NOTIFY or BS_CENTER or BS_VCENTER, _
         WS_EX_LEFT or WS_EX_LTRREADING)
 
     pWindow->AddControl("BUTTON", , IDC_FRMDEBUG_CMDOK, L(0,"&OK"), 450, 417, 74, 28, _
@@ -200,7 +268,7 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as string ) a
     ' The debug executable has been sucessfully created so start the debug thread
     ' add feed any breakpoints into it.
     if gdb_thread_init( gdb_data, HWND_FRMDEBUG, executable ) then
-        sleep 500
+        sleep 200
         gdb_thread_send( gdb_data, "set confirm off" )
         gdb_thread_send( gdb_data, "set language pascal" )
         frmDebug_SetInitialBreakpoints( gdb_data )

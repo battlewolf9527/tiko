@@ -14,7 +14,13 @@
 #pragma once
 
 #define IDC_FRMDEBUG_CMDOK      1000
-
+#define IDC_BTN_RUN             1001
+#define IDC_BTN_CONTINUE        1002
+#define IDC_BTN_BREAK           1003
+#define IDC_BTN_STOP            1004
+#define IDC_BTN_STEP_OVER       1005
+#define IDC_BTN_STEP_INTO       1006
+#define IDC_BTN_STEP_OUT        1007
 
 
 declare function frmDebug_Show( byval hWndParent as HWND, byval executable as string ) as LRESULT

@@ -270,21 +270,13 @@ sub gdb_thread_proc( byval param as any ptr )
         mutexunlock(thread_data->mutex)
         
         if len(cmd) > 0 then
-
-print "cmd: "; cmd
-
             if gdb_send(thread_data->session, cmd) then
-
-print "Command sent. Waiting for response..."
-                
                 if gdb_receive(thread_data->session, response, 5000) then
                     mutexlock(thread_data->mutex)
                     thread_data->response_queue = response
                     thread_data->is_busy = false
                     condsignal(thread_data->response_cond)
                     mutexunlock(thread_data->mutex)
-
-print "response: "; response
                     
                     ' Check for async notifications and send specific messages
                     if instr(response, "*stopped") > 0 then
