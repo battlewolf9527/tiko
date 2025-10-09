@@ -278,6 +278,8 @@ sub gdb_thread_proc( byval param as any ptr )
                     condsignal(thread_data->response_cond)
                     mutexunlock(thread_data->mutex)
                     
+print "response: "; response
+
                     ' Check for async notifications and send specific messages
                     if instr(response, "*stopped") > 0 then
                         if instr(response, "exited") > 0 then

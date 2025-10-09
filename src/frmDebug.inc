@@ -150,10 +150,19 @@ print "line_num: "; line_num
 
             
         case MSG_USER_GDB_ERROR
+print "MSG_USER_GDB_ERROR"
+
         case MSG_USER_GDB_READY
+print "MSG_USER_GDB_READY"
+
         case MSG_USER_GDB_STOPPED
+print "MSG_USER_GDB_STOPPED"
+            
         case MSG_USER_GDB_RUNNING
+print "MSG_USER_GDB_RUNNING"
+            
         case MSG_USER_GDB_EXITED
+print "MSG_USER_GDB_EXITED"            
 
 
     end select
@@ -232,7 +241,7 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as string ) a
         WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_PUSHBUTTON or BS_NOTIFY or BS_CENTER or BS_VCENTER, _
         WS_EX_LEFT or WS_EX_LTRREADING)
 
-    pWindow->AddControl("BUTTON", , IDC_BTN_CONTINUE, "RUN", 82, 5, 75, 28, _
+    pWindow->AddControl("BUTTON", , IDC_BTN_CONTINUE, "CONTINUE", 82, 5, 75, 28, _
         WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_PUSHBUTTON or BS_NOTIFY or BS_CENTER or BS_VCENTER, _
         WS_EX_LEFT or WS_EX_LTRREADING)
 
@@ -268,10 +277,9 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as string ) a
     ' The debug executable has been sucessfully created so start the debug thread
     ' add feed any breakpoints into it.
     if gdb_thread_init( gdb_data, HWND_FRMDEBUG, executable ) then
-        sleep 200
+        frmDebug_SetInitialBreakpoints( gdb_data )
         gdb_thread_send( gdb_data, "set confirm off" )
         gdb_thread_send( gdb_data, "set language pascal" )
-        frmDebug_SetInitialBreakpoints( gdb_data )
     else
         MessageBox( HWND_FRMMAIN, "Failed to initialize GDB. Ensure gdb.exe is installed correctly.", _
                     "Error", MB_OK or MB_ICONERROR)
