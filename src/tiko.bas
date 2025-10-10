@@ -52,6 +52,7 @@ dim shared as CWSTR gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.0"
 'TODO: Refactor AutoSave functionality. Until then, just disable it in the editor.
 #define ENABLE_AUTOSAVE false
 
+#include once "logging.bas"
 
 #include once "modScintilla.bi"
 #include once "modDeclares.bi"         

@@ -14,6 +14,19 @@
 #include once "frmDebug.bi"
 
 
+function frmDebug_PositionEditor( byval response as string ) as boolean
+    dim as string file_name = gdb_parse_current_filename(response)
+    dim as integer line_number = gdb_parse_breakpoint_linenumber(response)
+                        
+    LM("Filename: " + file_name)
+    LM("line_number: " + str(line_number)) 
+    
+    dim as clsDocument ptr pDoc = OpenSelectedDocument( file_name, "", line_number )
+
+    function = iif( pDoc > 0, true, false )
+end function
+
+
 ' ========================================================================================
 ' Process WM_COMMAND message for window/dialog: frmDebug
 ' ========================================================================================
@@ -24,10 +37,8 @@ function frmDebug_OnCommand( _
             byval codeNotify as UINT _
             ) as LRESULT
 
-    dim pWindow as CWindow ptr = AfxCWindowPtr(hwnd)
-    dim as GDBThreadData ptr gdb_data 
-    if pWindow then gdb_data = cast(GDBThreadData ptr, pWindow->UserData(0))
-
+    dim as string response
+    
     select case id
         
         case IDC_FRMDEBUG_CMDOK
@@ -44,37 +55,87 @@ function frmDebug_OnCommand( _
     
         case IDC_BTN_RUN
             if codeNotify = BN_CLICKED then
-                gdb_thread_send(gdb_data, "run")
+'                update_status("Running program...")
+    LM("Run...")
+                if send_gdb_command("run", response) then
+
+LM("RUN RESPONSE " & response)
+
+                    if gdb_at_breakpoint(response) then
+    LM(chr(13,10) + "*** BREAKPOINT HIT ***")
+                        frmDebug_PositionEditor( response )
+
+'    update_status("Stopped at breakpoint")
+     '                   send_gdb_command("info locals", response)
+                    elseif gdb_has_exited(response) then
+                        dim as integer exit_code = gdb_parse_exit_code(response)
+    LM(chr(13) + chr(10) + "*** PROGRAM EXITED ***" + chr(13) + chr(10))
+    LM("Exit code: " + str(exit_code) + chr(13) + chr(10))
+                    else
+'                        update_status("Program running")
+                    end if
+                end if
             end if
                 
         case IDC_BTN_CONTINUE
             if codeNotify = BN_CLICKED then
-                gdb_thread_send(gdb_data, "continue")
+                if send_gdb_command("continue", response) then
+LM("CONTINUE RESPONSE " & response)
+
+                    if gdb_at_breakpoint(response) then
+    LM(chr(13) + chr(10) + "*** BREAKPOINT HIT ***")
+                        frmDebug_PositionEditor( response )
+
+      '                  update_status("Stopped at breakpoint")
+                    elseif gdb_has_exited(response) then
+                        dim as integer exit_code = gdb_parse_exit_code(response)
+    LM(chr(13) + chr(10) + "*** PROGRAM EXITED ***" + chr(13) + chr(10))
+      '                  update_status("Program exited")
+                    end if
+                end if
             end if
         
         case IDC_BTN_BREAK
             if codeNotify = BN_CLICKED then
-                gdb_thread_send(gdb_data, "interrupt")
+'                update_status("Breaking...")
+LM("Interrupt")
+                send_gdb_command("interrupt", response)
+ '               update_status("Interrupted")
             end if
         
         case IDC_BTN_STOP
             if codeNotify = BN_CLICKED then
-                gdb_thread_send(gdb_data, "kill")
-            end if
+   '             update_status("Stopping...")
+LM("Kill")
+                send_gdb_command("kill", response)
+   '             update_status("Stopped")
+          end if
         
         case IDC_BTN_STEP_OVER
             if codeNotify = BN_CLICKED then
-                gdb_thread_send(gdb_data, "next")
+'                update_status("Stepping over...")
+LM("Next")
+                send_gdb_command("next", response)
+                frmDebug_PositionEditor( response )
+'                update_status("Ready")
             end if
         
         case IDC_BTN_STEP_INTO
             if codeNotify = BN_CLICKED then
-                gdb_thread_send(gdb_data, "step")
-            end if
+'                update_status("Stepping into...")
+LM("Step Into")
+                send_gdb_command("step", response)
+                frmDebug_PositionEditor( response )
+ '               update_status("Ready")
+           end if
         
         case IDC_BTN_STEP_OUT
             if codeNotify = BN_CLICKED then
-                gdb_thread_send(gdb_data, "finish")
+'                update_status("Stepping out...")
+LM("Step Out")
+                send_gdb_command("finish", response)
+                frmDebug_PositionEditor( response )
+'                update_status("Ready")
             end if
 
     end select
@@ -93,78 +154,17 @@ function frmDebug_WndProc( _
             byval lParam as LPARAM _
             ) as LRESULT
 
-    dim pWindow as CWindow ptr = AfxCWindowPtr(hwnd)
-    dim as GDBThreadData ptr gdb_data 
-    if pWindow then gdb_data = cast(GDBThreadData ptr, pWindow->UserData(0))
-
     select case uMsg
         HANDLE_MSG (hwnd, WM_COMMAND,  frmDebug_OnCommand)
     
         case WM_CLOSE
+            LogClose()
             DestroyWindow( hwnd )
             
         case WM_NCDESTROY
-            if pWindow then 
-                delete(gdb_data)
-                delete(pWindow)
-            end if
+            dim pWindow as CWindow ptr = AfxCWindowPtr(hwnd)
+            if pWindow then delete(pWindow)
             
-        case WM_DESTROY
-            if pWindow then 
-                if (gdb_data <> 0) andalso (gdb_data->session.initialized = true) then 
-                    gdb_thread_send(gdb_data, "kill")
-                    sleep 100
-                    gdb_thread_close(gdb_data)
-                end if
-            end if
-
-        case MSG_USER_GDB_RESPONSE
-            if gdb_data = 0 then exit function
-            dim as string response
-            dim as string console_out
-            if gdb_thread_get_response(gdb_data, response) then
-                console_out = gdb_parse_console_output(response)
-'print "WM_GDB_RESPONSE"
-'print "Response: "; response
-print "console_out: "; console_out
-                if len(console_out) > 0 then
-'                    append_output(console_out)
-                end if
-            end if
-
-      
-        case MSG_USER_GDB_BREAKPOINT_HIT
-print "WM_GDB_BREAKPOINT_HIT"
-            dim as string response
-            if gdb_thread_get_response(gdb_data, response) then
-                dim as string  reason = gdb_parse_stop_reason(response)
-                dim as integer bp_num = gdb_parse_breakpoint_number(response)
-                dim as string  file_name = gdb_parse_current_file(response)
-                dim as string  func_name = gdb_parse_current_function(response)
-                dim as integer line_num = gdb_parse_current_line(response)
-print "file_name: "; file_name
-print "func_name: "; func_name
-print "line_num: "; line_num
-                OpenSelectedDocument( file_name, func_name, line_num )
-            end if
-
-            
-        case MSG_USER_GDB_ERROR
-print "MSG_USER_GDB_ERROR"
-
-        case MSG_USER_GDB_READY
-print "MSG_USER_GDB_READY"
-
-        case MSG_USER_GDB_STOPPED
-print "MSG_USER_GDB_STOPPED"
-            
-        case MSG_USER_GDB_RUNNING
-print "MSG_USER_GDB_RUNNING"
-            
-        case MSG_USER_GDB_EXITED
-print "MSG_USER_GDB_EXITED"            
-
-
     end select
 
     
@@ -173,7 +173,7 @@ print "MSG_USER_GDB_EXITED"
 end function
 
 
-function frmDebug_SetInitialBreakpoints( byval gdb_data as GDBThreadData ptr ) as long
+function frmDebug_SetInitialBreakpoints( byref session as GDBSession ) as long
     'break main.c:25                    ' Line 25 in main.c
     'break utils.c:calculateSum         ' Function in utils.c
     'break "my file.c":10              ' File with spaces (use quotes)
@@ -212,8 +212,7 @@ function frmDebug_SetInitialBreakpoints( byval gdb_data as GDBThreadData ptr ) a
     loop
 
     bp_cmd = rtrim(bp_cmd, chr(10))
-print "BREAKPOINT: "; bp_cmd
-    gdb_thread_send( gdb_data, bp_cmd )
+    send_gdb_command( bp_cmd, "" )
 
     function = 0    
 end function
@@ -232,11 +231,6 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as string ) a
     pWindow->SetClientSize(625, 460)
     pWindow->Center(pWindow->hWindow, hWndParent)
     
-    ' Create a pointer to the thread data structure and store it in the created window
-    ' This manually created struture is deallocated in WM_NCDESTROY.
-    dim as GDBThreadData ptr gdb_data = new GDBThreadData
-    pWindow->UserData(0) = cast(LONG_PTR, gdb_data)
-        
     pWindow->AddControl("BUTTON", , IDC_BTN_RUN, "RUN", 5, 5, 75, 28, _
         WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_PUSHBUTTON or BS_NOTIFY or BS_CENTER or BS_VCENTER, _
         WS_EX_LEFT or WS_EX_LTRREADING)
@@ -273,13 +267,14 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as string ) a
         WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_PUSHBUTTON or BS_NOTIFY or BS_CENTER or BS_VCENTER, _
         WS_EX_LEFT or WS_EX_LTRREADING)
 
+    LogInit( "c:\dev\gdb_interface\_debug.txt" )
     
     ' The debug executable has been sucessfully created so start the debug thread
     ' add feed any breakpoints into it.
-    if gdb_thread_init( gdb_data, HWND_FRMDEBUG, executable ) then
-        frmDebug_SetInitialBreakpoints( gdb_data )
-        gdb_thread_send( gdb_data, "set confirm off" )
-        gdb_thread_send( gdb_data, "set language pascal" )
+    if gdb_init( gdb_session, executable ) then
+        frmDebug_SetInitialBreakpoints( gdb_session )
+        gdb_send(gdb_session, "set confirm off" )
+        gdb_send(gdb_session, "set language pascal" )
     else
         MessageBox( HWND_FRMMAIN, "Failed to initialize GDB. Ensure gdb.exe is installed correctly.", _
                     "Error", MB_OK or MB_ICONERROR)
