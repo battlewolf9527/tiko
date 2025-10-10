@@ -12,8 +12,8 @@
 '    GNU General Public License for more details.
 
 type GDBSession
-    hProcess as HANDLE
-    hThread as HANDLE
+    hProcess    as HANDLE
+    hThread     as HANDLE
     hStdInWrite as HANDLE
     hStdOutRead as HANDLE
     hStdErrRead as HANDLE
@@ -25,16 +25,16 @@ dim shared as GDBSession gdb_session
 
 
 type GDBNameValuePair
-    varname as string
+    varname  as string
     varvalue as string
 end type
 
 type GDBResult
-    token as string
-    resultClass as string
-    resultCount as integer
+    token        as string
+    resultClass  as string
+    resultCount  as integer
     results(any) as GDBNameValuePair
-    isComplete as boolean ' true = complete, false = incomplete
+    isComplete   as boolean ' true = complete, false = incomplete
 end type
 
 declare sub gdb_parseResults(byval stringinput as string, results() as GDBNameValuePair, byref count as integer)
@@ -359,9 +359,31 @@ function gdb_init(byref session as GDBSession, byval executable as CWSTR = "") a
     return true
 end function
 
+
+' Clear any pending output from pipe
+sub gdb_clear_pipe(byref session as GDBSession)
+    if session.initialized = false then return 
+    
+    dim as string buffer = space(4096)
+    dim as DWORD bytes_read, bytes_avail
+    
+    ' Read and discard any pending data
+    do
+        if PeekNamedPipe(session.hStdOutRead, NULL, 0, NULL, @bytes_avail, NULL) = 0 then exit do
+        if bytes_avail = 0 then exit do
+        
+        if bytes_avail > 4096 then bytes_avail = 4096
+        ReadFile(session.hStdOutRead, strptr(buffer), bytes_avail, @bytes_read, NULL)
+    loop while bytes_avail > 0
+end sub
+
+
 ' Send command to GDB (synchronous)
 function gdb_send(byref session as GDBSession, cmd as string) as boolean
     if session.initialized = false then return false
+    
+  ' Clear any old data first
+    gdb_clear_pipe(session)
     
     dim as string full_cmd = cmd + chr(13) + chr(10)
     dim as DWORD bytes_written
@@ -372,6 +394,7 @@ function gdb_send(byref session as GDBSession, cmd as string) as boolean
     
     return iif(ret <> 0 andalso bytes_written > 0, true, false)
 end function
+
 
 ' Receive response from GDB (synchronous with timeout)
 function gdb_receive(byref session as GDBSession, timeout_ms as integer = 500) as string
@@ -403,13 +426,13 @@ function gdb_receive(byref session as GDBSession, timeout_ms as integer = 500) a
         if instr(response, "(gdb)") > 0 orelse instr(response, "^done") > 0 orelse _
            instr(response, "^running") > 0 orelse instr(response, "^error") > 0 orelse _
            instr(response, "*stopped") > 0 then
-            return response
+            exit do
         end if
         
         if (timer - start_time) * 1000 > timeout_ms then exit do
     loop
     
-    return ""
+    return response
 end function
 
 ' Close GDB session
@@ -435,101 +458,6 @@ sub gdb_close(byref session as GDBSession)
     end if
 end sub
 
-function gdb_positionEditor( byref result as GDBResult ) as boolean
-    dim bkptValue as string = gdb_findResultValue(result.results(), result.resultCount, "bkpt")
-    print "  [Lookup] Found 'bkpt': " + bkptValue
-    
-    dim as string file_name 
-    dim as integer line_number
-    
-    ' Parse the bkpt tuple to find line number
-    dim bkptResults() as GDBNameValuePair
-    dim bkptCount as integer
-    gdb_parseResults(mid(bkptValue, 2, len(bkptValue) - 2), bkptResults(), bkptCount) ' Strip { }
-    
-    if gdb_resultExists(bkptResults(), bkptCount, "line") then
-        line_number = val( gdb_findResultValue(bkptResults(), bkptCount, "line") )
-'        print "  [Lookup] Breakpoint line number: " + lineNum
-    end if
-    
-'    if gdb_resultExists(bkptResults(), bkptCount, "file") then
-'        dim fileName as string = gdb_findResultValue(bkptResults(), bkptCount, "file")
-'        print "  [Lookup] Breakpoint file: " + fileName
-'    end if
-
-    if gdb_resultExists(bkptResults(), bkptCount, "fullname") then
-        file_name = gdb_findResultValue(bkptResults(), bkptCount, "fullname")
-        file_name = AfxStrReplace( file_name, "\\", "\" )
-        file_name = AfxStrReplace( file_name, "/", "\" )
-'        print "  [Lookup] Breakpoint full filename: " + fileName
-    end if
-
-LM("file_name: " & file_name)    
-LM("line_number: " & str(line_number))
-    
-    dim as clsDocument ptr pDoc = OpenSelectedDocument( file_name, "", line_number )
-
-    function = iif( pDoc > 0, true, false )
-end function
-
-
-
-' ============================================================================
-' RESPONSE PARSING
-' ============================================================================
-
-function replace_str(text as string, find_str as string, replace_with as string) as string
-    dim as string result = text
-    dim as integer position = 1
-    
-    do
-        position = instr(position, result, find_str)
-        if position = 0 then exit do
-        
-        result = left(result, position - 1) + replace_with + mid(result, position + len(find_str))
-        position += len(replace_with)
-    loop
-    
-    return result
-end function
-
-
-function gdb_at_breakpoint(byref response as string) as boolean
-    dim as string lresponse = lcase(response)
-    return iif(instr(lresponse, "type=" & chr(34) & "breakpoint" & chr(34)), true, false)
-end function
-
-function gdb_is_running(byref response as string) as boolean
-    dim as string lresponse = lcase(response)
-    return iif(instr(lresponse, "^running") > 0 orelse instr(lresponse, "*running") > 0, true, false)
-end function
-
-function gdb_has_exited(byref response as string) as boolean
-    dim as string lresponse = lcase(response)
-    return iif(instr(lresponse, "exited-normally") > 0 orelse _
-               instr(lresponse, "exit-code") > 0 orelse _
-               instr(lresponse, "exited-signalled") > 0, true, false)
-end function
-
-function gdb_parse_exit_code(byref response as string) as integer
-    dim as string lresponse = lcase(response)
-    dim as integer position = instr(lresponse, "exit-code=" & chr(34))
-    if position > 0 then
-        return val(mid(lresponse, position + 11))
-    end if
-    
-    position = instr(lresponse, "exited with code ")
-    if position > 0 then
-        return val(mid(lresponse, position + 17))
-    end if
-    
-    if instr(lresponse, "exited-normally") > 0 then
-        return 0
-    end if
-    
-    return -1
-end function
-
 
 ' Send command and get response (synchronous)
 function send_gdb_command( byref cmd as string ) as string
@@ -540,7 +468,10 @@ function send_gdb_command( byref cmd as string ) as string
 '        append_output("ERROR: Failed to send command" + chr(13) + chr(10))
         return ""
     end if
-    
+
+   ' Small delay to let GDB process
+    sleep 50
+        
     response = gdb_receive(gdb_session, 5000) 
     if response = "" then
 '        append_output("ERROR: No response from GDB" + chr(13) + chr(10))
