@@ -14,19 +14,6 @@
 #include once "frmDebug.bi"
 
 
-function frmDebug_PositionEditor( byval response as string ) as boolean
-    dim as string file_name = gdb_parse_current_filename(response)
-    dim as integer line_number = gdb_parse_breakpoint_linenumber(response)
-                        
-    LM("Filename: " + file_name)
-    LM("line_number: " + str(line_number)) 
-    
-    dim as clsDocument ptr pDoc = OpenSelectedDocument( file_name, "", line_number )
-
-    function = iif( pDoc > 0, true, false )
-end function
-
-
 ' ========================================================================================
 ' Process WM_COMMAND message for window/dialog: frmDebug
 ' ========================================================================================
@@ -37,7 +24,6 @@ function frmDebug_OnCommand( _
             byval codeNotify as UINT _
             ) as LRESULT
 
-    dim as string response
     
     select case id
         
@@ -57,49 +43,48 @@ function frmDebug_OnCommand( _
             if codeNotify = BN_CLICKED then
 '                update_status("Running program...")
     LM("Run...")
-                if send_gdb_command("run", response) then
+                dim as string response  = send_gdb_command("run")
+                dim as GDBResult result = gdb_parseResultRecord(response)
 
 LM("RUN RESPONSE " & response)
-
-                    if gdb_at_breakpoint(response) then
+                if gdb_resultExists(result.results(), result.resultCount, "bkpt") then
     LM(chr(13,10) + "*** BREAKPOINT HIT ***")
-                        frmDebug_PositionEditor( response )
-
-'    update_status("Stopped at breakpoint")
-     '                   send_gdb_command("info locals", response)
-                    elseif gdb_has_exited(response) then
-                        dim as integer exit_code = gdb_parse_exit_code(response)
-    LM(chr(13) + chr(10) + "*** PROGRAM EXITED ***" + chr(13) + chr(10))
-    LM("Exit code: " + str(exit_code) + chr(13) + chr(10))
-                    else
-'                        update_status("Program running")
-                    end if
+                    gdb_positionEditor( result )
                 end if
+'     '                   send_gdb_command("info locals", response)
+'                    elseif gdb_has_exited(response) then
+'                        dim as integer exit_code = gdb_parse_exit_code(response)
+'    LM(chr(13) + chr(10) + "*** PROGRAM EXITED ***" + chr(13) + chr(10))
+'    LM("Exit code: " + str(exit_code) + chr(13) + chr(10))
+'                    else
+''                        update_status("Program running")
+'                    end if
             end if
                 
         case IDC_BTN_CONTINUE
             if codeNotify = BN_CLICKED then
-                if send_gdb_command("continue", response) then
+                dim as string response  = send_gdb_command("continue")
+                dim as GDBResult result = gdb_parseResultRecord(response)
+
 LM("CONTINUE RESPONSE " & response)
-
-                    if gdb_at_breakpoint(response) then
-    LM(chr(13) + chr(10) + "*** BREAKPOINT HIT ***")
-                        frmDebug_PositionEditor( response )
-
-      '                  update_status("Stopped at breakpoint")
-                    elseif gdb_has_exited(response) then
-                        dim as integer exit_code = gdb_parse_exit_code(response)
-    LM(chr(13) + chr(10) + "*** PROGRAM EXITED ***" + chr(13) + chr(10))
-      '                  update_status("Program exited")
-                    end if
+                if gdb_resultExists(result.results(), result.resultCount, "bkpt") then
+    LM(chr(13,10) + "*** BREAKPOINT HIT ***")
+                    gdb_positionEditor( result )
                 end if
+
+'                    elseif gdb_has_exited(response) then
+'                        dim as integer exit_code = gdb_parse_exit_code(response)
+'    LM(chr(13) + chr(10) + "*** PROGRAM EXITED ***" + chr(13) + chr(10))
+'      '                  update_status("Program exited")
+'                    end if
             end if
         
         case IDC_BTN_BREAK
             if codeNotify = BN_CLICKED then
 '                update_status("Breaking...")
 LM("Interrupt")
-                send_gdb_command("interrupt", response)
+                dim as string response
+                response = send_gdb_command("interrupt") 
  '               update_status("Interrupted")
             end if
         
@@ -107,7 +92,8 @@ LM("Interrupt")
             if codeNotify = BN_CLICKED then
    '             update_status("Stopping...")
 LM("Kill")
-                send_gdb_command("kill", response)
+                dim as string response
+                response = send_gdb_command("kill") 
    '             update_status("Stopped")
           end if
         
@@ -115,8 +101,9 @@ LM("Kill")
             if codeNotify = BN_CLICKED then
 '                update_status("Stepping over...")
 LM("Next")
-                send_gdb_command("next", response)
-                frmDebug_PositionEditor( response )
+                dim as string response
+                response = send_gdb_command("next") 
+'                frmDebug_PositionEditor( response )
 '                update_status("Ready")
             end if
         
@@ -124,8 +111,9 @@ LM("Next")
             if codeNotify = BN_CLICKED then
 '                update_status("Stepping into...")
 LM("Step Into")
-                send_gdb_command("step", response)
-                frmDebug_PositionEditor( response )
+                dim as string response
+                response = send_gdb_command("step") 
+'                frmDebug_PositionEditor( response )
  '               update_status("Ready")
            end if
         
@@ -133,8 +121,9 @@ LM("Step Into")
             if codeNotify = BN_CLICKED then
 '                update_status("Stepping out...")
 LM("Step Out")
-                send_gdb_command("finish", response)
-                frmDebug_PositionEditor( response )
+                dim as string response
+                response = send_gdb_command("finish") 
+'                frmDebug_PositionEditor( response )
 '                update_status("Ready")
             end if
 
@@ -212,7 +201,7 @@ function frmDebug_SetInitialBreakpoints( byref session as GDBSession ) as long
     loop
 
     bp_cmd = rtrim(bp_cmd, chr(10))
-    send_gdb_command( bp_cmd, "" )
+    send_gdb_command( bp_cmd )
 
     function = 0    
 end function
