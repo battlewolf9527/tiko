@@ -38,7 +38,8 @@ sub gdb_processResponse( byval response as string )
 
     if instr( response, "*stopped,reason=" & chr(34) & "breakpoint-hit" & chr(34)) orelse _
        instr( response, "*stopped,reason=" & chr(34) & "end-stepping-range" & chr(34)) then
-        line_number = val( gdb_findResultValue( response, "line" ) )
+        ' Line numbers in GDB are 1 based whereas Scintilla is 0 based.
+        line_number = val( gdb_findResultValue( response, "line" ) ) - 1
         file_name = gdb_findResultValue( response, "fullname" )
         file_name = AfxStrReplace( file_name, "\\", "\" )
         file_name = AfxStrReplace( file_name, "/", "\" )
@@ -48,7 +49,7 @@ LM( "  file_name: " & file_name )
 LM( "  line_number: " & str(line_number) )
 
         if (len(file_name) > 0) andalso (line_number >= 0) then
-            dim as clsDocument ptr pDoc = OpenSelectedDocument( file_name, "", line_number )
+            dim as clsDocument ptr pDoc = OpenSelectedDocument( file_name, "", line_number)
             if pDoc then
                 SciExec( pDoc->hWndActiveScintilla, SCI_MARKERDELETEALL, MARKER_DEBUGGER_CURLINE, 0 )
                 pDoc->ToggleMarker( line_number, MARKER_DEBUGGER_CURLINE )
@@ -218,7 +219,6 @@ function frmDebug_SetInitialBreakpoints( byref session as GDBSession ) as long
     dim as string bp_cmd
     dim as string bp_file
     dim as string bp_line
-    dim as long   bp_line_val
     dim as long   nCount = 0
     
     dim pDoc as clsDocument ptr = gApp.pDocList
@@ -232,14 +232,17 @@ function frmDebug_SetInitialBreakpoints( byref session as GDBSession ) as long
         if len(sBreakpoints) then
             nCount = AfxStrParseCount( sBreakpoints, "," )
             for i as long = 1 to nCount
+                ' Line numbers in GDB are 1 based whereas Scintilla is 0 based.
                 bp_line = AfxStrParse( sBreakpoints, i, "," )
-                bp_line_val = val(bp_line) - 1
-                bp_cmd = bp_cmd & "break " & chr(34) & bp_file & chr(34) & ":" & str(bp_line_val) & chr(10)
+                bp_cmd = bp_cmd & "break " & chr(34) & bp_file & chr(34) & ":" & str(val(bp_line)+1) & chr(10)
             next
         end if
             
         pDoc = pDoc->pDocNext
     loop
+
+LM( "Set Breakpoints:")
+LM( bp_cmd & chr(13,10) )
 
     bp_cmd = rtrim(bp_cmd, chr(10))
     gdb_send( gdb_session, bp_cmd )
