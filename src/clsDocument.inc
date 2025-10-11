@@ -1568,6 +1568,11 @@ function clsDocument.ApplyProperties() as long
         SciMsg( pSci(i), SCI_MARKERDEFINE, MARKER_BREAKPOINT, SC_MARK_CIRCLE )
         SciMsg( pSci(i), SCI_MARKERSETFORE, MARKER_BREAKPOINT, BGR(196, 68, 80) )
         SciMsg( pSci(i), SCI_MARKERSETBACK, MARKER_BREAKPOINT, BGR(196, 68, 80) )
+
+        ' define debugger cuurent line marker (yellow arrow)
+        SciMsg( pSci(i), SCI_MARKERDEFINE, MARKER_DEBUGGER_CURLINE, SC_MARK_SHORTARROW )
+        SciMsg( pSci(i), SCI_MARKERSETFORE, MARKER_DEBUGGER_CURLINE, BGR(247, 217, 151) )
+        SciMsg( pSci(i), SCI_MARKERSETBACK, MARKER_DEBUGGER_CURLINE, BGR(247, 217, 151) )
         ''
         ''  MARGIN 0: Line Numbering (defaults to width 0)
         nPixels = SciMsg( pSci(i), SCI_TEXTWIDTH, 0, cast(LPARAM, @"_99999"))

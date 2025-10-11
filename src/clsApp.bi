@@ -43,7 +43,9 @@ type clsApp
         
         bShowSpinner               as boolean           ' Display the loading/compiling spinner
         SpinnerCurrentFrame        as long = 0          ' The index of the icon to use when timer fires.
-        SpinnerTimerID             as long = 0          ' Returned from SetTimer when Spinner is created.
+        SpinnerTimerID             as long = 101       
+        
+        DebugTimerID               as long = 102
         
         IsSessionActive            as boolean
         SessionName                as CWSTR

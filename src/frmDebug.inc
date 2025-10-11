@@ -14,108 +14,71 @@
 #include once "frmDebug.bi"
 
 
-sub printResult(byref result as GDBResult)
-    if len(result.token) > 0 then
-        print "Token: " + result.token 
-    end if
-    print "Result Class: " + result.resultClass 
-    print "Complete: " + iif(result.isComplete, "Yes", "No") 
+function gdb_findResultValue( byref response as string , byref token as string ) as string
+    ' Add to incoming token:   token="
+    dim as string result
     
-    if result.resultCount > 0 then
-        print "Results (" + str(result.resultCount) + " items):" 
-        for i as integer = 0 to result.resultCount - 1
-            print "  " + result.results(i).varname + " = " + result.results(i).varvalue 
-        next
+    token = token & "=" & chr(34)
+    dim as integer iStart = instr( response, token )
+    if iStart > 0 then
+        iStart = iStart + len(token)
+        dim as integer iEnd = instr( iStart, response, chr(34) )
+        if iEnd > 0 then
+            result = mid( response, iStart, iEnd - iStart ) 
+        end if
     end if
-end sub
+    
+    return result
+end function
 
 
 sub gdb_processResponse( byval response as string ) 
-    dim as GDBResult result = gdb_parseResultRecord(response)
-    if result.resultCount = 0 then exit sub
+    dim as string file_name 
+    dim as integer line_number
 
-    '// BREAKPOINTS
-    if gdb_resultExists(result.results(), result.resultCount, "bkpt") then
-        dim bkptValue as string = gdb_findResultValue(result.results(), result.resultCount, "bkpt")
-        
-        ' Parse the bkpt tuple to find line number
-        dim bkptResults() as GDBNameValuePair
-        dim bkptCount as integer
-        gdb_parseResults(mid(bkptValue, 2, len(bkptValue) - 2), bkptResults(), bkptCount) ' Strip { }
+    if instr( response, "*stopped,reason=" & chr(34) & "breakpoint-hit" & chr(34)) orelse _
+       instr( response, "*stopped,reason=" & chr(34) & "end-stepping-range" & chr(34)) then
+        line_number = val( gdb_findResultValue( response, "line" ) )
+        file_name = gdb_findResultValue( response, "fullname" )
+        file_name = AfxStrReplace( file_name, "\\", "\" )
+        file_name = AfxStrReplace( file_name, "/", "\" )
 
-        dim as string file_name 
-        dim as integer line_number
-        
-        if gdb_resultExists(bkptResults(), bkptCount, "line") then
-            line_number = val( gdb_findResultValue(bkptResults(), bkptCount, "line") )
-        end if
-        
-        if gdb_resultExists(bkptResults(), bkptCount, "fullname") then
-            file_name = gdb_findResultValue(bkptResults(), bkptCount, "fullname")
-            file_name = AfxStrReplace( file_name, "\\", "\" )
-            file_name = AfxStrReplace( file_name, "/", "\" )
-        end if
+LM( "STOP: BREAKPOINT OR STEPPING" )
+LM( "  file_name: " & file_name )
+LM( "  line_number: " & str(line_number) )
 
         if (len(file_name) > 0) andalso (line_number >= 0) then
             dim as clsDocument ptr pDoc = OpenSelectedDocument( file_name, "", line_number )
-        end if
-        
-    end if
-
-    '// STEP OVER, STEP INTO
-    if gdb_resultExists(result.results(), result.resultCount, "reason") then
-        dim reason as string = gdb_findResultValue(result.results(), result.resultCount, "reason")
-
-LM( "reason: " + reason )
-        
-        if reason = "end-stepping-range" then
-            dim as string file_name 
-            dim as integer line_number
-
-            if gdb_resultExists(result.results(), result.resultCount, "line") then
-                line_number = val( gdb_findResultValue(result.results(), result.resultCount, "line") )
-            end if
-            
-            if gdb_resultExists(result.results(), result.resultCount, "fullname") then
-                file_name = gdb_findResultValue(result.results(), result.resultCount, "fullname")
-                file_name = AfxStrReplace( file_name, "\\", "\" )
-                file_name = AfxStrReplace( file_name, "/", "\" )
-            end if
-        
-            if (len(file_name) > 0) andalso (line_number >= 0) then
-                dim as clsDocument ptr pDoc = OpenSelectedDocument( file_name, "", line_number )
-            end if
-
-LM("file_name: " & file_name)
-LM("line_number: " & str(line_number))
-
-        end if
-        
-    end if
-
-        
-    '// MSG FIELD (error messages)
-    if gdb_resultExists(result.results(), result.resultCount, "msg") then
-        dim msgValue as string = gdb_findResultValue(result.results(), result.resultCount, "msg")
-'LM("  [Lookup] Error message: " + msgValue)
-    end if
-        
-    '// EXIT CODE (program exit code)
-    if gdb_resultExists(result.results(), result.resultCount, "exit-code") then
-        dim exitCode as string = gdb_findResultValue(result.results(), result.resultCount, "exit-code")
-'LM("  [Lookup] Exit code: " + exitCode)
-        if exitCode = "0" then
-'LM("           (Success)")
-        else
-'LM("           (Error/Failure)")
+            if pDoc then
+                SciExec( pDoc->hWndActiveScintilla, SCI_MARKERDELETEALL, MARKER_DEBUGGER_CURLINE, 0 )
+                pDoc->ToggleMarker( line_number, MARKER_DEBUGGER_CURLINE )
+            end if    
         end if
     end if
+
+    
+'    '// MSG FIELD (error messages)
+'    if gdb_resultExists(result.results(), result.resultCount, "msg") then
+'        dim msgValue as string = gdb_findResultValue(result.results(), result.resultCount, "msg")
+''LM("  [Lookup] Error message: " + msgValue)
+'    end if
         
-    '// STATUS field (program exit status)
-    if gdb_resultExists(result.results(), result.resultCount, "status") then
-        dim statusValue as string = gdb_findResultValue(result.results(), result.resultCount, "status")
-LM("  [Lookup] Status: " + statusValue)
-    end if
+'    '// EXIT CODE (program exit code)
+'    if gdb_resultExists(result.results(), result.resultCount, "exit-code") then
+'        dim exitCode as string = gdb_findResultValue(result.results(), result.resultCount, "exit-code")
+''LM("  [Lookup] Exit code: " + exitCode)
+'        if exitCode = "0" then
+''LM("           (Success)")
+'        else
+''LM("           (Error/Failure)")
+'        end if
+'    end if
+        
+'    '// STATUS field (program exit status)
+'    if gdb_resultExists(result.results(), result.resultCount, "status") then
+'        dim statusValue as string = gdb_findResultValue(result.results(), result.resultCount, "status")
+'LM("  [Lookup] Status: " + statusValue)
+'    end if
     
 end sub
 
@@ -147,50 +110,37 @@ function frmDebug_OnCommand( _
     
         case IDC_BTN_RUN
             if codeNotify = BN_CLICKED then
-LM("RUN...")
-                dim as string response  = send_gdb_command("run")
-                gdb_processResponse( response )
+                gdb_send(gdb_session, "run")
             end if
                 
         case IDC_BTN_CONTINUE
             if codeNotify = BN_CLICKED then
-LM("CONTINUE...")
-                dim as string response  = send_gdb_command("continue")
-                gdb_processResponse( response )
+                gdb_send(gdb_session, "continue")
             end if
         
         case IDC_BTN_BREAK
             if codeNotify = BN_CLICKED then
-'                update_status("Breaking...")
-LM("Interrupt")
-                dim as string response = send_gdb_command("interrupt") 
+                gdb_send(gdb_session, "interrupt")
             end if
         
         case IDC_BTN_STOP
             if codeNotify = BN_CLICKED then
-LM("Kill")
-                dim as string response = send_gdb_command("kill") 
+                gdb_send(gdb_session, "kill")
           end if
         
         case IDC_BTN_STEP_OVER
             if codeNotify = BN_CLICKED then
-LM("Step Over")
-                dim as string response = send_gdb_command("next") 
-                gdb_processResponse( response )
+                gdb_send(gdb_session, "next")
             end if
         
         case IDC_BTN_STEP_INTO
             if codeNotify = BN_CLICKED then
-LM("Step Into")
-                dim as string response = send_gdb_command("step") 
-                gdb_processResponse( response )
+                gdb_send(gdb_session, "step")
            end if
         
         case IDC_BTN_STEP_OUT
             if codeNotify = BN_CLICKED then
-LM("Step Out")
-                dim as string response = send_gdb_command("finish") 
-                gdb_processResponse( response )
+                gdb_send(gdb_session, "finish")
             end if
 
     end select
@@ -214,12 +164,35 @@ function frmDebug_WndProc( _
     
         case WM_CLOSE
             LogClose()
+            KillTimer( HWND_FRMDEBUG, gApp.DebugTimerID )
+            gdb_close( gdb_session )
             DestroyWindow( hwnd )
             
         case WM_NCDESTROY
             dim pWindow as CWindow ptr = AfxCWindowPtr(hwnd)
             if pWindow then delete(pWindow)
-            
+            gdb_session.KillMessageThread = true
+            ThreadWait( gdb_session.hThreadMessages )
+            MutexDestroy( gdb_session.hThreadMutex )
+
+            ' Remove any yellow arrow debugger current line marker
+            dim pDoc as clsDocument ptr = gApp.pDocList
+            do until pDoc = 0
+                SciExec( pDoc->hWindow(0), SCI_MARKERDELETEALL, MARKER_DEBUGGER_CURLINE, 0 )
+                pDoc = pDoc->pDocNext
+            loop
+        
+        case WM_TIMER
+            if wParam = gApp.DebugTimerID then
+                ' Check for any pending message
+                if gdb_isMessageQueueEmpty( gdb_session ) = false then
+                    MutexLock( gdb_session.hThreadMutex )
+                    dim as string message = gdb_dequeue_message( gdb_session )
+                    MutexUnLock( gdb_session.hThreadMutex )
+                    gdb_processResponse( message )    
+                end if
+            end if
+
     end select
 
     
@@ -245,7 +218,8 @@ function frmDebug_SetInitialBreakpoints( byref session as GDBSession ) as long
     dim as string bp_cmd
     dim as string bp_file
     dim as string bp_line
-    dim as long nCount = 0
+    dim as long   bp_line_val
+    dim as long   nCount = 0
     
     dim pDoc as clsDocument ptr = gApp.pDocList
     do until pDoc = 0
@@ -259,7 +233,8 @@ function frmDebug_SetInitialBreakpoints( byref session as GDBSession ) as long
             nCount = AfxStrParseCount( sBreakpoints, "," )
             for i as long = 1 to nCount
                 bp_line = AfxStrParse( sBreakpoints, i, "," )
-                bp_cmd = bp_cmd & "break " & chr(34) & bp_file & chr(34) & ":" & bp_line & chr(10)
+                bp_line_val = val(bp_line) - 1
+                bp_cmd = bp_cmd & "break " & chr(34) & bp_file & chr(34) & ":" & str(bp_line_val) & chr(10)
             next
         end if
             
@@ -267,7 +242,7 @@ function frmDebug_SetInitialBreakpoints( byref session as GDBSession ) as long
     loop
 
     bp_cmd = rtrim(bp_cmd, chr(10))
-    send_gdb_command( bp_cmd )
+    gdb_send( gdb_session, bp_cmd )
 
     function = 0    
 end function
@@ -324,12 +299,18 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as string ) a
 
     LogInit( "c:\dev\gdb_interface\_debug.txt" )
     
+    SetTimer(HWND_FRMDEBUG, gApp.DebugTimerID, 20, null)   ' 20 ms
+    
     ' The debug executable has been sucessfully created so start the debug thread
     ' add feed any breakpoints into it.
     if gdb_init( gdb_session, executable ) then
         frmDebug_SetInitialBreakpoints( gdb_session )
         gdb_send(gdb_session, "set confirm off" )
         gdb_send(gdb_session, "set language pascal" )
+        
+        gdb_session.hThreadMutex = MutexCreate()
+        gdb_session.hThreadMessages = ThreadCreate( @gdb_threadListener, @gdb_session )
+        
     else
         MessageBox( HWND_FRMMAIN, "Failed to initialize GDB. Ensure gdb.exe is installed correctly.", _
                     "Error", MB_OK or MB_ICONERROR)

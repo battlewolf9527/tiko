@@ -33,7 +33,7 @@
 #define MARKER_BOOKMARK            1
 #define MARKER_BREAKPOINT          2
 #define MARKER_OCCURRENCES         3
-
+#define MARKER_DEBUGGER_CURLINE    4
 
 ' Structure that holds all of the user embedded compiler directives
 ' in the source code. Currently, only the main source file is searched

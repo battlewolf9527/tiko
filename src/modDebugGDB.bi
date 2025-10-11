@@ -11,261 +11,87 @@
 '    MERCHANTABILITY or FITNESS for A PARTICULAR PURPOSE.  See the
 '    GNU General Public License for more details.
 
+type _GDBMessage as GDBMessage
+
+type GDBMessage
+    message as string
+    pNextNode as _GDBMessage ptr
+end type
+
 type GDBSession
-    hProcess    as HANDLE
-    hThread     as HANDLE
-    hStdInWrite as HANDLE
-    hStdOutRead as HANDLE
-    hStdErrRead as HANDLE
-    dwProcessId as DWORD
-    initialized as boolean
+    hProcess          as HANDLE
+    hThread           as HANDLE
+    hStdInWrite       as HANDLE
+    hStdOutRead       as HANDLE
+    hStdErrRead       as HANDLE
+    dwProcessId       as DWORD
+    initialized       as boolean
+    hThreadMessages   as any ptr
+    KillMessageThread as boolean
+    hThreadMutex      as any ptr
+    
+    ' Message fifo queue
+    head              as GDBMessage ptr
+    tail              as GDBMessage ptr
+    count             as integer
 end type
 
 dim shared as GDBSession gdb_session
 
-
-type GDBNameValuePair
-    varname  as string
-    varvalue as string
-end type
-
-type GDBResult
-    token        as string
-    resultClass  as string
-    resultCount  as integer
-    results(any) as GDBNameValuePair
-    isComplete   as boolean ' true = complete, false = incomplete
-end type
-
-declare sub gdb_parseResults(byval stringinput as string, results() as GDBNameValuePair, byref count as integer)
-
-
-function gdb_isResultComplete(byval inputLine as string) as boolean
-    ' Check if inputLine starts with a result record marker
-    dim i as integer = 1
+' Enqueue - add message to the end of the queue
+sub gdb_enqueue_message( byref q as GDBSession, byref response as string )
+    dim newNode as GDBMessage ptr = new GDBMessage
+    newNode->message = response
+    newNode->pNextNode = 0
     
-    ' Skip optional token
-    while i <= len(inputLine) and (inputLine[i-1] >= asc("0") and inputLine[i-1] <= asc("9"))
-        i += 1
-    wend
-    
-    ' Must have '^' to be a result record
-    if i > len(inputLine) or inputLine[i-1] <> asc("^") then
-        return false
-    end if
-    
-    ' Check for balanced braces/brackets
-    dim braceCount as integer = 0
-    dim bracketCount as integer = 0
-    dim inString as boolean = false
-    dim ch as ubyte
-    
-    for j as integer = i to len(inputLine)
-        ch = inputLine[j-1]
-        
-        if ch = 34 andalso (j = 1 orelse inputLine[j-2] <> asc("\")) then
-            inString = not inString
-        elseif not inString then
-            if ch = asc("{") then braceCount += 1
-            if ch = asc("}") then braceCount -= 1
-            if ch = asc("[") then bracketCount += 1
-            if ch = asc("]") then bracketCount -= 1
-        end if
-    next
-    
-    return (braceCount = 0 and bracketCount = 0)
-end function
-
-function gdb_parseResultRecord(byval lines as string) as GDBResult
-    dim result as GDBResult
-    dim position as integer
-    dim i as integer
-    dim fullLine as string = lines
-    
-    result.resultCount = 0
-    result.isComplete = gdb_isResultComplete(fullLine)
-    
-    ' Check if line starts with optional token (numeric)
-    i = 1
-    while i <= len(fullLine) andalso (fullLine[i-1] >= asc("0") andalso fullLine[i-1] <= asc("9"))
-        result.token += chr(fullLine[i-1])
-        i += 1
-    wend
-    
-    ' Skip '^' character
-    if i <= len(fullLine) andalso fullLine[i-1] = asc("^") then
-        i += 1
-    end if
-    
-    ' Parse result class (done, running, connected, error, exit)
-    position = instr(i, fullLine, ",")
-    if position > 0 then
-        result.resultClass = mid(fullLine, i, position - i)
-        ' Parse results into dynamic array
-        gdb_parseResults(mid(fullLine, position + 1), result.results(), result.resultCount)
+    if q.tail = 0 then
+        ' Queue is empty
+        q.head = newNode
+        q.tail = newNode
     else
-        result.resultClass = mid(fullLine, i)
+        ' Add to end
+        q.tail->pNextNode = newNode
+        q.tail = newNode
     end if
     
-    return result
-end function
-
-function gdb_parseValue(byval stringinput as string, byref idx as integer) as string
-    dim result as string
-    dim ch as ubyte
-    
-    if idx > len(stringinput) then return ""
-    
-    ch = stringinput[idx-1]
-    
-    ' Handle quoted string
-    if ch = 34 then
-        idx += 1
-        while idx <= len(stringinput)
-            ch = stringinput[idx-1]
-            if ch = 34 then
-                idx += 1
-                exit while
-            elseif ch = asc("\") and idx < len(stringinput) then
-                idx += 1
-                ch = stringinput[idx-1]
-                select case ch
-                    case asc("n"): result += chr(10)
-                    case asc("t"): result += chr(9)
-                    case asc("r"): result += chr(13)
-                    case asc("\"): result += chr(92)
-                    case 34: result += chr(34)
-                    case else: result += chr(ch)
-                end select
-                idx += 1
-            else
-                result += chr(ch)
-                idx += 1
-            end if
-        wend
-    ' Handle list
-    elseif ch = asc("[") then
-        dim depth as integer = 1
-        result += chr(ch)
-        idx += 1
-        while idx <= len(stringinput) andalso depth > 0
-            ch = stringinput[idx-1]
-            result += chr(ch)
-            if ch = asc("[") then depth += 1
-            if ch = asc("]") then depth -= 1
-            idx += 1
-        wend
-    ' Handle tuple
-    elseif ch = asc("{") then
-        dim depth as integer = 1
-        result += chr(ch)
-        idx += 1
-        while idx <= len(stringinput) andalso depth > 0
-            ch = stringinput[idx-1]
-            result += chr(ch)
-            if ch = asc("{") then depth += 1
-            if ch = asc("}") then depth -= 1
-            idx += 1
-        wend
-    ' Handle simple value
-    else
-        while idx <= len(stringinput)
-            ch = stringinput[idx-1]
-            if ch = asc(",") orelse ch = asc("}") orelse ch = asc("]") then
-                exit while
-            end if
-            result += chr(ch)
-            idx += 1
-        wend
-    end if
-    
-    return result
-end function
-
-sub gdb_parseResults(byval stringinput as string, results() as GDBNameValuePair, byref count as integer)
-    dim i as integer = 1
-    dim varName as string
-    dim varValue as string
-    dim ch as ubyte
-    
-    count = 0
-    redim results(0 to 9) ' Initial allocation
-    
-    while i <= len(stringinput)
-        ' Parse variable name
-        varName = ""
-        while i <= len(stringinput)
-            ch = stringinput[i-1]
-            if ch = asc("=") then
-                i += 1
-                exit while
-            end if
-            varName += chr(ch)
-            i += 1
-        wend
-        
-        ' Parse value
-        varValue = gdb_parseValue(stringinput, i)
-        
-        ' Resize array if needed
-        if count > ubound(results) then
-            redim preserve results(0 to (count + 1) * 2 - 1)
-        end if
-        
-        ' Store name-value pair
-        results(count).varname = varName
-        results(count).varvalue = varValue
-        count += 1
-        
-        ' Skip comma
-        if i <= len(stringinput) andalso stringinput[i-1] = asc(",") then
-            i += 1
-        end if
-    wend
-    
-    ' Trim array to actual size
-    if count > 0 then
-        redim preserve results(0 to count - 1)
-    end if
+    q.count += 1
 end sub
 
-function gdb_findResultValue(results() as GDBNameValuePair, byval count as integer, byval searchName as string) as string
-    for i as integer = 0 to count - 1
-        if results(i).varname = searchName then
-            return results(i).varvalue
-        end if
-    next
-    return "" ' Not found
-end function
-
-function gdb_findResultIndex(results() as GDBNameValuePair, byval count as integer, byval searchName as string) as integer
-    for i as integer = 0 to count - 1
-        if results(i).varname = searchName then
-            return i
-        end if
-    next
-    return -1 ' Not found
-end function
-
-function gdb_resultExists(results() as GDBNameValuePair, byval count as integer, byval searchName as string) as boolean
-    return (gdb_findResultIndex(results(), count, searchName) >= 0)
-end function
-
-function gdb_readMultilineRecord(testLines() as string, byref startIdx as integer) as string
-    dim combined as string = ""
-    dim lineCount as integer = ubound(testLines) - lbound(testLines) + 1
+' Dequeue - remove and return message from front of queue
+function gdb_dequeue_message( byref q as GDBSession ) as string
+    if q.head = 0 then
+        return ""  ' Queue is empty
+    end if
     
-    while startIdx <= lineCount
-        combined += testLines(startIdx)
-        if gdb_isResultComplete(combined) then
-            exit while
-        end if
-        startIdx += 1
+    dim tempNode as GDBMessage ptr = q.head
+    dim msg as string = tempNode->message
+    
+    q.head = q.head->pNextNode
+    if q.head = 0 then
+        q.tail = 0  ' Queue is now empty
+    end if
+    
+    delete tempNode
+    q.count -= 1
+    
+    return msg
+end function
+
+' Check if queue is empty
+function gdb_isMessageQueueEmpty( byref q as GDBSession ) as boolean
+    dim as boolean isEmpty
+    MutexLock( gdb_session.hThreadMutex )
+    isEmpty = (q.head = 0)
+    MutexUnLock( gdb_session.hThreadMutex )
+    return isEmpty
+end function
+
+' Clear all messages from queue
+sub clearQueue( byref q as GDBSession )
+    while gdb_isMessageQueueEmpty(q) = false
+        gdb_dequeue_message(q)
     wend
-    
-    return combined
-end function
-
+end sub
 
 ' Initialize GDB session
 function gdb_init(byref session as GDBSession, byval executable as CWSTR = "") as boolean
@@ -382,9 +208,6 @@ end sub
 function gdb_send(byref session as GDBSession, cmd as string) as boolean
     if session.initialized = false then return false
     
-  ' Clear any old data first
-    gdb_clear_pipe(session)
-    
     dim as string full_cmd = cmd + chr(13) + chr(10)
     dim as DWORD bytes_written
     dim as integer ret
@@ -397,17 +220,20 @@ end function
 
 
 ' Receive response from GDB (synchronous with timeout)
-function gdb_receive(byref session as GDBSession, timeout_ms as integer = 500) as string
-    if session.initialized = false then return ""
+function gdb_receive( byref session as GDBSession ) as boolean
+    if session.initialized = false then return false
     
     dim as string buffer = space(4096)
     dim as DWORD bytes_read, bytes_avail
     dim as double start_time = timer
     dim as integer ret
     
+    dim as integer timeout_ms = 500
     dim as string response = ""
     
     do
+        if session.KillMessageThread = true then return false
+        
         ret = PeekNamedPipe(session.hStdOutRead, NULL, 0, NULL, @bytes_avail, NULL)
         
         if ret <> 0 andalso bytes_avail > 0 then
@@ -426,14 +252,30 @@ function gdb_receive(byref session as GDBSession, timeout_ms as integer = 500) a
         if instr(response, "(gdb)") > 0 orelse instr(response, "^done") > 0 orelse _
            instr(response, "^running") > 0 orelse instr(response, "^error") > 0 orelse _
            instr(response, "*stopped") > 0 then
+            ' Clear any old data first
+            gdb_clear_pipe(session)
+            ' Create a new message record and add it to the message queue. The WM_TIMER will
+            ' check the message queue for any pending messages.
+            MutexLock( gdb_session.hThreadMutex )
+            gdb_enqueue_message( session, response )
+            MutexUnLock( gdb_session.hThreadMutex )
             exit do
         end if
         
         if (timer - start_time) * 1000 > timeout_ms then exit do
     loop
     
-    return response
+    return false
 end function
+
+
+sub gdb_threadListener( byval userdata as any ptr )
+    dim as GDBSession ptr session = cast(GDBsession ptr, userdata)
+    do until session->KillMessageThread = true
+        gdb_receive(*session ) 
+    loop    
+end sub
+
 
 ' Close GDB session
 sub gdb_close(byref session as GDBSession)
@@ -458,31 +300,4 @@ sub gdb_close(byref session as GDBSession)
     end if
 end sub
 
-
-' Send command and get response (synchronous)
-function send_gdb_command( byref cmd as string ) as string
-'    append_output("> " + cmd + chr(13) + chr(10))
-    dim as string response
-    
-    if gdb_send(gdb_session, cmd) = false then
-'        append_output("ERROR: Failed to send command" + chr(13) + chr(10))
-        return ""
-    end if
-
-   ' Small delay to let GDB process
-    sleep 50
-        
-    response = gdb_receive(gdb_session, 5000) 
-    if response = "" then
-'        append_output("ERROR: No response from GDB" + chr(13) + chr(10))
-        return ""
-    end if
-    
-'    dim as string console_out = gdb_parse_console_output(response)
-'    if len(console_out) > 0 then
-'        append_output(console_out)
-'    end if
-    
-    return response
-end function
 
