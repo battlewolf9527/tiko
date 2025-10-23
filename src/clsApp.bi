@@ -45,6 +45,7 @@ type clsApp
         SpinnerCurrentFrame        as long = 0          ' The index of the icon to use when timer fires.
         SpinnerTimerID             as long = 101       
         
+        IsDebuggerActive           as boolean
         DebugTimerID               as long = 102
         
         IsSessionActive            as boolean

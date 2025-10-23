@@ -182,7 +182,9 @@ function frmDebug_WndProc( _
                 SciExec( pDoc->hWindow(0), SCI_MARKERDELETEALL, MARKER_DEBUGGER_CURLINE, 0 )
                 pDoc = pDoc->pDocNext
             loop
-        
+
+            gApp.IsDebuggerActive = false
+
         case WM_TIMER
             if wParam = gApp.DebugTimerID then
                 ' Check for any pending message
@@ -321,6 +323,7 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as string ) a
         exit function            
     end if
     
+    gApp.IsDebuggerActive = true
     
     ShowWindow( HWND_FRMDEBUG, SW_SHOW )
     

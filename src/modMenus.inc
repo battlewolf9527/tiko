@@ -252,10 +252,12 @@ function frmMain_DebugTopMenuStates() as long
 
     dim as boolean fEnabled = iif( gApp.IsProjectActive orelse cbool(gTTabCtl.GetItemCount), true, false )
     EnableTopMenuItem( IDM_DEBUG_STARTDEBUGGING, fEnabled )
-    EnableTopMenuItem( IDM_DEBUG_STEPINTO, fEnabled )
-    EnableTopMenuItem( IDM_DEBUG_STEPOVER, fEnabled )
-    EnableTopMenuItem( IDM_DEBUG_TOGGLEBREAKPOINT, fEnabled )
-    EnableTopMenuItem( IDM_DEBUG_DELETEALLBREAKPOINTS, fEnabled )
+    
+    EnableTopMenuItem( IDM_DEBUG_STOPDEBUGGING, gApp.IsDebuggerActive )
+    EnableTopMenuItem( IDM_DEBUG_STEPINTO, gApp.IsDebuggerActive )
+    EnableTopMenuItem( IDM_DEBUG_STEPOVER, gApp.IsDebuggerActive )
+    EnableTopMenuItem( IDM_DEBUG_TOGGLEBREAKPOINT, gApp.IsDebuggerActive )
+    EnableTopMenuItem( IDM_DEBUG_DELETEALLBREAKPOINTS, gApp.IsDebuggerActive )
 
     function = 0
 end function

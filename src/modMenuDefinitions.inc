@@ -161,7 +161,13 @@ Function getMenuText( byval idMenu as long ) As CWSTR
         case IDM_RUNEXE: wszText = L(67,"Run Executable")
         case IDM_COMMANDLINE: wszText = L(68,"Command Line") & "..."
 
-        case IDM_DEBUG_STARTDEBUGGING: wszText = L(310,"Start Debugging")
+        case IDM_DEBUG_STARTDEBUGGING
+            if gApp.IsDebuggerActive then
+                wszText = L(317,"Continue Debugging")
+            else    
+                wszText = L(310,"Start Debugging")
+            end if
+        case IDM_DEBUG_STOPDEBUGGING: wszText = L(318,"Stop Debugging")
         case IDM_DEBUG_STEPINTO: wszText = L(311,"Step Into")
         case IDM_DEBUG_STEPOVER: wszText = L(312,"Step Over")
         case IDM_DEBUG_TOGGLEBREAKPOINT: wszText = L(313,"Toggle Breakpoint")
@@ -366,6 +372,7 @@ function buildTopMenuDefinitions() as long
     setTopMenuItem( IDC_MENUBAR_COMPILE, IDM_COMMANDLINE, 0, false, false )
 
     setTopMenuItem( IDC_MENUBAR_DEBUG, IDM_DEBUG_STARTDEBUGGING, 0, false, false )
+    setTopMenuItem( IDC_MENUBAR_DEBUG, IDM_DEBUG_STOPDEBUGGING, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_DEBUG, 0, 0, false, true )
     setTopMenuItem( IDC_MENUBAR_DEBUG, IDM_DEBUG_STEPINTO, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_DEBUG, IDM_DEBUG_STEPOVER, 0, false, false )
