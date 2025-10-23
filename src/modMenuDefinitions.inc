@@ -376,6 +376,7 @@ function buildTopMenuDefinitions() as long
     setTopMenuItem( IDC_MENUBAR_DEBUG, 0, 0, false, true )
     setTopMenuItem( IDC_MENUBAR_DEBUG, IDM_DEBUG_STEPINTO, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_DEBUG, IDM_DEBUG_STEPOVER, 0, false, false )
+    setTopMenuItem( IDC_MENUBAR_DEBUG, IDM_DEBUG_STEPOUT, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_DEBUG, 0, 0, false, true )
     setTopMenuItem( IDC_MENUBAR_DEBUG, IDM_DEBUG_TOGGLEBREAKPOINT, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_DEBUG, IDM_DEBUG_DELETEALLBREAKPOINTS, 0, false, false )
