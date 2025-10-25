@@ -58,6 +58,7 @@ sub gdb_processResponse( byval response as string )
     dim as string function_args
     dim as integer line_number
 
+
     if instr( response, "*stopped,reason=" & chr(34) & "breakpoint-hit" & chr(34)) orelse _
        instr( response, "*stopped,reason=" & chr(34) & "end-stepping-range" & chr(34)) then
         ' Line numbers in GDB are 1 based whereas Scintilla is 0 based.
@@ -84,30 +85,12 @@ LM( "  line_number:   " & str(line_number) )
         end if
     end if
 
-    
-'    '// MSG FIELD (error messages)
-'    if gdb_resultExists(result.results(), result.resultCount, "msg") then
-'        dim msgValue as string = gdb_findResultValue(result.results(), result.resultCount, "msg")
-''LM("  [Lookup] Error message: " + msgValue)
-'    end if
-        
-'    '// EXIT CODE (program exit code)
-'    if gdb_resultExists(result.results(), result.resultCount, "exit-code") then
-'        dim exitCode as string = gdb_findResultValue(result.results(), result.resultCount, "exit-code")
-''LM("  [Lookup] Exit code: " + exitCode)
-'        if exitCode = "0" then
-''LM("           (Success)")
-'        else
-''LM("           (Error/Failure)")
-'        end if
-'    end if
-        
-'    '// STATUS field (program exit status)
-'    if gdb_resultExists(result.results(), result.resultCount, "status") then
-'        dim statusValue as string = gdb_findResultValue(result.results(), result.resultCount, "status")
-'LM("  [Lookup] Status: " + statusValue)
-'    end if
-    
+    if instr( response, "*stopped,reason=" & chr(34) & "exited-normally" & chr(34)) orelse _
+       instr( response, "*stopped,reason=" & chr(34) & "exited" & chr(34)) orelse _
+       instr( response, "*stopped,reason=" & chr(34) & "exited-signalled" & chr(34)) then
+        SendMessage( HWND_FRMDEBUG, IDM_DEBUG_STOPDEBUGGING, 0, 0 )
+    end if
+
 end sub
 
 
@@ -127,63 +110,70 @@ function frmDebug_PositionWindows() as LRESULT
     dim as long nSpacer = pWindow->ScaleX(4)
     dim as long nHeight = pWindow->ScaleY(TOPTABS_HEIGHT)
     dim as long nPadding = 10   ' 5 left 5 right
-    
+    dim as long nImageWidth = 12
+
     i = DEBUG_BUTTONS.CONTINUE_DEBUGGING
+    gDbgBtns(i).wszIcon    = wszIconContinue
     gDbgBtns(i).wszText    = L(321,"Continue")
     gDbgBtns(i).rc.Left    = nLeft
     gDbgBtns(i).rc.top     = rc.top
     gDbgBtns(i).rc.right   = nLeft + _
-        pWindow->ScaleX( getTextWidth(HWND_FRMDEBUG, gDbgBtns(i).wszText, GUIFONT_9) + nPadding )
+        pWindow->ScaleX( getTextWidth(HWND_FRMDEBUG, gDbgBtns(i).wszText, GUIFONT_9) + nPadding + nImageWidth)
     gDbgBtns(i).rc.bottom  = rc.top + nHeight
     gDbgBtns(i).nID        = IDM_DEBUG_STARTDEBUGGING
     nLeft = gDbgBtns(i).rc.right + nSpacer
 
     i = DEBUG_BUTTONS.STOP_DEBUGGING
+    gDbgBtns(i).wszIcon    = wszIconStop
     gDbgBtns(i).wszText    = L(322,"Stop")
     gDbgBtns(i).rc.Left    = nLeft
     gDbgBtns(i).rc.top     = rc.top
     gDbgBtns(i).rc.right   = nLeft + _
-        pWindow->ScaleX( getTextWidth(HWND_FRMDEBUG, gDbgBtns(i).wszText, GUIFONT_9) + nPadding )
+        pWindow->ScaleX( getTextWidth(HWND_FRMDEBUG, gDbgBtns(i).wszText, GUIFONT_9) + nPadding + nImageWidth)
     gDbgBtns(i).rc.bottom  = rc.top + nHeight
     gDbgBtns(i).nID        = IDM_DEBUG_STOPDEBUGGING
     nLeft = gDbgBtns(i).rc.right + nSpacer
 
     i = DEBUG_BUTTONS.STEP_INTO
-    gDbgBtns(i).wszText    = L(311,"Step Into")
+    gDbgBtns(i).wszIcon    = wszIconStepNext
+    gDbgBtns(i).wszText    = L(311,"Step Next")
     gDbgBtns(i).rc.Left    = nLeft
     gDbgBtns(i).rc.top     = rc.top
     gDbgBtns(i).rc.right   = nLeft + _
-        pWindow->ScaleX( getTextWidth(HWND_FRMDEBUG, gDbgBtns(i).wszText, GUIFONT_9) + nPadding )
+        pWindow->ScaleX( getTextWidth(HWND_FRMDEBUG, gDbgBtns(i).wszText, GUIFONT_9) + nPadding + nImageWidth)
     gDbgBtns(i).rc.bottom  = rc.top + nHeight
-    gDbgBtns(i).nID        = IDM_DEBUG_STEPINTO
+    gDbgBtns(i).nID        = IDM_DEBUG_STEPNEXT
     nLeft = gDbgBtns(i).rc.right + nSpacer
 
     i = DEBUG_BUTTONS.STEP_OVER
+    gDbgBtns(i).wszIcon    = wszIconStepOver
     gDbgBtns(i).wszText    = L(312,"Step Over")
     gDbgBtns(i).rc.Left    = nLeft
     gDbgBtns(i).rc.top     = rc.top
     gDbgBtns(i).rc.right   = nLeft + _
-        pWindow->ScaleX( getTextWidth(HWND_FRMDEBUG, gDbgBtns(i).wszText, GUIFONT_9) + nPadding )
+        pWindow->ScaleX( getTextWidth(HWND_FRMDEBUG, gDbgBtns(i).wszText, GUIFONT_9) + nPadding + nImageWidth)
     gDbgBtns(i).rc.bottom  = rc.top + nHeight
     gDbgBtns(i).nID        = IDM_DEBUG_STEPOVER
     nLeft = gDbgBtns(i).rc.right + nSpacer
 
     i = DEBUG_BUTTONS.STEP_OUT
+    gDbgBtns(i).wszIcon    = wszIconStepOut
     gDbgBtns(i).wszText    = L(319,"Step Out")
     gDbgBtns(i).rc.Left    = nLeft
     gDbgBtns(i).rc.top     = rc.top
     gDbgBtns(i).rc.right   = nLeft + _
-        pWindow->ScaleX( getTextWidth(HWND_FRMDEBUG, gDbgBtns(i).wszText, GUIFONT_9) + nPadding )
+        pWindow->ScaleX( getTextWidth(HWND_FRMDEBUG, gDbgBtns(i).wszText, GUIFONT_9) + nPadding + nImageWidth)
     gDbgBtns(i).rc.bottom  = rc.top + nHeight
     gDbgBtns(i).nID        = IDM_DEBUG_STEPOUT
     nLeft = gDbgBtns(i).rc.right + nSpacer
 
     i = DEBUG_BUTTONS.RUN_TO_CURSOR
+    gDbgBtns(i).wszIcon    = wszIconRunToCursor
     gDbgBtns(i).wszText    = L(320,"Run to Cursor")
     gDbgBtns(i).rc.Left    = nLeft
     gDbgBtns(i).rc.top     = rc.top
     gDbgBtns(i).rc.right   = nLeft + _
-        pWindow->ScaleX( getTextWidth(HWND_FRMDEBUG, gDbgBtns(i).wszText, GUIFONT_9) + nPadding )
+        pWindow->ScaleX( getTextWidth(HWND_FRMDEBUG, gDbgBtns(i).wszText, GUIFONT_9) + nPadding + nImageWidth)
     gDbgBtns(i).rc.bottom  = rc.top + nHeight
     gDbgBtns(i).nID        = IDM_DEBUG_RUNTOCURSOR
     nLeft = gDbgBtns(i).rc.right + nSpacer
@@ -211,7 +201,6 @@ function frmDebug_WndProc( _
 
     select case uMsg
 
-        case WM_CLOSE
         case WM_CLOSE
             LogClose()
             KillTimer( HWND_FRMDEBUG, gApp.DebugTimerID )
@@ -343,8 +332,6 @@ function frmDebug_WndProc( _
             ' Clear the entire back client area
             b.PaintClientRect()
           
-            b.SetFont( GUIFONT_9 )
-
             ' paint the panels
             for i as long = lbound(gDbgBtns) to ubound(gDbgBtns)
                 ' paint this tab based on active/inactive status
@@ -357,7 +344,20 @@ function frmDebug_WndProc( _
                 end if
 
                 b.PaintRect( @gDbgBtns(i).rc )
-                b.PaintText( gDbgBtns(i).wszText, @gDbgBtns(i).rc, DT_CENTER )
+                
+                dim as long nImageWidth = pWindow->ScaleX(12)
+                
+                dim as RECT rcIcon = gDbgBtns(i).rc
+                rcIcon.right = rcIcon.left + nImageWidth
+                
+                dim as RECT rcText = gDbgBtns(i).rc
+                rcText.left = rcIcon.right
+                
+                b.SetFont( SYMBOLFONT_9 )
+                b.PaintText( gDbgBtns(i).wszIcon, @rcIcon, DT_CENTER )
+
+                b.SetFont( GUIFONT_9 )
+                b.PaintText( gDbgBtns(i).wszText, @rcText, DT_CENTER )
             next
                                     
             b.EndDoubleBuffer()
@@ -371,7 +371,7 @@ function frmDebug_WndProc( _
             gdb_send(gdb_session, "kill")
             PostMessage( HWND_FRMDEBUG, WM_CLOSE, 0, 0 )
         
-        case IDM_DEBUG_STEPINTO
+        case IDM_DEBUG_STEPNEXT
             gdb_send(gdb_session, "step")
         
         case IDM_DEBUG_STEPOVER
@@ -403,12 +403,14 @@ function frmDebug_SetInitialBreakpoints( byref session as GDBSession ) as long
     'rbreak main.c:.*                  ' Regex breakpoint (all functions in file)
     'info line main.c:25               ' Show address of line
     'list main.c:25                    ' Show source at line
+    
     ' Iterate all pDoc in the project/files list
     dim as string sBreakpoints
     dim as string bp_cmd
     dim as string bp_file
     dim as string bp_line
     dim as long   nCount = 0
+    dim as long   numBreakpoints = 0
     
     dim pDoc as clsDocument ptr = gApp.pDocList
     do until pDoc = 0
@@ -424,17 +426,25 @@ function frmDebug_SetInitialBreakpoints( byref session as GDBSession ) as long
                 ' Line numbers in GDB are 1 based whereas Scintilla is 0 based.
                 bp_line = AfxStrParse( sBreakpoints, i, "," )
                 bp_cmd = bp_cmd & "break " & chr(34) & bp_file & chr(34) & ":" & str(val(bp_line)+1) & chr(10)
+                numBreakpoints += 1
             next
         end if
             
         pDoc = pDoc->pDocNext
     loop
 
+    ' If no breakpoints exist then set a temporary breakpoint in the main file
+    if numBreakpoints = 0 then
+LM( "Set Temp Breakpoint on Main")
+        bp_cmd = "tbreak main"
+        gdb_send( gdb_session, bp_cmd )
+        
+    else    
 LM( "Set Breakpoints:")
 LM( bp_cmd & chr(13,10) )
-
-    bp_cmd = rtrim(bp_cmd, chr(10))
-    gdb_send( gdb_session, bp_cmd )
+        bp_cmd = rtrim(bp_cmd, chr(10))
+        gdb_send( gdb_session, bp_cmd )
+    end if
 
     function = 0    
 end function
@@ -457,6 +467,8 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as string ) a
     if instr(gConfig.ThemeShortFilename, "_dark") then nvalue = true
     ' Attempt to apply the standard Windows dark theme to the non-client areas of the form.
     DwmSetWindowAttribute(HWND_FRMDEBUG, DWMWA_USE_IMMERSIVE_DARK_MODE, @nvalue, sizeof(nvalue))
+    
+    gApp.IsDebuggerActive = true
     
     frmDebug_PositionWindows()
 
@@ -481,7 +493,6 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as string ) a
         exit function            
     end if
     
-    gApp.IsDebuggerActive = true
 
     'TODO: If no breakpoints exist then create temp breakpoint to start at beginning
     ' of the main file.

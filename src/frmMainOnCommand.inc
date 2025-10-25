@@ -338,7 +338,8 @@ function frmMain_OnCommand( _
             OnCommand_CompileCommon( id )
 
         ''  DEBUG MENU          
-        case IDM_DEBUG_STARTDEBUGGING, IDM_DEBUG_STEPINTO, IDM_DEBUG_STEPOVER, _
+        case IDM_DEBUG_STARTDEBUGGING, IDM_DEBUG_STOPDEBUGGING, _
+            IDM_DEBUG_STEPNEXT, IDM_DEBUG_STEPOVER, IDM_DEBUG_STEPOUT, IDM_DEBUG_RUNTOCURSOR, _
             IDM_DEBUG_TOGGLEBREAKPOINT, IDM_DEBUG_DELETEALLBREAKPOINTS
             OnCommand_DebugCommon( id )
 

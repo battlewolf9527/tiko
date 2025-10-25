@@ -112,7 +112,7 @@ enum
     IDM_DEBUG_START
     IDM_DEBUG_STARTDEBUGGING
     IDM_DEBUG_STOPDEBUGGING
-    IDM_DEBUG_STEPINTO
+    IDM_DEBUG_STEPNEXT
     IDM_DEBUG_STEPOVER
     IDM_DEBUG_STEPOUT
     IDM_DEBUG_RUNTOCURSOR
@@ -309,7 +309,7 @@ dim shared as wstring * 10 _
     wszIconCompile, wszIconBuildExecute, wszIconDebug, _
     wszIconSplitEditor, wszIconSplitLeftRight, wszIconSplitTopBottom, wszIconThemes, _
     wszIconSettings, wszIconCheckBoxEmpty, wszIconCheckBoxMarked, _
-    wszIconContinue, wszIconStop, wszIconStepInto, wszIconStepOver, wszIconStepOut           
+    wszIconContinue, wszIconStop, wszIconStepNext, wszIconStepOver, wszIconStepOut, wszIconRunToCursor          
 
 
 ' Braille spinner patterns - large clockwise rotation
@@ -361,9 +361,10 @@ dim shared spinner(0 to 7) as wstring * 2 => { _
     wszIconDebug             = !"\uE62A"     ' form with magnifier
     wszIconContinue          = !"\uF5B0"     ' play solid
     wszIconStop              = !"\uEE95"     ' stop solid
-    wszIconStepInto          = wszIconDownArrow
+    wszIconStepNext          = !"\uF0AF"     ' right arrow
     wszIconStepOver          = !"\uEE35"     ' reply mirrored
     wszIconStepOut           = wszIconUpArrow
+    wszIconRunToCursor       = !"\uEE35"     ' next solid
     
     
     

@@ -34,6 +34,7 @@ enum DEBUG_BUTTONS explicit
 end enum
 
 type DEBUG_BUTTONS_TYPE
+    wszIcon as CWSTR
     wszText as CWSTR
     rc      as RECT            ' client coordinates 
     nID     as long            ' id to invoke if clicked on
