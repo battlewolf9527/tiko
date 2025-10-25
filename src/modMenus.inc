@@ -257,6 +257,7 @@ function frmMain_DebugTopMenuStates() as long
     EnableTopMenuItem( IDM_DEBUG_STEPINTO, gApp.IsDebuggerActive )
     EnableTopMenuItem( IDM_DEBUG_STEPOVER, gApp.IsDebuggerActive )
     EnableTopMenuItem( IDM_DEBUG_STEPOUT, gApp.IsDebuggerActive )
+    EnableTopMenuItem( IDM_DEBUG_RUNTOCURSOR, gApp.IsDebuggerActive )
     EnableTopMenuItem( IDM_DEBUG_TOGGLEBREAKPOINT, gApp.IsDebuggerActive )
     EnableTopMenuItem( IDM_DEBUG_DELETEALLBREAKPOINTS, gApp.IsDebuggerActive )
 

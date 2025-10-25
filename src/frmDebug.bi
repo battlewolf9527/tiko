@@ -22,5 +22,24 @@
 #define IDC_BTN_STEP_INTO       1006
 #define IDC_BTN_STEP_OUT        1007
 
+enum DEBUG_BUTTONS explicit
+    BUTTON_FIRST         = 0
+    CONTINUE_DEBUGGING   = 0
+    STOP_DEBUGGING       = 1
+    STEP_INTO            = 2
+    STEP_OVER            = 3
+    STEP_OUT             = 4
+    RUN_TO_CURSOR        = 5
+    BUTTON_LAST          = RUN_TO_CURSOR
+end enum
+
+type DEBUG_BUTTONS_TYPE
+    wszText as CWSTR
+    rc      as RECT            ' client coordinates 
+    nID     as long            ' id to invoke if clicked on
+    isHot   as boolean
+end type
+
+dim shared gDbgBtns(DEBUG_BUTTONS.BUTTON_LAST) as DEBUG_BUTTONS_TYPE
 
 declare function frmDebug_Show( byval hWndParent as HWND, byval executable as string ) as LRESULT

@@ -16,13 +16,13 @@
 type PANEL_MENU_TYPE
     wszCaption      as CWSTR
     wszTooltip      as CWSTR
-    id              as integer
+    id              as long
     rc              as RECT   
     isPrevHot       as boolean
 end type
 
 ' Values for each panel menu button are set in frmPanelMenu_PositionWindows
-dim shared gPanelMenu(0 to 5) as PANEL_MENU_TYPE
+dim shared gPanelMenu(0 to 6) as PANEL_MENU_TYPE
 
 
 declare function frmPanelMenu_PositionWindows() as LRESULT

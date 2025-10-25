@@ -77,12 +77,21 @@ function frmPanelMenu_PositionWindows() as LRESULT
     gPanelMenu(3).rc = type(nLeft, nTop, nLeft + nButtonWidth, nTop + nButtonHeight)
     gPanelMenu(3).wszTooltip = frmPanelMenu_FormatTooltip(IDM_OPTIONSDIALOG)
     
+    '(Right to left orientation)
+    
     ' Build & Execute
     nLeft = nRight - nButtonWidth
-    gPanelMenu(5).wszCaption = wszIconBuildExecute
-    gPanelMenu(5).id = IDM_BUILDEXECUTE
+    gPanelMenu(6).wszCaption = wszIconBuildExecute
+    gPanelMenu(6).id = IDM_BUILDEXECUTE
+    gPanelMenu(6).rc = type(nLeft, nTop, nLeft + nButtonWidth, nTop + nButtonHeight)
+    gPanelMenu(6).wszTooltip = frmPanelMenu_FormatTooltip(IDM_BUILDEXECUTE)
+
+    ' Debug
+    nLeft -= nButtonWidth
+    gPanelMenu(5).wszCaption = wszIconDebug
+    gPanelMenu(5).id = IDM_DEBUG_STARTDEBUGGING
     gPanelMenu(5).rc = type(nLeft, nTop, nLeft + nButtonWidth, nTop + nButtonHeight)
-    gPanelMenu(5).wszTooltip = frmPanelMenu_FormatTooltip(IDM_BUILDEXECUTE)
+    gPanelMenu(5).wszTooltip = frmPanelMenu_FormatTooltip(IDM_DEBUG_STARTDEBUGGING)
     
     ' Compile
     nLeft -= nButtonWidth

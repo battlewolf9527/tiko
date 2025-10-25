@@ -14,7 +14,7 @@
 #include once "frmDebug.bi"
 
 
-function gdb_findResultValue( byref response as string , byref token as string ) as string
+function gdb_findResultValue( byref response as string, byref token as string ) as string
     ' Add to incoming token:   token="
     dim as string result
     
@@ -32,8 +32,30 @@ function gdb_findResultValue( byref response as string , byref token as string )
 end function
 
 
+function gdb_findFunctionArguments( byref response as string, byref token as string ) as string
+    ' Add to incoming token:   token="
+    ' args=[{name="NUMHOURS$1",value="1500"},{name="NUMHOURS$1@entry",value="1500"}]
+    dim as string result
+    
+    token = token & "=" & "["
+    dim as integer iStart = instr( response, token )
+    if iStart > 0 then
+        iStart = iStart + len(token)
+        dim as integer iEnd = instr( iStart, response, "]" )
+        if iEnd > 0 then
+            result = mid( response, iStart, iEnd - iStart ) 
+        end if
+    end if
+    
+    return result
+end function
+
+
+
 sub gdb_processResponse( byval response as string ) 
     dim as string file_name 
+    dim as string function_name 
+    dim as string function_args
     dim as integer line_number
 
     if instr( response, "*stopped,reason=" & chr(34) & "breakpoint-hit" & chr(34)) orelse _
@@ -43,10 +65,15 @@ sub gdb_processResponse( byval response as string )
         file_name = gdb_findResultValue( response, "fullname" )
         file_name = AfxStrReplace( file_name, "\\", "\" )
         file_name = AfxStrReplace( file_name, "/", "\" )
+        function_name = gdb_findResultValue( response, "func" )
+        function_args = gdb_findFunctionArguments( response, "args" )
 
+LM( response )
 LM( "STOP: BREAKPOINT OR STEPPING" )
-LM( "  file_name: " & file_name )
-LM( "  line_number: " & str(line_number) )
+LM( "  file_name:     " & file_name )
+LM( "  function_name: " & function_name )
+LM( "  function_args: " & function_args )
+LM( "  line_number:   " & str(line_number) )
 
         if (len(file_name) > 0) andalso (line_number >= 0) then
             dim as clsDocument ptr pDoc = OpenSelectedDocument( file_name, "", line_number)
@@ -85,67 +112,83 @@ end sub
 
 
 ' ========================================================================================
-' Process WM_COMMAND message for window/dialog: frmDebug
+' Position all child windows. Called manually and/or by WM_SIZE
 ' ========================================================================================
-function frmDebug_OnCommand( _
-            byval hwnd as HWND, _
-            byval id as long, _
-            byval hwndCtl as HWND, _
-            byval codeNotify as UINT _
-            ) as LRESULT
+function frmDebug_PositionWindows() as LRESULT
 
+    dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMDEBUG)
+    if pWindow = 0 then exit function
     
-    select case id
-        
-        case IDC_FRMDEBUG_CMDOK
-            if codeNotify = BN_CLICKED then
-                SendMessage( hwnd, WM_CLOSE, 0, 0 )
-                exit function
-            end if
-        
-        case IDCANCEL
-            if codeNotify = BN_CLICKED then
-                SendMessage( hwnd, WM_CLOSE, 0, 0 )
-                exit function
-            end if
+    ' Get the entire client area
+    dim as RECT rc: GetClientRect(HWND_FRMDEBUG, @rc)
+
+    dim as long i = 0
+    dim as long nLeft = rc.left
+    dim as long nSpacer = pWindow->ScaleX(4)
+    dim as long nHeight = pWindow->ScaleY(TOPTABS_HEIGHT)
+    dim as long nPadding = 10   ' 5 left 5 right
     
-        case IDC_BTN_RUN
-            if codeNotify = BN_CLICKED then
-                gdb_send(gdb_session, "run")
-            end if
-                
-        case IDC_BTN_CONTINUE
-            if codeNotify = BN_CLICKED then
-                gdb_send(gdb_session, "continue")
-            end if
-        
-        case IDC_BTN_BREAK
-            if codeNotify = BN_CLICKED then
-                gdb_send(gdb_session, "interrupt")
-            end if
-        
-        case IDC_BTN_STOP
-            if codeNotify = BN_CLICKED then
-                gdb_send(gdb_session, "kill")
-          end if
-        
-        case IDC_BTN_STEP_OVER
-            if codeNotify = BN_CLICKED then
-                gdb_send(gdb_session, "next")
-            end if
-        
-        case IDC_BTN_STEP_INTO
-            if codeNotify = BN_CLICKED then
-                gdb_send(gdb_session, "step")
-           end if
-        
-        case IDC_BTN_STEP_OUT
-            if codeNotify = BN_CLICKED then
-                gdb_send(gdb_session, "finish")
-            end if
+    i = DEBUG_BUTTONS.CONTINUE_DEBUGGING
+    gDbgBtns(i).wszText    = L(321,"Continue")
+    gDbgBtns(i).rc.Left    = nLeft
+    gDbgBtns(i).rc.top     = rc.top
+    gDbgBtns(i).rc.right   = nLeft + _
+        pWindow->ScaleX( getTextWidth(HWND_FRMDEBUG, gDbgBtns(i).wszText, GUIFONT_9) + nPadding )
+    gDbgBtns(i).rc.bottom  = rc.top + nHeight
+    gDbgBtns(i).nID        = IDM_DEBUG_STARTDEBUGGING
+    nLeft = gDbgBtns(i).rc.right + nSpacer
 
-    end select
+    i = DEBUG_BUTTONS.STOP_DEBUGGING
+    gDbgBtns(i).wszText    = L(322,"Stop")
+    gDbgBtns(i).rc.Left    = nLeft
+    gDbgBtns(i).rc.top     = rc.top
+    gDbgBtns(i).rc.right   = nLeft + _
+        pWindow->ScaleX( getTextWidth(HWND_FRMDEBUG, gDbgBtns(i).wszText, GUIFONT_9) + nPadding )
+    gDbgBtns(i).rc.bottom  = rc.top + nHeight
+    gDbgBtns(i).nID        = IDM_DEBUG_STOPDEBUGGING
+    nLeft = gDbgBtns(i).rc.right + nSpacer
 
+    i = DEBUG_BUTTONS.STEP_INTO
+    gDbgBtns(i).wszText    = L(311,"Step Into")
+    gDbgBtns(i).rc.Left    = nLeft
+    gDbgBtns(i).rc.top     = rc.top
+    gDbgBtns(i).rc.right   = nLeft + _
+        pWindow->ScaleX( getTextWidth(HWND_FRMDEBUG, gDbgBtns(i).wszText, GUIFONT_9) + nPadding )
+    gDbgBtns(i).rc.bottom  = rc.top + nHeight
+    gDbgBtns(i).nID        = IDM_DEBUG_STEPINTO
+    nLeft = gDbgBtns(i).rc.right + nSpacer
+
+    i = DEBUG_BUTTONS.STEP_OVER
+    gDbgBtns(i).wszText    = L(312,"Step Over")
+    gDbgBtns(i).rc.Left    = nLeft
+    gDbgBtns(i).rc.top     = rc.top
+    gDbgBtns(i).rc.right   = nLeft + _
+        pWindow->ScaleX( getTextWidth(HWND_FRMDEBUG, gDbgBtns(i).wszText, GUIFONT_9) + nPadding )
+    gDbgBtns(i).rc.bottom  = rc.top + nHeight
+    gDbgBtns(i).nID        = IDM_DEBUG_STEPOVER
+    nLeft = gDbgBtns(i).rc.right + nSpacer
+
+    i = DEBUG_BUTTONS.STEP_OUT
+    gDbgBtns(i).wszText    = L(319,"Step Out")
+    gDbgBtns(i).rc.Left    = nLeft
+    gDbgBtns(i).rc.top     = rc.top
+    gDbgBtns(i).rc.right   = nLeft + _
+        pWindow->ScaleX( getTextWidth(HWND_FRMDEBUG, gDbgBtns(i).wszText, GUIFONT_9) + nPadding )
+    gDbgBtns(i).rc.bottom  = rc.top + nHeight
+    gDbgBtns(i).nID        = IDM_DEBUG_STEPOUT
+    nLeft = gDbgBtns(i).rc.right + nSpacer
+
+    i = DEBUG_BUTTONS.RUN_TO_CURSOR
+    gDbgBtns(i).wszText    = L(320,"Run to Cursor")
+    gDbgBtns(i).rc.Left    = nLeft
+    gDbgBtns(i).rc.top     = rc.top
+    gDbgBtns(i).rc.right   = nLeft + _
+        pWindow->ScaleX( getTextWidth(HWND_FRMDEBUG, gDbgBtns(i).wszText, GUIFONT_9) + nPadding )
+    gDbgBtns(i).rc.bottom  = rc.top + nHeight
+    gDbgBtns(i).nID        = IDM_DEBUG_RUNTOCURSOR
+    nLeft = gDbgBtns(i).rc.right + nSpacer
+
+    AfxRedrawWindow( HWND_FRMDEBUG )
     function = 0
 end function
 
@@ -160,9 +203,15 @@ function frmDebug_WndProc( _
             byval lParam as LPARAM _
             ) as LRESULT
 
+    static as long prev_idxHot = -1
+    static as long curr_idxHot = -1
+
+    static as HWND hTooltip
+    if (uMsg = WM_DESTROY) andalso (IsWindow(hToolTip)) then DestroyWindow(hToolTip)
+
     select case uMsg
-        HANDLE_MSG (hwnd, WM_COMMAND,  frmDebug_OnCommand)
-    
+
+        case WM_CLOSE
         case WM_CLOSE
             LogClose()
             KillTimer( HWND_FRMDEBUG, gApp.DebugTimerID )
@@ -195,6 +244,144 @@ function frmDebug_WndProc( _
                     gdb_processResponse( message )    
                 end if
             end if
+
+        case WM_SIZE
+            ' Position all of the child windows
+            if wParam <> SIZE_MINIMIZED then
+                frmDebug_PositionWindows()
+                return 0
+            end if
+
+
+        case WM_ERASEBKGND
+            return true
+
+
+        case WM_LBUTTONDOWN
+            SetCapture( hwnd )
+
+            
+        case WM_MOUSEMOVE
+            dim tme as TrackMouseEvent
+            tme.cbSize = sizeof(TrackMouseEvent)
+            tme.dwFlags = TME_HOVER or TME_LEAVE
+            tme.hwndTrack = hwnd
+            tme.dwHoverTime = 20    ' HOVER_DEFAULT is 500
+            TrackMouseEvent(@tme) 
+
+            if IsWindow(hTooltip) = 0 then hTooltip = AfxAddTooltip( hwnd, "", false, false )
+            
+            dim as point pt: GetCursorPos( @pt )
+            MapWindowPoints( HWND_DESKTOP, hwnd, cast( point ptr, @pt ), 1 )
+
+            ' Are we over one of the buttons
+            curr_idxHot = -1
+            for i as long = lbound(gDbgBtns) to ubound(gDbgBtns)
+                if PtInRect( @gDbgBtns(i).rc, pt ) then
+                    ' Only make hot panels that have actual text
+                    if len(gDbgBtns(i).wszText) then
+                        curr_idxHot = i
+                        gDbgBtns(i).isHot = true
+                    end if   
+                else   
+                    gDbgBtns(i).isHot = false
+                end if
+            next
+            if curr_idxHot <> prev_idxHot then
+                AfxRedrawWindow( hwnd )
+                prev_idxHot = curr_idxHot 
+            end if
+                
+                
+        case WM_MOUSELEAVE
+            for i as long = lbound(gDbgBtns) to ubound(gDbgBtns)
+                gDbgBtns(i).isHot = false
+            next
+            prev_idxHot = -1
+            curr_idxHot = -1
+            AfxRedrawWindow( hwnd )
+
+
+        case WM_LBUTTONUP
+            dim as point pt: GetCursorPos( @pt )
+            MapWindowPoints( HWND_DESKTOP, hwnd, cast( point ptr, @pt ), 1 )
+            SetCursor( LoadCursor( null, IDC_ARROW ))
+            ReleaseCapture
+            ' Are we over one of the status bar panels
+            for i as long = lbound(gDbgBtns) to ubound(gDbgBtns)
+                if PtInRect( @gDbgBtns(i).rc, pt ) then
+                    PostMessage( HWND_FRMDEBUG, gDbgBtns(i).nID, 0, 0 )
+                    exit for
+                end if
+            next   
+            
+
+        case WM_MOUSEHOVER
+'            dim as DWSTR wszTooltip
+'            if IsMouseOverRECT(hwnd,  gDbgBtns(STATUSBAR_IDPANEL.CONNECT_PANEL).rc ) then 
+'                if gEClient.IsConnected() then
+'                    wszTooltip = "Click to Disconnect"
+'                end if    
+'            end if
+'            if (wszTooltip = "") andalso (IsWindow(hToolTip)) then 
+'                DestroyWindow(hToolTip)
+'            else    
+'                AfxSetTooltipText( hTooltip, hwnd, wszTooltip )
+'            end if
+            
+
+        case WM_PAINT
+            dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMDEBUG)
+            dim as clsDoubleBuffer b
+
+            b.BeginDoubleBuffer(hwnd)
+
+            ' Set default back and fore colors
+            b.SetForeColors( ghTopTabs.ForeColor, ghTopTabs.ForeColorHot )
+            b.SetBackColors( ghTopTabs.BackColor, ghTopTabs.BackColorHot )
+
+            ' Clear the entire back client area
+            b.PaintClientRect()
+          
+            b.SetFont( GUIFONT_9 )
+
+            ' paint the panels
+            for i as long = lbound(gDbgBtns) to ubound(gDbgBtns)
+                ' paint this tab based on active/inactive status
+                if i = curr_idxHot then
+                    b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
+                    b.SetBackColors( ghTopTabs.BackColorHot, ghTopTabs.BackColorHot )
+                else
+                    b.SetForeColors( ghTopTabs.ForeColor, ghTopTabs.ForeColor )
+                    b.SetBackColors( ghTopTabs.BackColor, ghTopTabs.BackColor )
+                end if
+
+                b.PaintRect( @gDbgBtns(i).rc )
+                b.PaintText( gDbgBtns(i).wszText, @gDbgBtns(i).rc, DT_CENTER )
+            next
+                                    
+            b.EndDoubleBuffer()
+
+            return 0
+
+        case IDM_DEBUG_STARTDEBUGGING
+            gdb_send(gdb_session, "continue")
+        
+        case IDM_DEBUG_STOPDEBUGGING
+            gdb_send(gdb_session, "kill")
+            PostMessage( HWND_FRMDEBUG, WM_CLOSE, 0, 0 )
+        
+        case IDM_DEBUG_STEPINTO
+            gdb_send(gdb_session, "step")
+        
+        case IDM_DEBUG_STEPOVER
+            gdb_send(gdb_session, "next")
+        
+        case IDM_DEBUG_STEPOUT
+            gdb_send(gdb_session, "finish")
+
+        case IDM_DEBUG_RUNTOCURSOR
+            'TODO: Set a temp breakpoint?
 
     end select
 
@@ -262,47 +449,18 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as string ) a
 
     HWND_FRMDEBUG = pWindow->Create( hWndParent, "DEBUGGER", @frmDebug_WndProc, 0, 0, 0, 0, _
         WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
-        WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
+        WS_EX_CONTROLPARENT or WS_EX_LEFT )
     pWindow->SetClientSize(625, 460)
     pWindow->Center(pWindow->hWindow, hWndParent)
+
+    dim as long nvalue = false
+    if instr(gConfig.ThemeShortFilename, "_dark") then nvalue = true
+    ' Attempt to apply the standard Windows dark theme to the non-client areas of the form.
+    DwmSetWindowAttribute(HWND_FRMDEBUG, DWMWA_USE_IMMERSIVE_DARK_MODE, @nvalue, sizeof(nvalue))
     
-    pWindow->AddControl("BUTTON", , IDC_BTN_RUN, "RUN", 5, 5, 75, 28, _
-        WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_PUSHBUTTON or BS_NOTIFY or BS_CENTER or BS_VCENTER, _
-        WS_EX_LEFT or WS_EX_LTRREADING)
+    frmDebug_PositionWindows()
 
-    pWindow->AddControl("BUTTON", , IDC_BTN_CONTINUE, "CONTINUE", 82, 5, 75, 28, _
-        WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_PUSHBUTTON or BS_NOTIFY or BS_CENTER or BS_VCENTER, _
-        WS_EX_LEFT or WS_EX_LTRREADING)
-
-    pWindow->AddControl("BUTTON", , IDC_BTN_BREAK, "BREAK", 159, 5, 75, 28, _
-        WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_PUSHBUTTON or BS_NOTIFY or BS_CENTER or BS_VCENTER, _
-        WS_EX_LEFT or WS_EX_LTRREADING)
-
-    pWindow->AddControl("BUTTON", , IDC_BTN_STOP, "STOP", 236, 5, 75, 28, _
-        WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_PUSHBUTTON or BS_NOTIFY or BS_CENTER or BS_VCENTER, _
-        WS_EX_LEFT or WS_EX_LTRREADING)
-
-    pWindow->AddControl("BUTTON", , IDC_BTN_STEP_OVER, "STEP OVER", 5, 35, 75, 28, _
-        WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_PUSHBUTTON or BS_NOTIFY or BS_CENTER or BS_VCENTER, _
-        WS_EX_LEFT or WS_EX_LTRREADING)
-
-    pWindow->AddControl("BUTTON", , IDC_BTN_STEP_INTO, "STEP INTO", 82, 35, 75, 28, _
-        WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_PUSHBUTTON or BS_NOTIFY or BS_CENTER or BS_VCENTER, _
-        WS_EX_LEFT or WS_EX_LTRREADING)
-
-    pWindow->AddControl("BUTTON", , IDC_BTN_STEP_OUT, "STEP OUT", 159, 35, 75, 28, _
-        WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_PUSHBUTTON or BS_NOTIFY or BS_CENTER or BS_VCENTER, _
-        WS_EX_LEFT or WS_EX_LTRREADING)
-
-    pWindow->AddControl("BUTTON", , IDC_FRMDEBUG_CMDOK, L(0,"&OK"), 450, 417, 74, 28, _
-        WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_DEFPUSHBUTTON or BS_NOTIFY or BS_CENTER or BS_VCENTER, _
-        WS_EX_LEFT or WS_EX_LTRREADING)
-    
-    pWindow->AddControl("BUTTON", , IDCANCEL, L(1,"&Cancel"), 535, 417, 74, 28, _
-        WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_PUSHBUTTON or BS_NOTIFY or BS_CENTER or BS_VCENTER, _
-        WS_EX_LEFT or WS_EX_LTRREADING)
-
-    LogInit( "c:\dev\gdb_interface\_debug.txt" )
+    LogInit( "_debug.txt" )
     
     SetTimer(HWND_FRMDEBUG, gApp.DebugTimerID, 20, null)   ' 20 ms
     
@@ -324,6 +482,11 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as string ) a
     end if
     
     gApp.IsDebuggerActive = true
+
+    'TODO: If no breakpoints exist then create temp breakpoint to start at beginning
+    ' of the main file.
+    
+    gdb_send(gdb_session, "run")
     
     ShowWindow( HWND_FRMDEBUG, SW_SHOW )
     

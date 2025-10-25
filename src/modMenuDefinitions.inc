@@ -170,6 +170,8 @@ Function getMenuText( byval idMenu as long ) As CWSTR
         case IDM_DEBUG_STOPDEBUGGING: wszText = L(318,"Stop Debugging")
         case IDM_DEBUG_STEPINTO: wszText = L(311,"Step Into")
         case IDM_DEBUG_STEPOVER: wszText = L(312,"Step Over")
+        case IDM_DEBUG_STEPOUT: wszText = L(319,"Step Out")
+        case IDM_DEBUG_RUNTOCURSOR: wszText = L(320,"Run to Cursor")
         case IDM_DEBUG_TOGGLEBREAKPOINT: wszText = L(313,"Toggle Breakpoint")
         case IDM_DEBUG_DELETEALLBREAKPOINTS: wszText = L(314,"Delete All Breakpoints")
 
