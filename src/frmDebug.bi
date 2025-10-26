@@ -34,13 +34,16 @@ enum DEBUG_BUTTONS explicit
 end enum
 
 type DEBUG_BUTTONS_TYPE
-    wszIcon as CWSTR
-    wszText as CWSTR
-    rc      as RECT            ' client coordinates 
-    nID     as long            ' id to invoke if clicked on
-    isHot   as boolean
+    wszToolTip as CWSTR
+    wszIcon    as CWSTR
+    wszText    as CWSTR
+    rc         as RECT            ' client coordinates 
+    nID        as long            ' id to invoke if clicked on
+    isHot      as boolean
 end type
 
 dim shared gDbgBtns(DEBUG_BUTTONS.BUTTON_LAST) as DEBUG_BUTTONS_TYPE
+
+const as long DEBUG_BUTTON_IMAGE_WIDTH = 18
 
 declare function frmDebug_Show( byval hWndParent as HWND, byval executable as string ) as LRESULT

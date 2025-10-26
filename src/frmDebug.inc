@@ -106,13 +106,15 @@ function frmDebug_PositionWindows() as LRESULT
     dim as RECT rc: GetClientRect(HWND_FRMDEBUG, @rc)
 
     dim as long i = 0
-    dim as long nLeft = rc.left
-    dim as long nSpacer = pWindow->ScaleX(4)
-    dim as long nHeight = pWindow->ScaleY(TOPTABS_HEIGHT)
-    dim as long nPadding = 10   ' 5 left 5 right
-    dim as long nImageWidth = 12
+    dim as long nSpacer     = pWindow->ScaleX(4)
+    dim as long nLeft       = rc.left + pWindow->ScaleY(20)
+    dim as long nHeight     = pWindow->ScaleY(TOPTABS_HEIGHT)
+    dim as long nPadding    = 10   ' 5 left 5 right
+    dim as long nImageWidth = DEBUG_BUTTON_IMAGE_WIDTH
 
     i = DEBUG_BUTTONS.CONTINUE_DEBUGGING
+    gDbgBtns(i).nID        = IDM_DEBUG_STARTDEBUGGING
+    gDbgBtns(i).wszToolTip = getMenuText(gDbgBtns(i).nID)
     gDbgBtns(i).wszIcon    = wszIconContinue
     gDbgBtns(i).wszText    = L(321,"Continue")
     gDbgBtns(i).rc.Left    = nLeft
@@ -120,10 +122,11 @@ function frmDebug_PositionWindows() as LRESULT
     gDbgBtns(i).rc.right   = nLeft + _
         pWindow->ScaleX( getTextWidth(HWND_FRMDEBUG, gDbgBtns(i).wszText, GUIFONT_9) + nPadding + nImageWidth)
     gDbgBtns(i).rc.bottom  = rc.top + nHeight
-    gDbgBtns(i).nID        = IDM_DEBUG_STARTDEBUGGING
     nLeft = gDbgBtns(i).rc.right + nSpacer
 
     i = DEBUG_BUTTONS.STOP_DEBUGGING
+    gDbgBtns(i).nID        = IDM_DEBUG_STOPDEBUGGING
+    gDbgBtns(i).wszToolTip = getMenuText(gDbgBtns(i).nID)
     gDbgBtns(i).wszIcon    = wszIconStop
     gDbgBtns(i).wszText    = L(322,"Stop")
     gDbgBtns(i).rc.Left    = nLeft
@@ -131,10 +134,11 @@ function frmDebug_PositionWindows() as LRESULT
     gDbgBtns(i).rc.right   = nLeft + _
         pWindow->ScaleX( getTextWidth(HWND_FRMDEBUG, gDbgBtns(i).wszText, GUIFONT_9) + nPadding + nImageWidth)
     gDbgBtns(i).rc.bottom  = rc.top + nHeight
-    gDbgBtns(i).nID        = IDM_DEBUG_STOPDEBUGGING
     nLeft = gDbgBtns(i).rc.right + nSpacer
 
     i = DEBUG_BUTTONS.STEP_INTO
+    gDbgBtns(i).nID        = IDM_DEBUG_STEPNEXT
+    gDbgBtns(i).wszToolTip = getMenuText(gDbgBtns(i).nID)
     gDbgBtns(i).wszIcon    = wszIconStepNext
     gDbgBtns(i).wszText    = L(311,"Step Next")
     gDbgBtns(i).rc.Left    = nLeft
@@ -142,10 +146,11 @@ function frmDebug_PositionWindows() as LRESULT
     gDbgBtns(i).rc.right   = nLeft + _
         pWindow->ScaleX( getTextWidth(HWND_FRMDEBUG, gDbgBtns(i).wszText, GUIFONT_9) + nPadding + nImageWidth)
     gDbgBtns(i).rc.bottom  = rc.top + nHeight
-    gDbgBtns(i).nID        = IDM_DEBUG_STEPNEXT
     nLeft = gDbgBtns(i).rc.right + nSpacer
 
     i = DEBUG_BUTTONS.STEP_OVER
+    gDbgBtns(i).nID        = IDM_DEBUG_STEPOVER
+    gDbgBtns(i).wszToolTip = getMenuText(gDbgBtns(i).nID)
     gDbgBtns(i).wszIcon    = wszIconStepOver
     gDbgBtns(i).wszText    = L(312,"Step Over")
     gDbgBtns(i).rc.Left    = nLeft
@@ -153,10 +158,11 @@ function frmDebug_PositionWindows() as LRESULT
     gDbgBtns(i).rc.right   = nLeft + _
         pWindow->ScaleX( getTextWidth(HWND_FRMDEBUG, gDbgBtns(i).wszText, GUIFONT_9) + nPadding + nImageWidth)
     gDbgBtns(i).rc.bottom  = rc.top + nHeight
-    gDbgBtns(i).nID        = IDM_DEBUG_STEPOVER
     nLeft = gDbgBtns(i).rc.right + nSpacer
 
     i = DEBUG_BUTTONS.STEP_OUT
+    gDbgBtns(i).nID        = IDM_DEBUG_STEPOUT
+    gDbgBtns(i).wszToolTip = getMenuText(gDbgBtns(i).nID)
     gDbgBtns(i).wszIcon    = wszIconStepOut
     gDbgBtns(i).wszText    = L(319,"Step Out")
     gDbgBtns(i).rc.Left    = nLeft
@@ -164,10 +170,11 @@ function frmDebug_PositionWindows() as LRESULT
     gDbgBtns(i).rc.right   = nLeft + _
         pWindow->ScaleX( getTextWidth(HWND_FRMDEBUG, gDbgBtns(i).wszText, GUIFONT_9) + nPadding + nImageWidth)
     gDbgBtns(i).rc.bottom  = rc.top + nHeight
-    gDbgBtns(i).nID        = IDM_DEBUG_STEPOUT
     nLeft = gDbgBtns(i).rc.right + nSpacer
 
     i = DEBUG_BUTTONS.RUN_TO_CURSOR
+    gDbgBtns(i).nID        = IDM_DEBUG_RUNTOCURSOR
+    gDbgBtns(i).wszToolTip = getMenuText(gDbgBtns(i).nID)
     gDbgBtns(i).wszIcon    = wszIconRunToCursor
     gDbgBtns(i).wszText    = L(320,"Run to Cursor")
     gDbgBtns(i).rc.Left    = nLeft
@@ -175,7 +182,6 @@ function frmDebug_PositionWindows() as LRESULT
     gDbgBtns(i).rc.right   = nLeft + _
         pWindow->ScaleX( getTextWidth(HWND_FRMDEBUG, gDbgBtns(i).wszText, GUIFONT_9) + nPadding + nImageWidth)
     gDbgBtns(i).rc.bottom  = rc.top + nHeight
-    gDbgBtns(i).nID        = IDM_DEBUG_RUNTOCURSOR
     nLeft = gDbgBtns(i).rc.right + nSpacer
 
     AfxRedrawWindow( HWND_FRMDEBUG )
@@ -196,6 +202,7 @@ function frmDebug_WndProc( _
     static as long prev_idxHot = -1
     static as long curr_idxHot = -1
 
+    static as CWSTR wszPrevTooltip 
     static as HWND hTooltip
     if (uMsg = WM_DESTROY) andalso (IsWindow(hToolTip)) then DestroyWindow(hToolTip)
 
@@ -241,14 +248,11 @@ function frmDebug_WndProc( _
                 return 0
             end if
 
-
         case WM_ERASEBKGND
             return true
 
-
         case WM_LBUTTONDOWN
             SetCapture( hwnd )
-
             
         case WM_MOUSEMOVE
             dim tme as TrackMouseEvent
@@ -280,14 +284,16 @@ function frmDebug_WndProc( _
                 AfxRedrawWindow( hwnd )
                 prev_idxHot = curr_idxHot 
             end if
-                
+
                 
         case WM_MOUSELEAVE
+            wszPrevTooltip = ""
             for i as long = lbound(gDbgBtns) to ubound(gDbgBtns)
                 gDbgBtns(i).isHot = false
             next
             prev_idxHot = -1
             curr_idxHot = -1
+            DestroyWindow(hToolTip)
             AfxRedrawWindow( hwnd )
 
 
@@ -306,17 +312,24 @@ function frmDebug_WndProc( _
             
 
         case WM_MOUSEHOVER
-'            dim as DWSTR wszTooltip
-'            if IsMouseOverRECT(hwnd,  gDbgBtns(STATUSBAR_IDPANEL.CONNECT_PANEL).rc ) then 
-'                if gEClient.IsConnected() then
-'                    wszTooltip = "Click to Disconnect"
-'                end if    
-'            end if
-'            if (wszTooltip = "") andalso (IsWindow(hToolTip)) then 
-'                DestroyWindow(hToolTip)
-'            else    
-'                AfxSetTooltipText( hTooltip, hwnd, wszTooltip )
-'            end if
+            dim as CWSTR wszTooltip
+            for i as long = lbound(gDbgBtns) to ubound(gDbgBtns)
+                if IsMouseOverRECT(hwnd,  gDbgBtns(i).rc ) then 
+                    wszTooltip = gDbgBtns(i).wszToolTip
+                    exit for
+                end if
+            next
+            if (wszTooltip = "") andalso (IsWindow(hTooltip)) then
+                DestroyWindow( hTooltip )
+                exit function
+            end if
+            
+            ' Display the tooltip
+            if wszTooltip <> wszPrevTooltip then
+                dim as CWSTR wszText = AfxStrReplace( wszTooltip, wchr(9), " (" ) & ")"
+                AfxSetTooltipText( hTooltip, hwnd, wszText )
+                wszPrevTooltip = wszTooltip 
+            end if    
             
 
         case WM_PAINT
@@ -334,28 +347,30 @@ function frmDebug_WndProc( _
           
             ' paint the panels
             for i as long = lbound(gDbgBtns) to ubound(gDbgBtns)
-                ' paint this tab based on active/inactive status
+                dim as COLORREF ForeColor = ghTopTabs.ForeColorHot
+                if gDbgBtns(i).nID = IDM_DEBUG_STARTDEBUGGING then ForeColor = ghGeneral.iconsuccess
+                if gDbgBtns(i).nID = IDM_DEBUG_STOPDEBUGGING then ForeColor = ghGeneral.iconfail
+                
                 if i = curr_idxHot then
-                    b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
                     b.SetBackColors( ghTopTabs.BackColorHot, ghTopTabs.BackColorHot )
                 else
-                    b.SetForeColors( ghTopTabs.ForeColor, ghTopTabs.ForeColor )
                     b.SetBackColors( ghTopTabs.BackColor, ghTopTabs.BackColor )
                 end if
 
                 b.PaintRect( @gDbgBtns(i).rc )
                 
-                dim as long nImageWidth = pWindow->ScaleX(12)
-                
+                ' Paint the image
+                b.SetForeColors( ForeColor, ForeColor )
+                dim as long nImageWidth = pWindow->ScaleX(DEBUG_BUTTON_IMAGE_WIDTH)
                 dim as RECT rcIcon = gDbgBtns(i).rc
                 rcIcon.right = rcIcon.left + nImageWidth
-                
-                dim as RECT rcText = gDbgBtns(i).rc
-                rcText.left = rcIcon.right
-                
                 b.SetFont( SYMBOLFONT_9 )
                 b.PaintText( gDbgBtns(i).wszIcon, @rcIcon, DT_CENTER )
-
+                
+                ' Paint the text
+                b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
+                dim as RECT rcText = gDbgBtns(i).rc
+                rcText.left = rcIcon.right
                 b.SetFont( GUIFONT_9 )
                 b.PaintText( gDbgBtns(i).wszText, @rcText, DT_CENTER )
             next

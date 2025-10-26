@@ -364,7 +364,7 @@ dim shared spinner(0 to 7) as wstring * 2 => { _
     wszIconStepNext          = !"\uF0AF"     ' right arrow
     wszIconStepOver          = !"\uEE35"     ' reply mirrored
     wszIconStepOut           = wszIconUpArrow
-    wszIconRunToCursor       = !"\uEE35"     ' next solid
+    wszIconRunToCursor       = !"\uE623"     ' next solid
     
     
     
