@@ -16,15 +16,15 @@
 declare function SetDocumentErrorPosition( byval hLV as HWnd, byval wID as long ) as long
 declare function SetLogFileTextbox() as long
 declare function ParseLogForError( _
-            byref wsLogSt as CWSTR, _
+            byref wsLogSt as DWSTRING, _
             byval bAllowSuccessMessage as boolean, _
             byval wID as long, _
             byval fCompile64 as boolean, _
             byval fCompilingObjFiles as boolean _
             ) as boolean
 declare function ResetScintillaCursors() as long
-declare function RunEXE( byval pDocMain as clsDocument ptr, byref wszFileExe as CWSTR, byref wszParam as CWSTR ) as long
+declare function RunEXE( byval pDocMain as clsDocument ptr, byref wszFileExe as DWSTRING, byref wszParam as DWSTRING ) as long
 declare function SetCompileStatusBarMessage(byref wszText as wstring, byval hIconCompile as long) as LRESULT
-declare function RedirConsoleToFile(byval wszExe as CWSTR, byval wszCmdLine as CWSTR, byref sConsoleText as string ) as long
+declare function RedirConsoleToFile(byval wszExe as DWSTRING, byval wszCmdLine as DWSTRING, byref sConsoleText as string ) as long
 declare function CreateTempResourceFile() as boolean
 

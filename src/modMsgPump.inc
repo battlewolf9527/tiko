@@ -82,7 +82,7 @@ function handleAltKeyMenuBar( byval uMsg as MSG ) as boolean
 
     ' Handle the Split editor window icon in the toptab control
     if IsWindowVisible(HWND_FRMMAIN_TOPTABS) then
-        dim as CWSTR wszNewSplitButton
+        dim as DWSTRING wszNewSplitButton
         ' Alt key is currently down
         if (GetAsyncKeyState(VK_MENU) and &H8000) then
             wszNewSplitButton = wszIconSplitTopBottom
@@ -243,7 +243,7 @@ function handleKeysExplorerListBox( byval uMsg as MSG ) as boolean
     dim as HWND hList = GetDlgItem(HWND_FRMEXPLORER, IDC_FRMEXPLORER_LISTBOX)
     if (uMsg.message = WM_KEYDOWN) andalso (uMsg.HWnd = hList) then
         dim as long nSel = ListBox_GetCaretIndex( hList )
-        dim as CWSTR wszCaption = AfxGetListBoxText( hList, nSel )
+        dim as DWSTRING wszCaption = AfxGetListBoxText( hList, nSel )
         if uMsg.wParam = VK_RETURN then
             if left(wszCaption, 1) = "%" then
                 ' expand/contract the header node
@@ -256,7 +256,7 @@ function handleKeysExplorerListBox( byval uMsg as MSG ) as boolean
                 return true
             else   
                 ' open the selected document
-                dim as CWSTR wszFilename
+                dim as DWSTRING wszFilename
                 dim as long p = ListBox_GetItemData( hList, nSel )
                 dim pDoc as clsDocument ptr = cast( clsDocument ptr, cast(integer, p) )
                 if pDoc then

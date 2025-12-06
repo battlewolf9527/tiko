@@ -33,7 +33,7 @@ dim shared gOutputVScroll as OUTPUT_VSCROLL_TYPE
 
 
 type OUTPUT_TABS
-    wszText as CWSTR
+    wszText as DWSTRING
     rcTab   as RECT
     rcText  as RECT     ' diff rect b/c line drawn under Text for CurSel
     isHot   as boolean

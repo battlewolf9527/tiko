@@ -94,7 +94,7 @@ sub clearQueue( byref q as GDBSession )
 end sub
 
 ' Initialize GDB session
-function gdb_init(byref session as GDBSession, byval executable as CWSTR = "") as boolean
+function gdb_init(byref session as GDBSession, byval executable as DWSTRING = "") as boolean
     dim as SECURITY_ATTRIBUTES sa
     dim as HANDLE hStdInRead, hStdInWrite
     dim as HANDLE hStdOutRead, hStdOutWrite
@@ -280,23 +280,37 @@ end sub
 ' Close GDB session
 sub gdb_close(byref session as GDBSession)
     if session.initialized then
+      ' Try to quit gracefully
         gdb_send(session, "quit")
         sleep 200
         
+        ' Check if process is still running
         dim as DWORD exit_code
         if GetExitCodeProcess(session.hProcess, @exit_code) <> 0 then
             if exit_code = STILL_ACTIVE then
-                TerminateProcess(session.hProcess, 0)
+                ' Send quit again with confirmation disabled
+                gdb_send(session, "set confirm off")
+                sleep 50
+                gdb_send(session, "quit")
+                sleep 200
+                
+                ' If still running, force terminate
+                if GetExitCodeProcess(session.hProcess, @exit_code) <> 0 then
+                    if exit_code = STILL_ACTIVE then
+                        TerminateProcess(session.hProcess, 0)
+                        sleep 100
+                    end if
+                end if
             end if
         end if
-        
+                
         CloseHandle(session.hStdInWrite)
         CloseHandle(session.hStdOutRead)
         CloseHandle(session.hStdErrRead)
         CloseHandle(session.hThread)
         CloseHandle(session.hProcess)
         
-        session.initialized = 0
+        session.initialized = false
     end if
 end sub
 

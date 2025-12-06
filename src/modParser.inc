@@ -517,7 +517,7 @@ function ctxParser.IsStandardDataType( byref sVarType as string ) as boolean
     ' Determine if the variable is one of the predefined standard data types
     static as string sList
     sList = " boolean byte double integer long longint short single" & _
-            " string ubyte uinteger ushort wstring zstring cwstr dwstring "
+            " string ubyte uinteger ushort wstring zstring DWSTRING dwstring "
     if instr(sList, " " & lcase(sVarType) & " " ) then return true
     return false  
 end function

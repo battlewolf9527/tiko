@@ -20,13 +20,13 @@
 ' ========================================================================================
 function frmProjectOptions_CreateResourceManifest() as Long
 
-    dim as CWSTR wszProjectPath      = AfxStrPathname("PATH", gApp.ProjectFilename)
-    dim as CWSTR wszManifest         = wszProjectPath + "manifest.xml"
-    dim as CWSTR wszResource         = wszProjectPath + "resource.rc"
-    dim as CWSTR wszManifestTemplate = AfxGetExePathName + "settings\backup_manifest.xml"
-    dim as CWSTR wszResourceTemplate = AfxGetExePathName + "settings\backup_resource.rc" 
+    dim as DWSTRING wszProjectPath      = AfxStrPathname("PATH", gApp.ProjectFilename)
+    dim as DWSTRING wszManifest         = wszProjectPath + "manifest.xml"
+    dim as DWSTRING wszResource         = wszProjectPath + "resource.rc"
+    dim as DWSTRING wszManifestTemplate = AfxGetExePathName + "settings\backup_manifest.xml"
+    dim as DWSTRING wszResourceTemplate = AfxGetExePathName + "settings\backup_resource.rc" 
     
-    dim as CWSTR wszFilesMissing
+    dim as DWSTRING wszFilesMissing
     
     if AfxFileExists(wszManifest) = false then 
         if AfxFileExists(wszManifestTemplate) = false then 
@@ -131,7 +131,7 @@ function frmProjectOptions_OnCommand( _
     select case id
         case IDC_FRMPROJECTOPTIONS_CMDSELECT
             if codeNotify = BN_CLICKED then
-                dim as CWSTR wszProjectName = ""
+                dim as DWSTRING wszProjectName = ""
                 if gApp.IsNewProjectFlag = false then wszProjectName = gApp.ProjectName
                 dim pwszName as WString Ptr = AfxIFileSaveDialog(hwnd, wszProjectName, @wstr(APPEXTENSION), IDC_FRMPROJECTOPTIONS_CMDselect)
                 if pwszName then

@@ -40,7 +40,7 @@
 ' for the '#CONSOLE ON|OFF directive but others can be added as needed.
 type COMPILE_DIRECTIVES
     DirectiveFlag as long              ' IDM_GUI, IDM_CONSOLE, IDM_RESOURCE
-    DirectiveText as CWSTR             ' resource filename, link modules
+    DirectiveText as DWSTRING             ' resource filename, link modules
 end type
 
 ' Forward references
@@ -60,11 +60,11 @@ end enum
 type PROJECT_FILELOAD_DATA
     bIsValidData    as boolean      ' True set on projectload. Checked in AssignTextBuffer.
     bLoadInTab      as boolean
-    wszFilename     as CWSTR        ' full path and filename
-    wszFiletype     as CWSTR        ' pDoc->ProjectFileType
-    wszBookmarks    as CWSTR        ' pDoc->GetBookmarks()
-    wszBreakPoints  as CWSTR        ' pDoc->GetBreakPoints()
-    wszFoldPoints   as CWSTR        ' pDoc->GetFoldPoints()
+    wszFilename     as DWSTRING        ' full path and filename
+    wszFiletype     as DWSTRING        ' pDoc->ProjectFileType
+    wszBookmarks    as DWSTRING        ' pDoc->GetBookmarks()
+    wszBreakPoints  as DWSTRING        ' pDoc->GetBreakPoints()
+    wszFoldPoints   as DWSTRING        ' pDoc->GetFoldPoints()
     nFirstLine      as long         ' first line of main view 
     nPosition       as long         ' current position of main view
     nFirstLine1     as long         ' first line of second view 
@@ -104,7 +104,7 @@ type clsDocument
     pSci(1)               as any ptr      
     
     ' Code document related
-    ProjectFiletype       as CWSTR = FILETYPE_UNDEFINED
+    ProjectFiletype       as DWSTRING = FILETYPE_UNDEFINED
     DiskFilename          as wstring * MAX_PATH
     DateFileTime          as FILETIME  
     bBookmarkExpanded     as boolean = true     ' Bookmarks list expand/collapse state
@@ -120,7 +120,7 @@ type clsDocument
     lastCaretPos          as long               ' used for checking in SCN_UPDATEUI
     lastXOffsetPos        as long               ' used for checking in SCN_UPDATEUI (horizontal offset)
     LastCharTyped         as long               ' used to test for BACKSPACE resetting the autocomplete popup.
-    wszEOL                as CWSTR              ' used in replace in files when constructing each line of new file
+    wszEOL                as DWSTRING              ' used in replace in files when constructing each line of new file
     CurrentSelection      as SELECTION_INFO     ' set during scintilla wm_notfy and used in Find/Replace dialog
     
     ' Following used for split edit views
@@ -157,7 +157,7 @@ type clsDocument
     declare function FindReplace( byval strFindText as string, byval strReplaceText as string ) as long
     declare function InsertFile() as boolean
     declare function SaveFile(byval bSaveAs as boolean = false ) as boolean
-    declare function SaveTempFile( byval wszFilename as CWSTR ) as boolean
+    declare function SaveTempFile( byval wszFilename as DWSTRING ) as boolean
     declare function ApplyProperties() as long
     declare function GetTextRange( byval cpMin as long, byval cpMax as long) as string
     declare function ChangeSelectionCase( byval fCase as long) as long 

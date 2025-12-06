@@ -30,7 +30,7 @@ function frmOptionsColors_EnumFontName( _
             hwnd as HWND _
             ) as long
 
-    static wszPrevText as CWSTR
+    static wszPrevText as DWSTRING
     
     if (FontType and trueTYPE_FONTTYPE) then                      ' // true type fonts
         ComboBox_AddString( hwnd, @lf.lfFaceName )
@@ -223,14 +223,14 @@ end function
 ' ========================================================================================
 ' GetThemeDescription
 ' ========================================================================================
-function GetThemeDescription( byval wszFilename as CWSTR ) as string
+function GetThemeDescription( byval wszFilename as DWSTRING ) as string
     ' default to the theme description being the filename
     function = AfxGetFileName(wszFilename)
 
     dim pStream as CTextStream   
     if pStream.Open(wszFilename) <> S_OK then exit function  'error
 
-    dim as CWSTR wst, keyValue, keyData
+    dim as DWSTRING wst, keyValue, keyData
         
     do until pStream.EOS
         wst = pStream.ReadLine
@@ -341,7 +341,7 @@ function frmOptionsColors_Show( byval hWndParent as HWND ) as LRESULT
                 wszFullPath = wszPath & WFD.cFileName
                 wszDisplayName = GetThemeDescription(wszFullPath)
                 idx = SendMessage( hListBox, LB_ADDSTRING, 0, cast(LPARAM, @wszDisplayName) )
-                redim preserve gThemeFilenames(idx) as CWSTR
+                redim preserve gThemeFilenames(idx) as DWSTRING
                 gThemeFilenames(idx) = WFD.cFileName
                 if ucase(gConfig.ThemeShortFilename) = ucase(WFD.cFileName ) then
                     idxMatch = idx

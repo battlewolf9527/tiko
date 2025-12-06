@@ -17,10 +17,10 @@
 ' ========================================================================================
 ' Generate the keybind string based on the selected controls
 ' ========================================================================================
-function frmKeyboardEdit_GenerateKeyBinding() as CWSTR
+function frmKeyboardEdit_GenerateKeyBinding() as DWSTRING
     dim as HWND hCtrl
-    dim as CWSTR wszKeys
-    dim as CWSTR wszAccel
+    dim as DWSTRING wszKeys
+    dim as DWSTRING wszAccel
 
     hCtrl = GetDlgItem( HWND_FRMKEYBOARDEDIT, IDC_FRMKEYBOARDEDIT_CHKCTRL )
     if Button_GetCheck(hCtrl) = BST_CHECKED then wszKeys = "Ctrl+"
@@ -77,7 +77,7 @@ function frmKeyboardEdit_OnCommand( _
             if codeNotify = BN_CLICKED then
                 dim as long nCurSel = ListView_GetSelection( HWND_FRMKEYBOARD_LISTVIEW )
                 if nCurSel < 0 then exit function
-                dim as CWSTR wszKeys = frmKeyboardEdit_GenerateKeyBinding()
+                dim as DWSTRING wszKeys = frmKeyboardEdit_GenerateKeyBinding()
                 frmKeyboard_CheckForKeyConflict( wszKeys, nCurSel )
             end if
             
@@ -85,14 +85,14 @@ function frmKeyboardEdit_OnCommand( _
             if codeNotify = CBN_SELCHANGE then
                 dim as long nCurSel = ListView_GetSelection( HWND_FRMKEYBOARD_LISTVIEW )
                 if nCurSel < 0 then exit function
-                dim as CWSTR wszKeys = frmKeyboardEdit_GenerateKeyBinding()
+                dim as DWSTRING wszKeys = frmKeyboardEdit_GenerateKeyBinding()
                 frmKeyboard_CheckForKeyConflict( wszKeys, nCurSel )
             end if
 
         case IDOK
             If codeNotify = BN_CLICKED Then
                 ' Update the gKeysEdit entry with the new UserKeys value & Enabled value
-                dim as CWSTR wszKeys = frmKeyboardEdit_GenerateKeyBinding()
+                dim as DWSTRING wszKeys = frmKeyboardEdit_GenerateKeyBinding()
                 gKeysEdit.wszUserKeys = wszKeys
                 dim as HWND hCtrl = GetDlgItem( HWND_FRMKEYBOARDEDIT, IDC_FRMKEYBOARDEDIT_CHKDISABLED )
                 gKeysEdit.bDefaultDisabled = iif( Button_GetCheck(hCtrl) = BST_CHECKED, true, false )
@@ -162,7 +162,7 @@ end function
 ' (2) User Tools
 ' ========================================================================================
 function AddShortcutsToComboBox( byval hCombo as HWND ) as long
-    dim as CWSTR wszText
+    dim as DWSTRING wszText
 
     ComboBox_AddString( hCombo, @wstr("None") ) 
     ComboBox_AddString( hCombo, @wstr("Backspace") ) 
@@ -238,12 +238,12 @@ end function
 function frmKeyboardEdit_Show( byval hWndParent as HWND ) as LRESULT
 
     dim hCtrl as HWND
-    dim as CWSTR wszText
+    dim as DWSTRING wszText
     
     ' Get the components of the current user key binding
-    dim as CWSTR wszKeys = gKeysEdit.wszUserKeys
+    dim as DWSTRING wszKeys = gKeysEdit.wszUserKeys
     dim as long nCount = AfxStrParseCount( wszKeys, "+" )
-    dim as CWSTR wszAccel
+    dim as DWSTRING wszAccel
     dim as long isAlt = BST_UNCHECKED
     dim as long isShift = BST_UNCHECKED
     dim as long isCtrl = BST_UNCHECKED
@@ -256,7 +256,7 @@ function frmKeyboardEdit_Show( byval hWndParent as HWND ) as LRESULT
     for ii as long = nCount to 1 step -1
         ' The accelerator key will always be the last parse regardless of 
         ' number of items in the string
-        dim as CWSTR wszString = AfxStrParse( wszKeys, ii, "+" )
+        dim as DWSTRING wszString = AfxStrParse( wszKeys, ii, "+" )
         if ii = nCount then
             wszAccel = wszString
         else

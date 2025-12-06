@@ -23,10 +23,10 @@
 ' ========================================================================================
 ' Format the tooltip based on menu id
 ' ========================================================================================
-function frmPanelMenu_FormatTooltip( byval id as integer ) as CWSTR
-    dim as CWSTR wszTooltip = getMenuText(id)
-    dim as CWSTR wszCaption = rtrim(AfxStrParse(wszTooltip, 1, wchr(9)), "...")
-    dim as CWSTR wszShortcut = AfxStrParse(wszTooltip, 2, wchr(9))
+function frmPanelMenu_FormatTooltip( byval id as integer ) as DWSTRING
+    dim as DWSTRING wszTooltip = getMenuText(id)
+    dim as DWSTRING wszCaption = rtrim(AfxStrParse(wszTooltip, 1, wchr(9)), "...")
+    dim as DWSTRING wszShortcut = AfxStrParse(wszTooltip, 2, wchr(9))
     
     if len(wszShortcut) then wszShortcut = " (" & wszShortcut & ")"
     
@@ -141,7 +141,7 @@ function frmPanelMenu_OnPaint( byval hwnd as HWND ) as LRESULT
     b.SetFont( SYMBOLFONT_10 )
 
     for i as integer = lbound(gPanelMenu) to ubound(gPanelMenu)
-        dim as CWSTR wszCaption = gPanelMenu(i).wszCaption
+        dim as DWSTRING wszCaption = gPanelMenu(i).wszCaption
         dim as integer id       = gPanelMenu(i).id
         dim as RECT rc          = gPanelMenu(i).rc
 
@@ -194,7 +194,7 @@ function frmPanelMenu_WndProc( _
             byval lParam as LPARAM _
             ) as LRESULT
 
-    static as CWSTR wszPrevTooltip 
+    static as DWSTRING wszPrevTooltip 
     static as HWND hTooltip
     if (uMsg = WM_DESTROY) andalso (IsWindow(hToolTip)) then DestroyWindow(hToolTip)
 
@@ -263,7 +263,7 @@ function frmPanelMenu_WndProc( _
 
 
     case WM_MOUSEHOVER
-        dim as CWSTR wszTooltip 
+        dim as DWSTRING wszTooltip 
         for i as integer = lbound(gPanelMenu) to ubound(gPanelMenu)
             dim as boolean isHot = isMouseOverRECT(hwnd, gPanelMenu(i).rc)
             if isHot then

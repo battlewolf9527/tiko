@@ -54,7 +54,7 @@ function frmOutput_UpdateToDoListview() as long
     dim as hwnd hLV = HWND_FRMOUTPUT_LVTODO
     frmListView_DeleteAllItems( hLV )
     
-    dim as CWSTR wszText
+    dim as DWSTRING wszText
 
     dim pData as DB2_DATA ptr
     
@@ -84,8 +84,8 @@ function frmOutput_UpdateSearchListview( byref wszResultFile as wstring ) as lon
 
     if AfxFileExists(wszResultFile) = 0 then exit function
     
-    dim as CWSTR wst
-    dim as CWSTR wszText
+    dim as DWSTRING wst
+    dim as DWSTRING wszText
 
     dim pStream as CTextStream
     if pStream.OpenUnicode(wszResultFile) <> S_OK then exit function
@@ -96,7 +96,7 @@ function frmOutput_UpdateSearchListview( byref wszResultFile as wstring ) as lon
         wst = trim(wst)
         if len(wst) = 0 then continue do
 
-        dim as CWSTR wszFilename, wszLineNum, wszDescription
+        dim as DWSTRING wszFilename, wszLineNum, wszDescription
         dim as long f1, f2
         
         ' Search for the 2nd semicolon
@@ -153,7 +153,7 @@ function frmOutput_ShowHideOutputControls( byval hwnd as HWND ) as LRESULT
         case 1    ' compiler log file
             hTextBox = GetDlgItem(hwnd, IDC_FRMOUTPUT_TXTLOGFILE)
             hCtrl = hTextBox
-            dim as CWSTR wszText = ltrim(AfxGetWindowText(hTextBox))
+            dim as DWSTRING wszText = ltrim(AfxGetWindowText(hTextBox))
             if wszText = "" then
                AfxSetWindowText(hTextBox, "No compiler log file exists.")
             end if   
@@ -818,7 +818,7 @@ function frmOutputTabs_SubclassProc ( _
             end if
                         
         case WM_MOUSEHOVER
-            dim as CWSTR wszTooltip
+            dim as DWSTRING wszTooltip
             if isMouseOverRECT( hWin, gOutputCloseRect ) = true then
                 ' Display the tooltip
                 wszTooltip  = L(161, "Close")
@@ -945,7 +945,7 @@ function frmOutput_RichEdit_SubclassProc ( _
         
         case WM_CONTEXTMENU 
             ' Create the right click popup menu
-            dim as CWSTR wszText = RichEdit_GetSelText( hWin )
+            dim as DWSTRING wszText = RichEdit_GetSelText( hWin )
             dim hPopUpMenu as HMENU = CreatePopupMenu()
             if len(wszText) then 
                 AppendMenu( hPopUpMenu, MF_ENABLED, IDM_CUT, L(17,"Cut") )
@@ -1076,7 +1076,6 @@ end function
 ' frmOutput_Show
 ' ========================================================================================
 function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
-
     '  Create the main window and child controls
     '  This pointer destroyed at end of frmMain ends before application ends.
     dim pWindow as CWindow ptr = new CWindow
@@ -1110,16 +1109,16 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
     hCtl = _
     pWindow->AddControl("LABEL", , IDC_FRMOUTPUT_TABS, , 0, 0, 0, OUTPUT_TABS_HEIGHT, _
         WS_CHILD or WS_CLIPSIBLINGS or WS_CLIPCHILDREN or SS_NOTIFY or SS_LEFT, _
-        WS_EX_LEFT or WS_EX_LTRREADING, , _
-        cast(SUBCLASSPROC, @frmOutputTabs_SubclassProc), _
-        IDC_FRMOUTPUT_TABS, cast(DWORD_PTR, @pWindow))
+        WS_EX_LEFT or WS_EX_LTRREADING)
+    pWindow->SetControlSubclass(hCtl, @frmOutputTabs_SubclassProc, IDC_FRMOUTPUT_TABS, @pWindow)
 
     hCtl = pWindow->AddControl("RICHEDIT", , IDC_FRMOUTPUT_TXTLOGFILE, "", _
                     0, 0, 0, 0, _
                     WS_CHILD or WS_TABSTOP or WS_VSCROLL or _
                     ES_READONLY or ES_MULTILINE or ES_LEFT or ES_AUTOVSCROLL, _
-                    WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR, _
-                    0, @frmOutput_RichEdit_SubclassProc, IDC_FRMOUTPUT_TXTLOGFILE, null )
+                    WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR)
+    pWindow->SetControlSubclass(hCtl, @frmOutput_RichEdit_SubclassProc, IDC_FRMOUTPUT_TXTLOGFILE, NULL)
+
         SendMessage( hCtl, EM_SETEVENTMASK, 0, cast(LPARAM, ENM_SELCHANGE or ENM_CHANGE or ENM_UPDATE) )
         SendMessage( hCtl, EM_SHOWSCROLLBAR, SB_VERT, FALSE)
         SendMessage( hCtl, EM_SHOWSCROLLBAR, SB_HORZ, FALSE)
@@ -1128,8 +1127,9 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
                     0, 0, 0, 0, _
                     WS_CHILD or WS_TABSTOP or WS_VSCROLL or _
                     ES_MULTILINE or ES_LEFT or ES_AUTOVSCROLL or ES_WANTRETURN, _
-                    WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR, _
-                    0, @frmOutput_RichEdit_SubclassProc, IDC_FRMOUTPUT_TXTNOTES, null )
+                    WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR)
+    pWindow->SetControlSubclass(hCtl, @frmOutput_RichEdit_SubclassProc, IDC_FRMOUTPUT_TXTNOTES, NULL)
+        
         SendMessage( hCtl, EM_SETEVENTMASK, 0, cast(LPARAM, ENM_SELCHANGE or ENM_CHANGE or ENM_UPDATE) )
         SendMessage( hCtl, EM_SHOWSCROLLBAR, SB_VERT, FALSE)
         SendMessage( hCtl, EM_SHOWSCROLLBAR, SB_HORZ, FALSE)
@@ -1140,7 +1140,7 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
         frmListView_AddColumn( hLV, 0, "", pWindow->ScaleX(20) )
         frmListView_AddColumn( hLV, 1, L(253, "Line"), pWindow->ScaleX(75) )
         frmListView_AddColumn( hLV, 2, L(254, "File"), pWindow->ScaleX(250) )
-        frmListView_AddColumn( hLV, 3, L(255, "Description"), pWindow->ScaleX(1000) )
+        frmListView_AddColumn( hLV, 3, L(255, "Description"), pWindow->ScaleX(480) )
         HWND_FRMOUTPUT_LVRESULTS = hLV
 
     ' Search Listview
@@ -1148,7 +1148,7 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
         frmListView_AddColumn( hLV, 0, "", pWindow->ScaleX(20) )
         frmListView_AddColumn( hLV, 1, L(253, "Line"), pWindow->ScaleX(75) )
         frmListView_AddColumn( hLV, 2, L(254, "File"), pWindow->ScaleX(250) )
-        frmListView_AddColumn( hLV, 3, L(255, "Description"), pWindow->ScaleX(1000) )
+        frmListView_AddColumn( hLV, 3, L(255, "Description"), pWindow->ScaleX(480) )
         HWND_FRMOUTPUT_LVSEARCH = hLV
 
     ' TODO listview
@@ -1156,7 +1156,7 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
         frmListView_AddColumn( hLV, 0, "", pWindow->ScaleX(20) )
         frmListView_AddColumn( hLV, 1, L(253, "Line"), pWindow->ScaleX(75) )
         frmListView_AddColumn( hLV, 2, L(254, "File"), pWindow->ScaleX(250) )
-        frmListView_AddColumn( hLV, 3, L(255, "Description"), pWindow->ScaleX(1000) )
+        frmListView_AddColumn( hLV, 3, L(255, "Description"), pWindow->ScaleX(480) )
         HWND_FRMOUTPUT_LVTODO = hLV
 
     dim pWindowPanel as CPanelWindow ptr = New CPanelWindow

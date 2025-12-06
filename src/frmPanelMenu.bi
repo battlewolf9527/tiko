@@ -14,8 +14,8 @@
 #pragma once
 
 type PANEL_MENU_TYPE
-    wszCaption      as CWSTR
-    wszTooltip      as CWSTR
+    wszCaption      as DWSTRING
+    wszTooltip      as DWSTRING
     id              as long
     rc              as RECT   
     isPrevHot       as boolean

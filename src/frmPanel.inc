@@ -386,7 +386,7 @@ function frmPanel_WndProc( _
 
     static as boolean isPrevHotAction, isPrevHotButton0, isPrevHotButton1
     
-    static as CWSTR wszPrevTooltip
+    static as DWSTRING wszPrevTooltip
     static as HWND hTooltip 
     if (uMsg = WM_DESTROY) andalso (IsWindow(hToolTip)) then DestroyWindow(hToolTip)
 
@@ -545,7 +545,7 @@ function frmPanel_WndProc( _
 
 
     case WM_MOUSEHOVER
-        dim as CWSTR wszTooltip 
+        dim as DWSTRING wszTooltip 
         if isMouseOverRECT( hwnd, gPanel.rcActionMenu ) then
             wszTooltip  = L(440, "More Actions") & "..."
         end if

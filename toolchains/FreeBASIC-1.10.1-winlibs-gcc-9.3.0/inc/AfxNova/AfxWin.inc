@@ -1,7 +1,7 @@
 ' ########################################################################################
 ' Platform: Microsoft Windows
 ' Filename: AfxWin.inc
-' Purpose:  Windows wrapper functions
+' Purpose:  Assorted Windows wrapper functions
 ' Compiler: FreeBASIC 32 & 64 bit
 ' Copyright (c) 2025 José Roca
 '
@@ -373,7 +373,10 @@ PRIVATE FUNCTION AfxGetExePath () AS DWSTRING
    DIM buffer AS WSTRING * MAX_PATH, p AS LONG
    GetModuleFileNameW NULL, buffer, SIZEOF(buffer)
    p = INSTRREV(buffer, ANY ":/\")
-   IF p THEN buffer = AfxPathRemoveBackslash(LEFT(buffer, p))
+   IF p THEN
+      buffer = LEFT(buffer, p)
+      PathRemoveBackslashW(buffer)
+   END IF
    RETURN buffer
 END FUNCTION
 ' ========================================================================================
@@ -485,6 +488,20 @@ END FUNCTION
 ' * Retrieves the current directory for the current process.
 ' ========================================================================================
 PRIVATE FUNCTION AfxGetCurrentDirectory () AS DWSTRING
+   DIM wszCurDir AS WSTRING * MAX_PATH
+   GetCurrentDirectoryW(MAX_PATH, wszCurDir)
+   RETURN wszCurDir
+END FUNCTION
+' ========================================================================================
+' ========================================================================================
+PRIVATE FUNCTION AfxGetCurDir () AS DWSTRING
+   DIM wszCurDir AS WSTRING * MAX_PATH
+   GetCurrentDirectoryW(MAX_PATH, wszCurDir)
+   RETURN wszCurDir
+END FUNCTION
+' ========================================================================================
+' ========================================================================================
+PRIVATE FUNCTION AfxCurDir () AS DWSTRING
    DIM wszCurDir AS WSTRING * MAX_PATH
    GetCurrentDirectoryW(MAX_PATH, wszCurDir)
    RETURN wszCurDir
@@ -687,153 +704,6 @@ PRIVATE FUNCTION AfxControlRunDLL (BYVAL hWin AS HWND, BYVAL hInst AS HINSTANCE,
    IF pProc = 0 THEN EXIT FUNCTION
    FUNCTION = pProc(hWin, hInst, cmd, nCmdShow)
    DyLibFree(pLib)
-END FUNCTION
-' ========================================================================================
-
-' ========================================================================================
-' Saves the contents of a string buffer in a temporary file and returns the name of the file.
-' ========================================================================================
-PRIVATE FUNCTION AfxSaveTempFile (BYVAL pwszBuffer AS WSTRING PTR, BYREF wszExtension AS WSTRING) AS DWSTRING
-   DIM wszTmpFileName AS WSTRING * MAX_PATH
-   DIM wszTmpPath AS WSTRING * MAX_PATH - 14
-   DIM dwRes AS DWORD, fn AS LONG
-   dwRes = GetTempPathW(MAX_PATH - 14, @wszTmpPath)
-   IF dwRes > 0 AND dwRes <= MAX_PATH - 14 THEN
-      dwRes = GetTempFileNameW(@wszTmpPath, "TMP", 0, @wszTmpFileName)
-      IF dwRes THEN
-         IF LEN(wszExtension) THEN wszTmpFileName = LEFT(wszTmpFileName, LEN(wszTmpFileName) -  3) & wszExtension
-         fn = FREEFILE
-         OPEN wszTmpFileName FOR OUTPUT AS #fn
-         IF ERR = 0 THEN
-            PRINT #fn, *pwszBuffer
-            CLOSE #fn
-            RETURN wszTmpFileName
-         END IF
-      END IF
-   END IF
-   RETURN ""
-END FUNCTION
-' ========================================================================================
-
-' ========================================================================================
-' Determines whether a disk drive is a removable, fixed, CD-ROM, RAM disk, or network drive.
-' - lpRootPathName : The root directory for the drive.
-'   A trailing backslash is required. If this parameter is NULL, the function uses the
-'   root of the current directory.
-' Return value: DRIVE_UNKNOWN (0), DRIVE_NO_ROOT_DIR (1), DRIVE_REMOVABLE (2), DRIVE_FIXED(3),
-'   DRIVE_REMOTE (4), DRIVE_CDROM (5), DRIVE_RAMDISK (6).
-' ========================================================================================
-PRIVATE FUNCTION AfxGetDriveType (BYVAL lpRootPathName AS LPCWSTR) as UINT
-   RETURN GetDriveTypeW(lpRootPathName)
-END FUNCTION
-' ========================================================================================
-
-' ========================================================================================
-' * Retrieves the Internet Explorer version (major.minor).
-' ========================================================================================
-PRIVATE FUNCTION AfxGetInternetExplorerVersion () AS SINGLE
-   DIM hk AS HKEY, wszData AS WSTRING * 1024, cbData AS DWORD = SIZEOF(wszData)
-   IF RegOpenKeyExW(HKEY_LOCAL_MACHINE, "SOFTWARE\Microsoft\Internet Explorer", 0, _
-                    KEY_QUERY_VALUE, @hk) <> ERROR_SUCCESS THEN EXIT FUNCTION
-   RegQueryValueExW hk, "Version", NULL, NULL, cast(BYTE PTR, @wszData), @cbData
-   RegCloseKey hk
-   FUNCTION = VAL(wszData)
-END FUNCTION
-' ========================================================================================
-
-' ========================================================================================
-' * Retrieves the path of the default browser.
-' ========================================================================================
-PRIVATE FUNCTION AfxGetDefaultBrowserPath () AS DWSTRING
-   DIM wszPath AS WSTRING * MAX_PATH, cchOut AS DWORD = SIZEOF(wszPath)
-   IF SUCCEEDED(AssocQueryStringW(0, ASSOCSTR_EXECUTABLE, "http", "open", wszPath, @cchOut)) THEN RETURN wszPath
-   RETURN ""
-END FUNCTION
-' ========================================================================================
-
-' ========================================================================================
-' * Retrieves the name of the default browser.
-' ========================================================================================
-PRIVATE FUNCTION AfxGetDefaultBrowserName () AS DWSTRING
-   DIM wszPath AS WSTRING * MAX_PATH, cchOut AS DWORD = SIZEOF(wszPath)
-   IF SUCCEEDED(AssocQueryStringW(0, ASSOCSTR_EXECUTABLE, "http", "open", wszPath, @cchOut)) THEN
-      RETURN AfxGetFileName(wszPath)
-   END IF
-   RETURN ""
-END FUNCTION
-' ========================================================================================
-
-' ========================================================================================
-' Retrieves the handle of the top level window of the web browser.
-' Parameter:
-'    pwszClassName: The browser class name.
-' Return value:
-'    The handle of the top level window of the browser.
-' Thanks to Dominic Mitchell for the information provided in this thread:
-' https://forum.powerbasic.com/forum/user-to-user-discussions/powerbasic-for-windows/767812-handle-to-browser-window?p=767896#post767896
-' Examples:
-' DIM hwndBrowser AS HWND = AfxGetBrowserHandle("IEFrame")              ' // Internet Explorer
-' DIM hwndBrowser AS HWND = AfxGetBrowserHandle("MozillaWindowClass")   ' // Firefox
-' DIM hwndBrowser AS HWND = AfxGetBrowserHandle("Chrome_WidgetWin_1")   ' // Chrome
-' ========================================================================================
-PRIVATE FUNCTION AfxEnumThreadWndProc (BYVAL hWin AS HWND, BYVAL lPrm AS LPARAM) AS WINBOOL
-   DIM dwStyle AS DWORD = GetWindowLongPtr(hWin, GWL_STYLE)
-   IF ((dwStyle AND (WS_POPUP OR WS_CHILD)) = 0) AND ((dwStyle AND WS_VISIBLE) <> 0) THEN
-      DIM phwndTop AS HWND PTR
-      CAST(LPARAM, phwndTop) = lPrm
-      *phwndTop = hWin
-      RETURN FALSE
-   END IF
-   RETURN CTRUE
-END FUNCTION
-' ========================================================================================
-' ========================================================================================
-PRIVATE FUNCTION AfxGetBrowserHandle (BYVAL pwszClassName AS WSTRING PTR) AS HWND
-  DIM hwndBrowser AS HWND = FindWindowW(pwszClassName, NULL)
-  IF hwndBrowser = NULL THEN RETURN NULL
-  DIM dwThread AS DWORD = GetWindowThreadProcessId(hwndBrowser, NULL)
-  IF dwThread = 0 THEN RETURN NULL
-  DIM hwndTop AS HWND
-  EnumThreadWindows(dwThread, @AfxEnumThreadWndProc, CAST(LPARAM, @hwndTop))
-  RETURN hwndTop
-END FUNCTION
-' ========================================================================================
-' ========================================================================================
-' Retrieves the top level window handle of Intenet Exploreror Google Chrome.
-' ========================================================================================
-PRIVATE FUNCTION AfxGetChromiumHandle () AS HWND
-   DIM hWin AS HWND = AfxGetBrowserHandle("Chrome_WidgetWin_1")
-   IF hWin = NULL THEN hWin = AfxGetBrowserHandle("Chrome_WidgetWin_2")
-   RETURN  hWin
-END FUNCTION
-' ========================================================================================
-' ========================================================================================
-' Retrieves the top level window handle of Firefox.
-' ========================================================================================
-PRIVATE FUNCTION AfxGetFireFoxHandle () AS HWND
-   RETURN AfxGetBrowserHandle("MozillaWindowClass")
-END FUNCTION
-' ========================================================================================
-
-' ========================================================================================
-' * Retrieves the path of the default mail client application.
-' ========================================================================================
-PRIVATE FUNCTION AfxGetDefaultMailClientPath () AS DWSTRING
-   DIM wszPath AS WSTRING * MAX_PATH, cchOut AS DWORD = SIZEOF(wszPath)
-   IF SUCCEEDED(AssocQueryStringW(0, ASSOCSTR_EXECUTABLE, "mailto", "open", wszPath, @cchOut)) THEN RETURN wszPath
-   RETURN ""
-END FUNCTION
-' ========================================================================================
-
-' ========================================================================================
-' * Retrieves the name of the default mail client application.
-' ========================================================================================
-PRIVATE FUNCTION AfxGetDefaultMailClientName () AS DWSTRING
-   DIM wszPath AS WSTRING * MAX_PATH, cchOut AS DWORD = SIZEOF(wszPath)
-   IF SUCCEEDED(AssocQueryStringW(0, ASSOCSTR_EXECUTABLE, "mailto", "open", wszPath, @cchOut)) THEN
-      RETURN AfxGetFileName(wszPath)
-   END IF
-   RETURN ""
 END FUNCTION
 ' ========================================================================================
 
@@ -3620,6 +3490,19 @@ END FUNCTION
 ' ########################################################################################
 
 ' ========================================================================================
+' Determines whether a disk drive is a removable, fixed, CD-ROM, RAM disk, or network drive.
+' - lpRootPathName : The root directory for the drive.
+'   A trailing backslash is required. If this parameter is NULL, the function uses the
+'   root of the current directory.
+' Return value: DRIVE_UNKNOWN (0), DRIVE_NO_ROOT_DIR (1), DRIVE_REMOVABLE (2), DRIVE_FIXED(3),
+'   DRIVE_REMOTE (4), DRIVE_CDROM (5), DRIVE_RAMDISK (6).
+' ========================================================================================
+PRIVATE FUNCTION AfxGetDriveType (BYVAL lpRootPathName AS LPCWSTR) as UINT
+   RETURN GetDriveTypeW(lpRootPathName)
+END FUNCTION
+' ========================================================================================
+
+' ========================================================================================
 ' Searches a directory for a file or subdirectory with a name that matches a specific name
 ' (or partial name if wildcards are used).
 ' Parameter:
@@ -4198,6 +4081,35 @@ PRIVATE FUNCTION AfxFileScanW (BYREF wszFileName AS WSTRING, BYREF wszDelimiter 
 END FUNCTION
 ' ========================================================================================
 
+' ========================================================================================
+' Saves the contents of a string buffer in a temporary file and returns the name of the file.
+' ========================================================================================
+PRIVATE FUNCTION AfxSaveTempFile (BYVAL pwszBuffer AS WSTRING PTR, BYREF wszExtension AS WSTRING = "") AS DWSTRING
+   DIM wszTmpFileName AS WSTRING * MAX_PATH
+   DIM wszTmpPath AS WSTRING * MAX_PATH - 14
+   DIM dwRes AS DWORD, fn AS LONG
+   dwRes = GetTempPathW(MAX_PATH - 14, @wszTmpPath)
+   IF dwRes > 0 AND dwRes <= MAX_PATH - 14 THEN
+      dwRes = GetTempFileNameW(@wszTmpPath, "TMP", 0, @wszTmpFileName)
+      IF dwRes THEN
+         fn = FREEFILE
+         OPEN wszTmpFileName FOR OUTPUT AS #fn
+         IF ERR = 0 THEN
+            PRINT #fn, *pwszBuffer
+            CLOSE #fn
+            DIM newTmpFileName AS WSTRING * MAX_PATH = wszTmpFileName
+            IF LEN(wszExtension) THEN newTmpFileName = LEFT(newTmpFileName, LEN(newTmpFileName) -  3) & wszExtension
+            IF AfxRenameFile(wszTmpFileName, newTmpFileName) THEN
+               RETURN newTmpFileName
+            ELSE
+               RETURN wszTmpFileName
+            END IF
+         END IF
+      END IF
+   END IF
+   RETURN ""
+END FUNCTION
+' ========================================================================================
 
 ' ########################################################################################
 '                                     *** SIDs ***
@@ -4269,4 +4181,118 @@ PRIVATE FUNCTION AfxGetSystemInfo (BYREF metricName AS STRING) AS LONG_PTR
 END FUNCTION
 ' ========================================================================================
 
+
+' ########################################################################################
+'                                     *** INTERNET ***
+' ########################################################################################
+
+' ========================================================================================
+' * Retrieves the Internet Explorer version (major.minor).
+' ========================================================================================
+PRIVATE FUNCTION AfxGetInternetExplorerVersion () AS SINGLE
+   DIM hk AS HKEY, wszData AS WSTRING * 1024, cbData AS DWORD = SIZEOF(wszData)
+   IF RegOpenKeyExW(HKEY_LOCAL_MACHINE, "SOFTWARE\Microsoft\Internet Explorer", 0, _
+                    KEY_QUERY_VALUE, @hk) <> ERROR_SUCCESS THEN EXIT FUNCTION
+   RegQueryValueExW hk, "Version", NULL, NULL, cast(BYTE PTR, @wszData), @cbData
+   RegCloseKey hk
+   FUNCTION = VAL(wszData)
+END FUNCTION
+' ========================================================================================
+
+' ========================================================================================
+' * Retrieves the path of the default browser.
+' ========================================================================================
+PRIVATE FUNCTION AfxGetDefaultBrowserPath () AS DWSTRING
+   DIM wszPath AS WSTRING * MAX_PATH, cchOut AS DWORD = SIZEOF(wszPath)
+   IF SUCCEEDED(AssocQueryStringW(0, ASSOCSTR_EXECUTABLE, "http", "open", wszPath, @cchOut)) THEN RETURN wszPath
+   RETURN ""
+END FUNCTION
+' ========================================================================================
+
+' ========================================================================================
+' * Retrieves the name of the default browser.
+' ========================================================================================
+PRIVATE FUNCTION AfxGetDefaultBrowserName () AS DWSTRING
+   DIM wszPath AS WSTRING * MAX_PATH, cchOut AS DWORD = SIZEOF(wszPath)
+   IF SUCCEEDED(AssocQueryStringW(0, ASSOCSTR_EXECUTABLE, "http", "open", wszPath, @cchOut)) THEN
+      RETURN AfxGetFileName(wszPath)
+   END IF
+   RETURN ""
+END FUNCTION
+' ========================================================================================
+
+' ========================================================================================
+' Retrieves the handle of the top level window of the web browser.
+' Parameter:
+'    pwszClassName: The browser class name.
+' Return value:
+'    The handle of the top level window of the browser.
+' Thanks to Dominic Mitchell for the information provided in this thread:
+' https://forum.powerbasic.com/forum/user-to-user-discussions/powerbasic-for-windows/767812-handle-to-browser-window?p=767896#post767896
+' Examples:
+' DIM hwndBrowser AS HWND = AfxGetBrowserHandle("IEFrame")              ' // Internet Explorer
+' DIM hwndBrowser AS HWND = AfxGetBrowserHandle("MozillaWindowClass")   ' // Firefox
+' DIM hwndBrowser AS HWND = AfxGetBrowserHandle("Chrome_WidgetWin_1")   ' // Chrome
+' ========================================================================================
+PRIVATE FUNCTION AfxEnumThreadWndProc (BYVAL hWin AS HWND, BYVAL lPrm AS LPARAM) AS WINBOOL
+   DIM dwStyle AS DWORD = GetWindowLongPtr(hWin, GWL_STYLE)
+   IF ((dwStyle AND (WS_POPUP OR WS_CHILD)) = 0) AND ((dwStyle AND WS_VISIBLE) <> 0) THEN
+      DIM phwndTop AS HWND PTR
+      CAST(LPARAM, phwndTop) = lPrm
+      *phwndTop = hWin
+      RETURN FALSE
+   END IF
+   RETURN CTRUE
+END FUNCTION
+' ========================================================================================
+' ========================================================================================
+PRIVATE FUNCTION AfxGetBrowserHandle (BYVAL pwszClassName AS WSTRING PTR) AS HWND
+  DIM hwndBrowser AS HWND = FindWindowW(pwszClassName, NULL)
+  IF hwndBrowser = NULL THEN RETURN NULL
+  DIM dwThread AS DWORD = GetWindowThreadProcessId(hwndBrowser, NULL)
+  IF dwThread = 0 THEN RETURN NULL
+  DIM hwndTop AS HWND
+  EnumThreadWindows(dwThread, @AfxEnumThreadWndProc, CAST(LPARAM, @hwndTop))
+  RETURN hwndTop
+END FUNCTION
+' ========================================================================================
+' ========================================================================================
+' Retrieves the top level window handle of Intenet Exploreror Google Chrome.
+' ========================================================================================
+PRIVATE FUNCTION AfxGetChromiumHandle () AS HWND
+   DIM hWin AS HWND = AfxGetBrowserHandle("Chrome_WidgetWin_1")
+   IF hWin = NULL THEN hWin = AfxGetBrowserHandle("Chrome_WidgetWin_2")
+   RETURN  hWin
+END FUNCTION
+' ========================================================================================
+' ========================================================================================
+' Retrieves the top level window handle of Firefox.
+' ========================================================================================
+PRIVATE FUNCTION AfxGetFireFoxHandle () AS HWND
+   RETURN AfxGetBrowserHandle("MozillaWindowClass")
+END FUNCTION
+' ========================================================================================
+
+' ========================================================================================
+' * Retrieves the path of the default mail client application.
+' ========================================================================================
+PRIVATE FUNCTION AfxGetDefaultMailClientPath () AS DWSTRING
+   DIM wszPath AS WSTRING * MAX_PATH, cchOut AS DWORD = SIZEOF(wszPath)
+   IF SUCCEEDED(AssocQueryStringW(0, ASSOCSTR_EXECUTABLE, "mailto", "open", wszPath, @cchOut)) THEN RETURN wszPath
+   RETURN ""
+END FUNCTION
+' ========================================================================================
+
+' ========================================================================================
+' * Retrieves the name of the default mail client application.
+' ========================================================================================
+PRIVATE FUNCTION AfxGetDefaultMailClientName () AS DWSTRING
+   DIM wszPath AS WSTRING * MAX_PATH, cchOut AS DWORD = SIZEOF(wszPath)
+   IF SUCCEEDED(AssocQueryStringW(0, ASSOCSTR_EXECUTABLE, "mailto", "open", wszPath, @cchOut)) THEN
+      RETURN AfxGetFileName(wszPath)
+   END IF
+   RETURN ""
+END FUNCTION
+' ========================================================================================
+ 
 END NAMESPACE

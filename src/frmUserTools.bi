@@ -56,7 +56,7 @@ declare function frmUserTools_ExecuteUserTool( byval nToolNum as long ) as long
 declare function frmUserTools_CreateAcceleratorTable() as long
 declare function frmUserTools_Show( byval hWndParent As HWND ) as LRESULT
 declare function updateUserToolsMenuItems() as long
-declare function createToolsMenuShortcut( byval nCtrlID as long ) as CWSTR
+declare function createToolsMenuShortcut( byval nCtrlID as long ) as DWSTRING
 
 
 

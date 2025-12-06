@@ -21,7 +21,7 @@
 ' ========================================================================================
 ' Get the Bookmarks line number from the Listbox line
 ' ========================================================================================
-function getBookmarksLineNumber( byval wszCaption as CWSTR ) as long
+function getBookmarksLineNumber( byval wszCaption as DWSTRING ) as long
     ' do not use Parse for this because line may contain embedded % in description
     dim as long nLineNum
     dim as long f1
@@ -33,9 +33,9 @@ end function
 ' ========================================================================================
 ' Get the Bookmarks description from the Listbox line
 ' ========================================================================================
-function getBookmarksDescription( byval wszCaption as CWSTR ) as CWSTR
+function getBookmarksDescription( byval wszCaption as DWSTRING ) as DWSTRING
     ' do not use Parse for this because line may contain embedded % in description
-    dim as CWSTR wszTemp = "Error retrieving bookmark"
+    dim as DWSTRING wszTemp = "Error retrieving bookmark"
     dim as long f1
     f1 = instr(wszCaption, "%")
     if f1 then wszTemp = mid(wszCaption, f1 + 1)
@@ -166,7 +166,7 @@ function frmBookmarks_OnDrawItem( _
         b.SetForeColors(foreclr, foreclr)
         b.SetBackColors(backclr, backclr)
 
-        dim as CWSTR wszCaption = AfxGetListBoxText(lpdis->hwndItem, lpdis->ItemID)
+        dim as DWSTRING wszCaption = AfxGetListBoxText(lpdis->hwndItem, lpdis->ItemID)
         dim as clsDocument ptr pDoc = cast(clsDocument ptr, lpdis->itemData)
 
        ' if this is a "node" header
@@ -196,7 +196,7 @@ function frmBookmarks_OnDrawItem( _
         if isNodeHeader then
             b.SetFont( SYMBOLFONT_10 )
             rcBitmap.right = rcBitmap.left + pWindow->ScaleX(20)
-            dim as CWSTR wszBitmap = iif(isIconDown, wszIconChevronDown, wszIconChevronRight) 
+            dim as DWSTRING wszBitmap = iif(isIconDown, wszIconChevronDown, wszIconChevronRight) 
             b.PaintText( wszBitmap, @rcBitmap, DT_CENTER )
 
             b.SetFont( GUIFONT_10 )
@@ -307,7 +307,7 @@ function frmBookmarksListBox_SubclassProc ( _
     dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMBOOKMARKS)
     static as long accumDelta
 
-    static as CWSTR wszPrevTooltip
+    static as DWSTRING wszPrevTooltip
     static as HWND hTooltip
     if (uMsg = WM_DESTROY) andalso (IsWindow(hToolTip)) then DestroyWindow(hToolTip)
 
@@ -368,13 +368,13 @@ function frmBookmarksListBox_SubclassProc ( _
             end if
 
         case WM_MOUSEHOVER
-            dim as CWSTR wszTooltip
+            dim as DWSTRING wszTooltip
             dim as long idx = Listbox_ItemFromPoint( hWin, GET_X_LPARAM(_lParam), GET_Y_LPARAM(_lParam))
             ' The return value contains the index of the nearest item in the LOWORD. The HIWORD is zero
             ' if the specified point is in the client area of the list box, or one if it is outside the
             ' client area.
             if hiword(idx) <> 1 then
-                dim as CWSTR wszCaption = AfxGetListBoxText( hWin, idx )
+                dim as DWSTRING wszCaption = AfxGetListBoxText( hWin, idx )
                 if (left(wszCaption, 4) = "true") orelse (left(wszCaption, 5) = "false") then
                     dim as clsDocument ptr pDoc = cast(clsDocument ptr, ListBox_GetItemData( hWin, idx ))
                     if pDoc then wszTooltip = pDoc->DiskFilename
@@ -401,7 +401,7 @@ function frmBookmarksListBox_SubclassProc ( _
                 dim as clsDocument ptr pDoc = cast(clsDocument ptr, ListBox_GetItemData( hWin, idx ))
                 if pDoc then
                     dim as HMENU hPopupMenu
-                    dim as CWSTR wszCaption = AfxGetListBoxText( hWin, idx )
+                    dim as DWSTRING wszCaption = AfxGetListBoxText( hWin, idx )
                     if (left(wszCaption, 4) = "true") orelse (left(wszCaption, 5) = "false") then
                         hPopupMenu = CreateBookmarksHeaderNodeContextMenu()
                     else
@@ -431,7 +431,7 @@ function frmBookmarksListBox_SubclassProc ( _
             ' client area.
             if hiword(idx) <> 1 then
                 dim as clsDocument ptr pDoc = cast(clsDocument ptr, ListBox_GetItemData( hWin, idx ))
-                dim as CWSTR wszCaption = AfxGetListBoxText( hWin, idx )
+                dim as DWSTRING wszCaption = AfxGetListBoxText( hWin, idx )
                 if (left(wszCaption, 4) = "true") orelse (left(wszCaption, 5) = "false") then
                     ' Toggle the show/hide of bookmarks under this node
                     if pDoc then pDoc->bBookmarkExpanded = not pDoc->bBookmarkExpanded
@@ -440,7 +440,7 @@ function frmBookmarksListBox_SubclassProc ( _
                 else
                     ' Attempt to show the bookmark
                     dim as long nLineNum = getBookmarksLinenumber( wszCaption )
-                    dim as CWSTR wszDiskFilename
+                    dim as DWSTRING wszDiskFilename
                     if pDoc then wszDiskFilename = pDoc->DiskFilename
                     OpenSelectedDocument( wszDiskFilename, "", nLineNum )
                 end if
@@ -485,9 +485,8 @@ function frmBookmarks_Show( byval hWndParent as HWND ) as LRESULT
         pWindow->AddControl("LISTBOX", , IDC_FRMBOOKMARKS_LISTBOX, "", 0, 0, 0, 0, _
         WS_CHILD or WS_CLIPSIBLINGS or WS_CLIPCHILDREN or WS_TABSTOP or _
         LBS_NOINTEGRALHEIGHT or LBS_OWNERDRAWFIXED or LBS_HASSTRINGS or LBS_NOTIFY, _
-        WS_EX_LEFT or WS_EX_RIGHTSCROLLBAR, , _
-        cast(SUBCLASSPROC, @frmBookmarksListBox_SubclassProc), _
-        IDC_FRMBOOKMARKS_LISTBOX, cast(DWORD_PTR, @pWindow))
+        WS_EX_LEFT or WS_EX_RIGHTSCROLLBAR)
+    pWindow->SetControlSubclass(HWND_FRMBOOKMARKS_LISTBOX, @frmBookmarksListBox_SubclassProc, IDC_FRMBOOKMARKS_LISTBOX, @pWindow)
 
     function = 0
 

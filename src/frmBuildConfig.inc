@@ -18,7 +18,7 @@
 
 type BUILD_OPTIONS
     groupid as long
-    wszText as CWSTR
+    wszText as DWSTRING
 end type
 
 ' Create an array that holds all options in the Build compiler options listbox. The
@@ -131,7 +131,7 @@ end function
 ' ========================================================================================
 ' Return the string description of the currently selected build configuration
 ' ========================================================================================
-function frmBuildConfig_GetSelectedBuildDescription() as CWSTR
+function frmBuildConfig_GetSelectedBuildDescription() as DWSTRING
     dim as long nCurSel = frmBuildConfig_getActiveBuildIndex()
     if nCurSel > -1 then
         function = gConfig.Builds(nCurSel).wszDescription
@@ -370,7 +370,7 @@ function frmBuildConfig_OnDrawItem( _
             ) as long
 
     dim as RECT rc
-    dim as CWSTR wszText, wszOptions, wszAction
+    dim as DWSTRING wszText, wszOptions, wszAction
     dim as boolean IsChecked = false
     
     dim pWindow as CWindow ptr = AfxCWindowPtr(hwnd)
@@ -426,7 +426,7 @@ function frmBuildConfig_OnDrawItem( _
             elseif lpdis->CtlID = IDC_FRMBUILDCONFIG_LSTOPTIONS then
                 b.SetFont( SYMBOLFONT_9 )
                 rcBitmap.right = rcBitmap.left + pWindow->ScaleX(20)
-                dim as CWSTR wszBitmap = iif(IsChecked, wszIconCheckBoxMarked, wszIconCheckBoxEmpty) 
+                dim as DWSTRING wszBitmap = iif(IsChecked, wszIconCheckBoxMarked, wszIconCheckBoxEmpty) 
                 b.PaintText( wszBitmap, @rcBitmap, DT_CENTER )
                 rcText.left = rcBitmap.right
             end if
@@ -454,8 +454,8 @@ function frmBuildConfig_ProcessListboxClick( _
     if nCurSel = -1 then exit function
     
     ' Get the action text for this listbox item. 
-    dim as CWSTR wszText = AfxGetWindowText( GetDlgItem(HWND_FRMBUILDCONFIG, IDC_FRMBUILDCONFIG_TXTOPTIONS)) & " "
-    dim as CWSTR wszAction = AfxStrExtract(gBuildOptions(nCurSel).wszText, "(", ")") & " "
+    dim as DWSTRING wszText = AfxGetWindowText( GetDlgItem(HWND_FRMBUILDCONFIG, IDC_FRMBUILDCONFIG_TXTOPTIONS)) & " "
+    dim as DWSTRING wszAction = AfxStrExtract(gBuildOptions(nCurSel).wszText, "(", ")") & " "
     dim as long groupid = gBuildOptions(nCurSel).groupid
     dim as boolean doAddAction = false
     
@@ -466,7 +466,7 @@ function frmBuildConfig_ProcessListboxClick( _
     ' Remove all actions with same groupid.
     for i as long = lbound(gBuildOptions) to ubound(gBuildOptions)
         if gBuildOptions(i).groupid = groupid then
-            dim as CWSTR wszRemove = AfxStrExtract(gBuildOptions(i).wszText, "(", ")") & " "
+            dim as DWSTRING wszRemove = AfxStrExtract(gBuildOptions(i).wszText, "(", ")") & " "
             wszText = AfxStrRemove(wszText, wszRemove)
         end if
     next
@@ -878,11 +878,11 @@ function frmBuildConfig_Show( byval hWndParent as HWND ) as LRESULT
     pWindow->SetClientSize(675, 500)
     pWindow->Center(pWindow->hWindow, hWndParent)
 
-    pWindow->AddControl("LISTBOX", , IDC_FRMBUILDCONFIG_LIST1, "", 10, 10, 218, 420, _
+    dim hListBox as hwnd = pWindow->AddControl("LISTBOX", , IDC_FRMBUILDCONFIG_LIST1, "", 10, 10, 218, 420, _
         WS_CHILD or WS_VISIBLE or WS_VSCROLL or WS_TABSTOP or LBS_NOTIFY or _
         LBS_NOINTEGRALHEIGHT or LBS_OWNERDRAWFIXED or LBS_HASSTRINGS, _
-        WS_EX_CLIENTEDGE or WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR, , _
-        cast(SUBCLASSPROC, @frmBuildConfig_ListBox_SubclassProc), IDC_FRMBUILDCONFIG_LIST1, cast(DWORD_PTR, @pWindow))
+        WS_EX_CLIENTEDGE or WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR)
+    pWindow->SetControlSubclass(hListBox, @frmBuildConfig_ListBox_SubclassProc, IDC_FRMBUILDCONFIG_LIST1, @pWindow)
 
     pWindow->AddControl("LABEL", , IDC_FRMBUILDCONFIG_LABEL1, L(278,"Description") & ":", 240, 11, 120, 20, _
         WS_CHILD or WS_VISIBLE or WS_CLIPSIBLINGS or WS_CLIPCHILDREN or SS_LEFT or SS_NOTIFY, _
@@ -924,11 +924,12 @@ function frmBuildConfig_Show( byval hWndParent as HWND ) as LRESULT
     pWindow->AddControl("TEXTBOX", , IDC_FRMBUILDCONFIG_TXTOPTIONS, "", 240, 123, 425, 20, _
         WS_CHILD or WS_VISIBLE or WS_TABSTOP or ES_LEFT or ES_AUTOHSCROLL, _
         WS_EX_CLIENTEDGE or WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR)
-    pWindow->AddControl("LISTBOX", , IDC_FRMBUILDCONFIG_LSTOPTIONS, "", 240, 149, 425, 263, _
+    dim hLB as hwnd = pWindow->AddControl("LISTBOX", , IDC_FRMBUILDCONFIG_LSTOPTIONS, "", 240, 149, 425, 263, _
         WS_CHILD or WS_VISIBLE or WS_VSCROLL or WS_TABSTOP or LBS_NOTIFY or _
         LBS_NOINTEGRALHEIGHT or LBS_OWNERDRAWFIXED or LBS_HASSTRINGS, _
-        WS_EX_CLIENTEDGE or WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR, , _
-        cast(SUBCLASSPROC, @frmBuildConfig_ListBox_SubclassProc), IDC_FRMBUILDCONFIG_LSTOPTIONS, cast(DWORD_PTR, @pWindow))
+        WS_EX_CLIENTEDGE or WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR)
+    pWindow->SetControlSubclass(hLB, @frmBuildConfig_ListBox_SubclassProc, IDC_FRMBUILDCONFIG_LSTOPTIONS, @pWindow)
+
     pWindow->AddControl("CHECKBOX", , IDC_FRMBUILDCONFIG_CHKEXCLUDEPOPUP, _
         L(284,"Exclude build from status bar popup menu"), 240, 415, 425, 20, _
         WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_NOTIFY or BS_AUTOCHECKBOX or BS_LEFT or BS_VCENTER, _

@@ -13,7 +13,7 @@
 
 #pragma once
 
-#include once "Afx/AfxRichEdit.inc"
+#include once "AfxNova/AfxRichEdit.inc"
 
 #define IDC_FRMHELPVIEWER_LEFTPANEL        1000
 #define IDC_FRMHELPVIEWER_RIGHTPANEL       1001
@@ -22,8 +22,8 @@
 type HELPVIEWER_TYPE
     as POINT ptSplitPrev
     as long  xDeltaSplitter
-    as CWSTR Filenames(any)
-    as CWSTR Topics(any)
+    as DWSTRING Filenames(any)
+    as DWSTRING Topics(any)
 end type
 
 dim shared as HELPVIEWER_TYPE gHelpViewer

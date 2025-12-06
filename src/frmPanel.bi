@@ -15,7 +15,7 @@
 
 
 type PANEL_BUTTON_TYPE
-    wszCaption   as CWSTR
+    wszCaption   as DWSTRING
     hActionChild as HWND
     rc           as RECT
 end type
@@ -23,7 +23,7 @@ dim shared gPanelButton(any) as PANEL_BUTTON_TYPE
 
 type PANEL_TYPE
     hActiveChild    as HWND
-    wszHeader       as CWSTR
+    wszHeader       as DWSTRING
     rcDividerLine   as RECT
     rcHeader        as RECT     ' EXPLORER, FUNCTION LIST, BOOKMARKS
     rcActionMenu    as RECT

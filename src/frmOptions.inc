@@ -108,7 +108,7 @@ function frmOptions_SaveEditorOptions() as long
     hwnd = HWND_FRMOPTIONSCOMPILER
     
     ' Get the selected toolchain and then build the paths to the compilers
-    dim as CWSTR wszPath
+    dim as DWSTRING wszPath
     idx = ListBox_GetCurSel( GetDlgItem(hwnd, IDC_FRMOPTIONSCOMPILER_LSTTOOLCHAINS) )
     if idx <> -1 then
         wszPath = AfxGetExePathName + "Toolchains\" + AfxGetListBoxText( GetDlgItem(hwnd, IDC_FRMOPTIONSCOMPILER_LSTTOOLCHAINS), idx )

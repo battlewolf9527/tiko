@@ -12,14 +12,14 @@
 '    GNU General Public License for more details.
 
 'https://learn.microsoft.com/en-us/windows/win32/api/dwmapi/nf-dwmapi-dwmsetwindowattribute
-declare function DwmSetWindowAttribute lib "Dwmapi.dll" alias "DwmSetWindowAttribute" ( _
-    hwnd as HWND, dwAttribute as DWORD, pvAttribute as LPCVOID, cbAttribute as DWORD) as HRESULT
-const DWMWA_USE_IMMERSIVE_DARK_MODE = 20
+'declare function DwmSetWindowAttribute lib "Dwmapi.dll" alias "DwmSetWindowAttribute" ( _
+'    hwnd as HWND, dwAttribute as DWORD, pvAttribute as LPCVOID, cbAttribute as DWORD) as HRESULT
+'const DWMWA_USE_IMMERSIVE_DARK_MODE = 20
 
 
 type THEME_TYPE
-    keyValue as CWSTR
-    keyData as CWSTR 
+    keyValue as DWSTRING
+    keyData as DWSTRING 
     foreground as COLORREF
     background as COLORREF
     bold as long
@@ -27,11 +27,11 @@ type THEME_TYPE
     underline as long
 end type
 dim shared gTheme(any) as THEME_TYPE
-dim shared gThemeFilenames(any) as CWSTR
+dim shared gThemeFilenames(any) as DWSTRING
 
 type GENERAL_HANDLES_TYPE
-    description as CWSTR
-    version as CWSTR
+    description as DWSTRING
+    version as DWSTRING
     iconfail as COLORREF      
     iconsuccess as COLORREF      
 end type
@@ -219,7 +219,7 @@ end function
 ''
 function LoadThemeFile() as boolean
 
-    dim as CWSTR wszFilename = AfxGetExePathName & "settings\themes\" & gConfig.ThemeShortFilename
+    dim as DWSTRING wszFilename = AfxGetExePathName & "settings\themes\" & gConfig.ThemeShortFilename
     if AfxFileExists(wszFilename) = 0 then
         ' default to the visual studio dark theme
         wszFilename = AfxGetExePathName & "settings\themes\default_dark.theme"
@@ -228,7 +228,7 @@ function LoadThemeFile() as boolean
             ' missing or the theme was renamed. Use the backup version in the settings folder. 
             wszFilename = AfxGetExePathName & "settings\backup_default_dark.theme"
             ' Attempt to copy the file for next time
-            dim as CWSTR wszThemeDirFilename = AfxGetExePathName & "settings\themes\default_dark.theme"
+            dim as DWSTRING wszThemeDirFilename = AfxGetExePathName & "settings\themes\default_dark.theme"
             if AfxCopyFile( wszFilename, wszThemeDirFilename ) then
             gConfig.ThemeShortFilename = "default_dark.theme"
             end if   
@@ -247,11 +247,11 @@ function LoadThemeFile() as boolean
     ' Ensure to delete any existing gTheme data
     erase gTheme
     
-    dim param(100) as CWSTR
-    dim param_value(100) as CWSTR
+    dim param(100) as DWSTRING
+    dim param_value(100) as DWSTRING
     dim as long nextParam = 0
     
-    dim as CWSTR wst, keyValue, keyData
+    dim as DWSTRING wst, keyValue, keyData
         
     Do Until pStream.EOS
         wst = pStream.ReadLine

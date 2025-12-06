@@ -233,7 +233,7 @@ function frmMain_CompileTopMenuStates() as long
     end if
     
     ' Determine if an executable exists based on the current active file or project
-    dim as CWSTR wszRunFile = GetRunExecutableFilename()
+    dim as DWSTRING wszRunFile = GetRunExecutableFilename()
     if AfxFileExists(wszRunFile) then EnableTopMenuItem( IDM_RUNEXE, true )
     
     function = 0
@@ -381,13 +381,13 @@ function CreateStatusBarBuildConfigContextMenu() as HMENU
     dim hPopUpMenu as HMENU
     
     dim as long curSelected
-    dim as CWSTR wszCurrentBuild = frmBuildConfig_GetSelectedBuildDescription()
+    dim as DWSTRING wszCurrentBuild = frmBuildConfig_GetSelectedBuildDescription()
     
     hPopUpMenu = CreatePopupMenu
     for i as long = lbound(gConfig.Builds) to ubound(gConfig.Builds)
         if gConfig.Builds(i).ExcludeInPopup then continue for
         dim as long idMenu = IDM_BUILDCONFIG_POPUP + i
-        dim as CWSTR wszCaption = gConfig.Builds(i).wszDescription
+        dim as DWSTRING wszCaption = gConfig.Builds(i).wszDescription
         if wszCaption = wszCurrentBuild then curSelected = idMenu
         gConfig.Builds(i).idMenu = idMenu
         AppendMenu hPopUpMenu, MF_ENABLED or MFT_RADIOCHECK, idMenu, wszCaption
@@ -437,7 +437,7 @@ function CreateStatusBarSpacesContextMenu() as HMENU
         hPopUpMenu = CreatePopupMenu
         for i as long = 0 to 8
             dim as long idMenu = IDM_SPACES + i
-            dim as CWSTR wszCaption = str(i)
+            dim as DWSTRING wszCaption = str(i)
             if i = val(gConfig.TabSize) then wszCaption = wszCaption & "  (Current Tab Size)"
             AppendMenu hPopUpMenu, MF_ENABLED or MFT_RADIOCHECK, idMenu, wszCaption
         next
@@ -599,7 +599,7 @@ end function
 ''
 function CreateExplorerActionButtonContextMenu() as HMENU
     dim hPopUpMenu as HMENU
-    dim as CWSTR wszCaption
+    dim as DWSTRING wszCaption
     
     hPopUpMenu = CreatePopupMenu
     AppendMenu hPopUpMenu, MF_ENABLED, IDM_EXPLORER_EXPANDALL, L(441,"Expand All") 
@@ -614,7 +614,7 @@ end function
 ''
 function CreateFunctionsActionButtonContextMenu() as HMENU
     dim hPopUpMenu as HMENU
-    dim as CWSTR wszCaption
+    dim as DWSTRING wszCaption
     
     hPopUpMenu = CreatePopupMenu
     AppendMenu hPopUpMenu, MF_ENABLED, IDM_FUNCTIONS_EXPANDALL, L(441,"Expand All") 
@@ -632,7 +632,7 @@ end function
 ''
 function CreateBookmarksActionButtonContextMenu() as HMENU
     dim hPopUpMenu as HMENU
-    dim as CWSTR wszCaption
+    dim as DWSTRING wszCaption
     
     hPopUpMenu = CreatePopupMenu
     AppendMenu hPopUpMenu, MF_ENABLED, IDM_BOOKMARKS_EXPANDALL, L(441,"Expand All") 
@@ -649,7 +649,7 @@ end function
 ''
 function CreateBookmarksHeaderNodeContextMenu() as HMENU
     dim hPopUpMenu as HMENU
-    dim as CWSTR wszCaption
+    dim as DWSTRING wszCaption
     
     hPopUpMenu = CreatePopupMenu
     AppendMenu hPopUpMenu, MF_ENABLED, IDM_CLEARALLBOOKMARKNODE, L(53,"Clear Bookmarks") 
@@ -661,7 +661,7 @@ end function
 ''
 function CreateBookmarksBookmarkNodeContextMenu() as HMENU
     dim hPopUpMenu as HMENU
-    dim as CWSTR wszCaption
+    dim as DWSTRING wszCaption
     
     hPopUpMenu = CreatePopupMenu
     AppendMenu hPopUpMenu, MF_ENABLED, IDM_REMOVEBOOKMARKNODE, L(444,"Remove Bookmark") 
@@ -673,7 +673,7 @@ end function
 ''
 function CreateTopTabsActionButtonContextMenu() as HMENU
     dim hPopUpMenu as HMENU
-    dim as CWSTR wszCaption
+    dim as DWSTRING wszCaption
     ' List all of the Top Tab open tabs in the popup menu. Simply use the array
     ' index as the ID because the calling program will use this ID to set the
     ' gTTabCtl.CurSel. Must add 1 to idMenu because Win32 returns 0 if the popup

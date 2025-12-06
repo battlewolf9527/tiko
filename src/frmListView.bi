@@ -20,7 +20,7 @@
 #define IDC_FRMLISTVIEW_VSCROLL              1002
 
 type LISTVIEW_COLUMN_TYPE
-    wszText as CWSTR            ' row 0 is the header data
+    wszText as DWSTRING            ' row 0 is the header data
     nWidth as long
 end type
 

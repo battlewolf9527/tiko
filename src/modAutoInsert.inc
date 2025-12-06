@@ -277,7 +277,7 @@ function AttemptAutoInsert() as Long
     ' FOR/NEXT
     if left(strPrevLine, 4) = "FOR " then
         strFill = FillString(space(nSpaces + IndentSize))
-        dim as CWSTR wszLoopVar
+        dim as DWSTRING wszLoopVar
         if gConfig.FornextVariable then
             ' Determine the loop variable and append it to the "next" statement
             strPrevLine = ltrim(AfxStrShrink(strPrevLineOrig))

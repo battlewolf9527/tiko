@@ -120,9 +120,8 @@ function frmOptionsKeywordsWinApi_Show( byval hwndParent as HWND ) as LRESULT
     pWindow->AddControl("TEXTBOX", , IDC_FRMOPTIONSKEYWORDSWINAPI_TXTKEYWORDS, "", 0, 0, 386, 345, _
         WS_CHILD or WS_VISIBLE or WS_VSCROLL or WS_TABSTOP or ES_LEFT or _
         ES_MULTILINE or ES_AUTOVSCROLL or ES_WANTRETURN, _
-        WS_EX_CLIENTEDGE or WS_EX_LEFT or WS_EX_LTRREADING , , _
-        cast(SUBCLASSPROC, @frmOptionsKeywordsWinApiTextBox_SubclassProc ), _
-        IDC_FRMOPTIONSKEYWORDSWINAPI_TXTKEYWORDS, cast(DWORD_PTR, @pWindow)) 
+        WS_EX_CLIENTEDGE or WS_EX_LEFT or WS_EX_LTRREADING)
+    pWindow->SetControlSubclass(hTextBox, @frmOptionsKeywordsWinApiTextBox_SubclassProc, IDC_FRMOPTIONSKEYWORDSWINAPI_TXTKEYWORDS, @pWindow)
         
     SendMessage( hTextBox, EM_SETLIMITTEXT, (1024 * 100), 0 )    ' max 100K text   
     

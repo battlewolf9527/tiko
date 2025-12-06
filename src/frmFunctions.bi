@@ -17,8 +17,8 @@
 #define IDC_FRMFUNCTIONS_LISTBOX   1000
 
 type FUNCTION_NODE_TYPE
-    wszFunctionName as CWSTR
-    wszPrototype    as CWSTR      ' the sub/function parameters
+    wszFunctionName as DWSTRING
+    wszPrototype    as DWSTRING      ' the sub/function parameters
     nLineNumber     as long
 end type
 

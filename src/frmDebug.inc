@@ -185,6 +185,22 @@ function frmDebug_PositionWindows() as LRESULT
     nLeft = gDbgBtns(i).rc.right + nSpacer
 
     AfxRedrawWindow( HWND_FRMDEBUG )
+
+    dim as HWND hCtl = _
+        pWindow->AddControl("RICHEDIT", , IDC_FRMDEBUG_TXTOUTPUT, "", _
+                    0, 0, 0, 0, _
+                    WS_CHILD or WS_TABSTOP or WS_VSCROLL or _
+                    ES_MULTILINE or ES_LEFT or ES_AUTOVSCROLL or ES_WANTRETURN, _
+                    WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR )
+        SendMessage( hCtl, EM_SETEVENTMASK, 0, cast(LPARAM, ENM_SELCHANGE or ENM_CHANGE or ENM_UPDATE) )
+        SendMessage( hCtl, EM_SHOWSCROLLBAR, SB_VERT, FALSE)
+        SendMessage( hCtl, EM_SHOWSCROLLBAR, SB_HORZ, FALSE)
+        
+    HWND_FRMDEBUG_OUTPUT = hCtl
+    
+    GetClientRect(HWND_FRMDEBUG, @rc)
+    SetWindowPos( hCtl, 0, 0, nHeight, rc.right, rc.bottom - nHeight, SWP_NOZORDER or SWP_SHOWWINDOW )
+
     function = 0
 end function
 
@@ -202,17 +218,20 @@ function frmDebug_WndProc( _
     static as long prev_idxHot = -1
     static as long curr_idxHot = -1
 
-    static as CWSTR wszPrevTooltip 
+    static as DWSTRING wszPrevTooltip 
     static as HWND hTooltip
     if (uMsg = WM_DESTROY) andalso (IsWindow(hToolTip)) then DestroyWindow(hToolTip)
 
     select case uMsg
 
         case WM_CLOSE
-            LogClose()
-            KillTimer( HWND_FRMDEBUG, gApp.DebugTimerID )
-            gdb_close( gdb_session )
             DestroyWindow( hwnd )
+            
+        case WM_DESTROY    
+            KillTimer( HWND_FRMDEBUG, gApp.DebugTimerID )
+            ' Kill the GDB process
+            gdb_close( gdb_session )
+            LogClose()
             
         case WM_NCDESTROY
             dim pWindow as CWindow ptr = AfxCWindowPtr(hwnd)
@@ -312,7 +331,7 @@ function frmDebug_WndProc( _
             
 
         case WM_MOUSEHOVER
-            dim as CWSTR wszTooltip
+            dim as DWSTRING wszTooltip
             for i as long = lbound(gDbgBtns) to ubound(gDbgBtns)
                 if IsMouseOverRECT(hwnd,  gDbgBtns(i).rc ) then 
                     wszTooltip = gDbgBtns(i).wszToolTip
@@ -326,7 +345,7 @@ function frmDebug_WndProc( _
             
             ' Display the tooltip
             if wszTooltip <> wszPrevTooltip then
-                dim as CWSTR wszText = AfxStrReplace( wszTooltip, wchr(9), " (" ) & ")"
+                dim as DWSTRING wszText = AfxStrReplace( wszTooltip, wchr(9), " (" ) & ")"
                 AfxSetTooltipText( hTooltip, hwnd, wszText )
                 wszPrevTooltip = wszTooltip 
             end if    
@@ -380,10 +399,12 @@ function frmDebug_WndProc( _
             return 0
 
         case IDM_DEBUG_STARTDEBUGGING
-            gdb_send(gdb_session, "continue")
+'            gdb_send(gdb_session, "continue")
+            gdb_send(gdb_session, "-exec-continue")
         
         case IDM_DEBUG_STOPDEBUGGING
             gdb_send(gdb_session, "kill")
+            sleep 200
             PostMessage( HWND_FRMDEBUG, WM_CLOSE, 0, 0 )
         
         case IDM_DEBUG_STEPNEXT
@@ -441,6 +462,7 @@ function frmDebug_SetInitialBreakpoints( byref session as GDBSession ) as long
                 ' Line numbers in GDB are 1 based whereas Scintilla is 0 based.
                 bp_line = AfxStrParse( sBreakpoints, i, "," )
                 bp_cmd = bp_cmd & "break " & chr(34) & bp_file & chr(34) & ":" & str(val(bp_line)+1) & chr(10)
+'                bp_cmd = bp_cmd & "-break-insert --source " & chr(34) & bp_file & chr(34) & " --line " & str(val(bp_line)+1) & chr(10)
                 numBreakpoints += 1
             next
         end if
@@ -452,6 +474,7 @@ function frmDebug_SetInitialBreakpoints( byref session as GDBSession ) as long
     if numBreakpoints = 0 then
 LM( "Set Temp Breakpoint on Main")
         bp_cmd = "tbreak main"
+'        bp_cmd = "-break-insert -t main"
         gdb_send( gdb_session, bp_cmd )
         
     else    
@@ -507,10 +530,6 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as string ) a
         DestroyWindow( HWND_FRMMAIN )
         exit function            
     end if
-    
-
-    'TODO: If no breakpoints exist then create temp breakpoint to start at beginning
-    ' of the main file.
     
     gdb_send(gdb_session, "run")
     

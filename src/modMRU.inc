@@ -265,7 +265,7 @@ end function
     
 ''
 ''
-function UpdateMRUSessionList( byval wszFilename as CWSTR ) as long
+function UpdateMRUSessionList( byval wszFilename as DWSTRING ) as long
 
     dim idxExistsAt as long = -1   ' index of where filename already exists 
     dim i           as long
@@ -316,7 +316,7 @@ end function
     
 ''
 ''
-function UpdateMRUProjectList( byval wszFilename as CWSTR ) as long
+function UpdateMRUProjectList( byval wszFilename as DWSTRING ) as long
 
     dim idxExistsAt as long = -1   ' index of where filename already exists 
     dim i           as long

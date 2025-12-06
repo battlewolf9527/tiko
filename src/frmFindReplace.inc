@@ -481,7 +481,7 @@ function frmFindReplace_OnPaint( byval hwnd as HWND) as LRESULT
     b.SetForeColors( ghFindReplace.ForeColor, ghFindReplace.ForeColorHot )
     b.SetBackColors( ghFindReplace.BackColor, ghFindReplace.IconBackColorHot )
     b.PaintRect( @gFind.rcExpand, true )
-    dim as CWSTR wszText = iif( gFind.bExpanded, wszIconChevronDown, wszIconChevronRight )
+    dim as DWSTRING wszText = iif( gFind.bExpanded, wszIconChevronDown, wszIconChevronRight )
     b.PaintText( wszText, @gFind.rcExpand, DT_CENTER, true )
 
 
@@ -738,7 +738,7 @@ function frmFindReplace_WndProc( _
         AfxRedrawWindow( hwnd )
 
     case WM_MOUSEHOVER
-        dim as CWSTR wszTooltip = ""
+        dim as DWSTRING wszTooltip = ""
         if isMouseOverRECT( hwnd, gFind.rcExpand ) then
             wszTooltip = L(270, "Toggle Replace mode")
         elseif isMouseOverRECT( hwnd, gFind.rcMatchCase ) then
@@ -897,7 +897,7 @@ Function frmFindReplace_RichEdit_SubclassProc ( _
         
         case WM_CONTEXTMENU 
             ' Create the right click popup menu
-            dim as CWSTR wszText = RichEdit_GetSelText( hWin )
+            dim as DWSTRING wszText = RichEdit_GetSelText( hWin )
             Dim hPopUpMenu As HMENU = CreatePopupMenu()
             if len(wszText) then 
                 AppendMenu( hPopUpMenu, MF_ENABLED, IDM_CUT, wstr("Cut") )
@@ -1007,11 +1007,16 @@ function frmFindReplace_Show( _
         cf.dwMask = CFM_COLOR
         cf.crTextColor = ghFindReplace.TextBoxForeColor
 
+'        hCtlFind = pWindow->AddControl("RICHEDIT", , IDC_FRMFINDREPLACE_TXTFIND, "", _
+'                    0, 0, 166, 24, _
+'                    WS_CHILD or WS_VISIBLE or WS_TABSTOP or ES_LEFT or ES_AUTOHSCROLL, _
+'                    WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR, _
+'                    0, @frmFindReplace_RichEdit_SubclassProc, IDC_FRMFINDREPLACE_TXTFIND, null )
         hCtlFind = pWindow->AddControl("RICHEDIT", , IDC_FRMFINDREPLACE_TXTFIND, "", _
                     0, 0, 166, 24, _
                     WS_CHILD or WS_VISIBLE or WS_TABSTOP or ES_LEFT or ES_AUTOHSCROLL, _
-                    WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR, _
-                    0, @frmFindReplace_RichEdit_SubclassProc, IDC_FRMFINDREPLACE_TXTFIND, null )
+                    WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR)
+        pWindow->SetControlSubclass(hCtlFind, @frmFindReplace_RichEdit_SubclassProc, IDC_FRMFINDREPLACE_TXTFIND, NULL)
 
         SendMessage( hCtlFind, EM_SETCHARFORMAT, SCF_ALL, cast(LPARAM, @cf) ) 
         SendMessage( hCtlFind, EM_SETBKGNDCOLOR , 0, cast(LPARAM, ghFindReplace.TextBoxBackColor) )
@@ -1020,11 +1025,16 @@ function frmFindReplace_Show( _
         SendMessage( hCtlFind, EM_SETRECT, 0, cast(LPARAM, @rc) )
         SendMessage( hCtlFind, EM_SETEVENTMASK, 0, cast(LPARAM, ENM_SELCHANGE or ENM_CHANGE) )
         
-        hCtlReplace = pWindow->AddControl("RICHEDIT", , IDC_FRMFINDREPLACE_TXTREPLACE, wstr(gFind.txtReplace), _
+'        hCtlReplace = pWindow->AddControl("RICHEDIT", , IDC_FRMFINDREPLACE_TXTREPLACE, wstr(gFind.txtReplace), _
+'                    0, 0, 190, 24, _
+'                    WS_CHILD or WS_VISIBLE or WS_TABSTOP or ES_LEFT or ES_AUTOHSCROLL, _
+'                    WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR, _
+'                    0, @frmFindReplace_RichEdit_SubclassProc, IDC_FRMFINDREPLACE_TXTREPLACE, null )
+        hCtlReplace = pWindow->AddControl("RICHEDIT", , IDC_FRMFINDREPLACE_TXTREPLACE, gFind.txtReplace, _
                     0, 0, 190, 24, _
                     WS_CHILD or WS_VISIBLE or WS_TABSTOP or ES_LEFT or ES_AUTOHSCROLL, _
-                    WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR, _
-                    0, @frmFindReplace_RichEdit_SubclassProc, IDC_FRMFINDREPLACE_TXTREPLACE, null )
+                    WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR)
+        pWindow->SetControlSubclass(hCtlReplace, @frmFindReplace_RichEdit_SubclassProc, IDC_FRMFINDREPLACE_TXTREPLACE, NULL)
         SendMessage( hCtlReplace, EM_SETCHARFORMAT, SCF_ALL, cast(LPARAM, @cf) ) 
         SendMessage( hCtlReplace, EM_SETBKGNDCOLOR , 0, cast(LPARAM, ghFindReplace.TextBoxBackColor) )
         GetClientRect( hCtlReplace, @rc )

@@ -47,9 +47,9 @@ end function
 ' ========================================================================================
 ' frmListView_GetItemText
 ' ========================================================================================
-function frmListView_GetItemText( byval hLV as HWND, byval nLineNum as long, byval nColNum as long ) as CWSTR
+function frmListView_GetItemText( byval hLV as HWND, byval nLineNum as long, byval nColNum as long ) as DWSTRING
     dim as HWND hListBox = GetDlgItem( hLV, IDC_FRMLISTVIEW_LISTBOX )
-    dim as CWSTR wszCaption = AfxGetListBoxText( hListBox, nLineNum )
+    dim as DWSTRING wszCaption = AfxGetListBoxText( hListBox, nLineNum )
     return AfxStrParse( wszCaption, nColNum + 1, chr(9) )
 end function
 
@@ -88,7 +88,7 @@ end function
 ' ========================================================================================
 ' frmListView_AddString
 ' ========================================================================================
-function frmListView_AddString( byval hLV as HWND, byval wszText as CWSTR ) as long
+function frmListView_AddString( byval hLV as HWND, byval wszText as DWSTRING ) as long
     dim as HWND hListBox = GetDlgItem( hLV, IDC_FRMLISTVIEW_LISTBOX )
     ListBox_AddString( hListBox, wszText.vptr )
     AfxRedrawWindow( hListBox )
@@ -103,7 +103,7 @@ end function
 function frmListView_AddColumn( _
             byval hLV as HWND, _
             byval nColNum as long, _
-            byval wszText as CWSTR, _
+            byval wszText as DWSTRING, _
             byval nWidth as long _
             ) as long
     dim as LISTVIEW_DATA_TYPE ptr pData = frmListView_GetPointer(hLV)
@@ -186,9 +186,9 @@ function SpawnPreviousInstance() as boolean
     if hWindow then
         SetForegroundWindow(hWindow)
         ' Send the command line to the original editor to be processed
-        dim as CWSTR wszPath 
-        dim as CWSTR wszArg  
-        dim as CWSTR wszSendString  
+        dim as DWSTRING wszPath 
+        dim as DWSTRING wszArg  
+        dim as DWSTRING wszSendString  
 
         dim as long i = 1
         do
@@ -251,7 +251,7 @@ public function ShowContextHelp( byval id as long ) as long
                                 byval dwData as DWORD_PTR _
                                 ) as HWND
 
-    dim as CWSTR wszHelpFilename, wszLabel
+    dim as DWSTRING wszHelpFilename, wszLabel
     
     ' Ensure that the CurDrive parameter is converted if applicable
     gConfig.CompilerHelpFile = ProcessFromCurdriveApp( gConfig.CompilerHelpFile ) 
@@ -428,7 +428,7 @@ end function
 ' ========================================================================================
 ' Get the Scintilla value for a character sets
 ' ========================================================================================
-function GetFontCharSetID(byref wzCharsetName as CWSTR ) as long
+function GetFontCharSetID(byref wzCharsetName as DWSTRING ) as long
 
     if len(wzCharsetName) = 0 then return SC_CHARSET_DEFAULT
     
@@ -572,7 +572,7 @@ end function
 ' ========================================================================================
 ' Maps Unicode character string to a UTF-8 string.
 ' ========================================================================================
-function UnicodeToUtf8( byval wzUnicode as CWSTR ) as string
+function UnicodeToUtf8( byval wzUnicode as DWSTRING ) as string
     dim sUtf8 as string
 
     ' Maps Unicode character string to a UTF-8 string.
@@ -729,7 +729,7 @@ function GetFileToString( _
          
       case FILE_ENCODING_UTF16_BOM
          ' Convert the whole buffer to UTF-16 unicode string
-         dim as CWSTR wszText = string(len(txtBuffer),0)
+         dim as DWSTRING wszText = string(len(txtBuffer),0)
          MemCpy( CAST(any PTR, wszText.m_pBuffer), strptr(txtBuffer), len(txtBuffer))
 
          ' Convert to UTF8 so it can display in the editor
@@ -748,10 +748,10 @@ end function
 ' include files have changed and requires the module bas file to recompile.
 ' ========================================================================================
 function CompleteIncludeFilename( byval pDoc as clsDocument ptr, byval sFilename as string ) as string
-    dim wszPath             as CWSTR
-    dim wszCompilerPath     as CWSTR
-    dim wszText             as CWSTR
-    dim wszCompleteFilename as CWSTR
+    dim wszPath             as DWSTRING
+    dim wszCompilerPath     as DWSTRING
+    dim wszText             as DWSTRING
+    dim wszCompleteFilename as DWSTRING
     dim i                   as long
 
     dim as long idxBuild = frmBuildConfig_getActiveBuildIndex()
@@ -784,7 +784,7 @@ function CompleteIncludeFilename( byval pDoc as clsDocument ptr, byval sFilename
         wszCompleteFilename = str(wszCompilerPath) & "\" & sFilename
     else
         ' Iterate the optional semi colon separated list of compiler include paths
-        dim as CWSTR includePath
+        dim as DWSTRING includePath
         dim as long numpaths = AfxStrParseCount(gConfig.CompilerIncludes, ";")
         for i as long = 1 to numpaths
             includePath = rtrim(AfxStrParse(gConfig.CompilerIncludes, i, ";")) & "\" & sFilename
@@ -908,15 +908,15 @@ end function
 ' ========================================================================================
 ' Process prefix {CURDRIVE} and convert to current drive letter.
 ' ========================================================================================
-function ProcessToCurdriveApp( byval wszFilename as CWSTR ) as CWSTR
+function ProcessToCurdriveApp( byval wszFilename as DWSTRING ) as DWSTRING
     ' for each folder location determine if it resides on the same drive as
     ' the editor. if it does then substitute the replaceable parameter
     ' {CURDRIVE} for the drive letter. This allows you to easily run the editor
     ' on different media (eg. thumb drive) that may be assigned a different
     ' drive letter.
-    dim as CWSTR wszText = AfxGetExePathName
+    dim as DWSTRING wszText = AfxGetExePathName
 
-    dim wszCurDrive as CWSTR = lcase(left(wszText, 3))  ' eg. D:\
+    dim wszCurDrive as DWSTRING = lcase(left(wszText, 3))  ' eg. D:\
 
     ' if the incoming filename is a relative file name then the following test
     ' will have no effect.
@@ -931,13 +931,13 @@ end function
 ' ========================================================================================
 ' Process current drive to prefix {CURDRIVE} 
 ' ========================================================================================
-function ProcessFromCurdriveApp( byval wszFilename as CWSTR ) as CWSTR
+function ProcessFromCurdriveApp( byval wszFilename as DWSTRING ) as DWSTRING
     ' for each folder location determine if it resides on the same drive as
     ' the editor. if it does then substitute the replaceable parameter
     ' {CURDRIVE} for the drive letter. This allows you to easily run the editor
     ' on different media (eg. thumb drive) that may be assigned a different
     ' drive letter.
-    dim as CWSTR wszText = AfxGetExePathName
+    dim as DWSTRING wszText = AfxGetExePathName
 
     if ucase(left(wszFilename, 10)) = wstr("{CURDRIVE}") then 
         wszFilename = left(wszText, 1) & mid(wszFilename, 11)
@@ -950,15 +950,15 @@ end function
 ' ========================================================================================
 ' Process prefix {CURDRIVE} and convert to current drive letter.
 ' ========================================================================================
-function ProcessToCurdriveProject( byval wszFilename as CWSTR ) as CWSTR
+function ProcessToCurdriveProject( byval wszFilename as DWSTRING ) as DWSTRING
     ' for each folder location determine if it resides on the same drive as
     ' the project file. if it does then substitute the replaceable parameter
     ' {CURDRIVE} for the drive letter. This allows you to easily run the editor
     ' on different media (eg. thumb drive) that may be assigned a different
     ' drive letter.
-    dim wszText as CWSTR = gApp.ProjectFilename
+    dim wszText as DWSTRING = gApp.ProjectFilename
 
-    dim wszCurDrive as CWSTR = lcase(left(wszText, 3))  ' eg. D:\
+    dim wszCurDrive as DWSTRING = lcase(left(wszText, 3))  ' eg. D:\
 
     ' if the incoming filename is a relative file name then the following test
     ' will have no effect.
@@ -973,13 +973,13 @@ end function
 ' ========================================================================================
 ' Process current drive to prefix {CURDRIVE} 
 ' ========================================================================================
-function ProcessFromCurdriveProject( byval wszFilename as CWSTR ) as CWSTR
+function ProcessFromCurdriveProject( byval wszFilename as DWSTRING ) as DWSTRING
     ' for each folder location determine if it resides on the same drive as
     ' the project file. if it does then substitute the replaceable parameter
     ' {CURDRIVE} for the drive letter. This allows you to easily run the editor
     ' on different media (eg. thumb drive) that may be assigned a different
     ' drive letter.
-    dim wszText as CWSTR = gApp.ProjectFilename
+    dim wszText as DWSTRING = gApp.ProjectFilename
     
     if ucase(left(wszFilename, 10)) = wstr("{CURDRIVE}") then 
         wszFilename = left(wszText, 1) & mid(wszFilename, 11)
@@ -1053,7 +1053,7 @@ function AfxIFileOpenDialogW( _
             ' Set the title of the dialog
             hr = pofd->lpVtbl->SetTitle(pofd, L(103,"Open Localization File"))
     
-            dim as CWSTR wszDefaultFolder = AfxGetExePathName & wstr("settings\languages\") 
+            dim as DWSTRING wszDefaultFolder = AfxGetExePathName & wstr("settings\languages\") 
             dim pFolder as IShellItem ptr
             SHCreateItemFromParsingName (wszDefaultFolder, null, @IID_IShellItem, @pFolder)
             if pFolder then
@@ -1070,7 +1070,7 @@ function AfxIFileOpenDialogW( _
             ' Set the title of the dialog
             hr = pofd->lpVtbl->SetTitle(pofd, L(4,"Open File"))
     
-            dim as CWSTR wszDefaultFolder = AfxGetExePathName & wstr("settings\tools\") 
+            dim as DWSTRING wszDefaultFolder = AfxGetExePathName & wstr("settings\tools\") 
             dim pFolder as IShellItem ptr
             SHCreateItemFromParsingName (wszDefaultFolder, null, @IID_IShellItem, @pFolder)
             if pFolder then
@@ -1089,7 +1089,7 @@ function AfxIFileOpenDialogW( _
             ' Set the title of the dialog
             hr = pofd->lpVtbl->SetTitle(pofd, L(105,"Find Help File"))
 
-            dim as CWSTR wszDefaultFolder = AfxGetExePathName & wstr("settings\help\") 
+            dim as DWSTRING wszDefaultFolder = AfxGetExePathName & wstr("settings\help\") 
             dim pFolder as IShellItem ptr
             SHCreateItemFromParsingName (wszDefaultFolder, null, @IID_IShellItem, @pFolder)
             if pFolder then
@@ -1217,7 +1217,7 @@ function AfxIFileSaveDialog( _
     hr = CoCreateInstance(@CLSID_FileSaveDialog, null, CLSCTX_INPROC_SERVER, @IID_IFileSaveDialog, @psfd)
     if psfd = null then return null
 
-    dim as CWSTR wszFilename, wszFilePath 
+    dim as DWSTRING wszFilename, wszFilePath 
     
     ' Add extensions if it does not already exist as part of the filename
     wszFilename = AfxStrPathname( "NAMEX", *pwszFileName )
@@ -1279,7 +1279,7 @@ function AfxIFileSaveDialog( _
             psfd->lpVtbl->SetFileTypes(psfd, 2, @rgFileTypes(1))
             psfd->lpVtbl->SetTitle(psfd, L(8,"Save As..."))
 
-            dim as CWSTR wszDefaultFolder = AfxGetExePathName & wstr("settings\languages\") 
+            dim as DWSTRING wszDefaultFolder = AfxGetExePathName & wstr("settings\languages\") 
             dim pFolder as IShellItem ptr
             SHCreateItemFromParsingName (wszDefaultFolder, null, @IID_IShellItem, @pFolder)
             if pFolder then
@@ -1426,7 +1426,7 @@ end function
 ' array that is used in the editor startup code.
 ' ========================================================================================
 function LoadLocalizationFile( _
-            byref wszFileName as CWSTR, _
+            byref wszFileName as DWSTRING, _
             byval IsEnglish as boolean = false _
             ) as boolean
 
@@ -1434,7 +1434,7 @@ function LoadLocalizationFile( _
     function = false
     if AfxFileExists( wszFileName ) = 0 then exit function
 
-    dim as CBSTR wst, wKey, wData
+    dim as BSTRING wst, wKey, wData
     dim nKey  as long
     dim nData as long  
     dim i     as long
@@ -1474,7 +1474,7 @@ function LoadLocalizationFile( _
             if IsEnglish then
                 if (nKey >= lbound(gLangEnglish)) andalso (nKey <= ubound(gLangEnglish)) then
                     ' Use ** to ensure that cyrillic langauge gets converted correctly. FB intrinsic
-                    ' functions (RTRIM) automatically convert those incorrectly when using CBSTR or CWSTR.
+                    ' functions (RTRIM) automatically convert those incorrectly when using CBSTR or DWSTRING.
                     gLangEnglish(nKey) = rtrim(**AfxStrParse(wData, 1, ";"), any chr(9,32))
                 end if
             else
@@ -1482,7 +1482,7 @@ function LoadLocalizationFile( _
                     ' Remove any comments from end of the line. Comments begin with
                     ' a semicolon character.
                     ' Use ** to ensure that cyrillic langauge gets converted correctly. FB intrinsic
-                    ' functions (RTRIM) automatically convert those incorrectly when using CBSTR or CWSTR.
+                    ' functions (RTRIM) automatically convert those incorrectly when using CBSTR or DWSTRING.
                     LL(nKey) = rtrim(**AfxStrParse(wData, 1, ";"), any chr(9,32))
                     ' if the local phrase is empty then fill it using the English version.
                     if len(LL(nKey)) = 0 then 
@@ -1576,10 +1576,10 @@ end function
 ' ========================================================================================
 ' Determine the EXE name of the currently active document or project.
 ' ========================================================================================
-function GetRunExecutableFilename() as CWSTR
+function GetRunExecutableFilename() as DWSTRING
     ' Used by the top menu to determine if the Run Executable option is available
-    dim wszFilename as CWSTR
-    dim wszOptions as CWSTR
+    dim wszFilename as DWSTRING
+    dim wszOptions as DWSTRING
     dim pDocMain as clsDocument ptr 
 
     dim as long idxBuild = frmBuildConfig_getActiveBuildIndex()

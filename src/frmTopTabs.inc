@@ -337,7 +337,7 @@ function frmTopTabs_WndProc( _
 
     static as long curr_idxHot = -1
     
-    static as CWSTR wszPrevTooltip 
+    static as DWSTRING wszPrevTooltip 
     static as HWND hTooltip 
     if (uMsg = WM_DESTROY) andalso (IsWindow(hToolTip)) then DestroyWindow(hToolTip)
 
@@ -398,7 +398,7 @@ function frmTopTabs_WndProc( _
 
 
     case WM_MOUSEHOVER
-        dim as CWSTR wszTooltip 
+        dim as DWSTRING wszTooltip 
         ' test for Action Button, Filename caption or Close caption
         curr_idxHot = getHotTabHitTest( hwnd )
         if isMouseOverRECT(hwnd, gTTabCtl.rcPrevTabs) then

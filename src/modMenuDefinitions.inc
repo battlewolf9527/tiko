@@ -17,8 +17,8 @@
 ' ========================================================================================
 ' Get the menu accelerator text (if one exists) for this menu item
 ' ========================================================================================
-function getMenuAccelText( byval idMenu as long ) As CWSTR
-    dim as CWSTR wszAccel
+function getMenuAccelText( byval idMenu as long ) As DWSTRING
+    dim as DWSTRING wszAccel
     ' Search the gKeys array for a match
     for i as long = lbound(gKeys) to ubound(gKeys)
         if gKeys(i).idAction = idMenu then
@@ -41,8 +41,8 @@ end function
 ' ========================================================================================
 ' Get the menu text based on the incoming control id
 ' ========================================================================================
-Function getMenuText( byval idMenu as long ) As CWSTR
-    dim as CWSTR wszText
+Function getMenuText( byval idMenu as long ) As DWSTRING
+    dim as DWSTRING wszText
     select case idMenu
         case 0: return "-"    ' this is a separator line
         case IDC_MENUBAR_FILE: wszText = L(2,"&File")
@@ -79,8 +79,8 @@ Function getMenuText( byval idMenu as long ) As CWSTR
         case IDM_USERTOOLS: return L(289,"User Tools")
         case IDM_USERTOOLSDIALOG: wszText = L(289,"User Tools") & "..."
         case IDM_USERTOOLSBASE to IDM_USERTOOLSBASE + ubound(gConfig.Tools)
-            dim as CWSTR wszText = gConfig.Tools(idMenu - IDM_USERTOOLSBASE).wszDescription
-            dim as CWSTR wszShortcut = createToolsMenuShortcut(idMenu - IDM_USERTOOLSBASE)
+            dim as DWSTRING wszText = gConfig.Tools(idMenu - IDM_USERTOOLSBASE).wszDescription
+            dim as DWSTRING wszShortcut = createToolsMenuShortcut(idMenu - IDM_USERTOOLSBASE)
             if len(wszShortcut) then wszText = wszText & chr(9) & wszShortcut
             return wszText
         case IDM_USERTOOLSLIST: return L(11,"(Empty)")

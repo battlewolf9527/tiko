@@ -25,14 +25,15 @@
 #include once "vbcompat.bi"
 #include once "win\shobjidl.bi"
 #include once "win\TlHelp32.bi"
-#include once "Afx\CWindow.inc"
-#include once "Afx\AfxFile.inc"
-#include once "Afx\AfxRichEdit.inc"
-#include once "Afx\AfxGdiplus.inc"
-#include once "Afx\AfxCom.inc" 
-#include once "Afx\CImageCtx.inc"
+#include once "AfxNova\CWindow.inc"
+#include once "AfxNova\AfxFile.inc"
+#include once "AfxNova\AfxRichEdit.inc"
+#include once "AfxNova\AfxGdiplus.inc"
+#include once "AfxNova\AfxCom.inc" 
+#include once "AfxNova\CImageCtx.inc"
+#include once "AfxNova\AfxStr.inc"
 
-using Afx
+using AfxNova
 
 
 #define APPNAME             wstr("Tiko Editor")
@@ -46,7 +47,7 @@ using Afx
 #define QUICKRUNEXE         wstr("_tiko_quickrun.exe")
 
 #define APPCOPYRIGHT   wstr("Paul Squires, PlanetSquires Software, Copyright (C) 2016-2025") 
-dim shared as CWSTR gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.0"
+dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.0"
 
 
 'TODO: Refactor AutoSave functionality. Until then, just disable it in the editor.
@@ -154,7 +155,7 @@ function WinMain( _
     ' Attempt to load the english localization file. This is necessary because
     ' any non-english localization file will have missing entries filled by the
     ' english version.
-    dim as CWSTR wszLocalizationFile
+    dim as DWSTRING wszLocalizationFile
     wszLocalizationFile = AfxGetExePathName + wstr("settings\languages\english.lang")
     if LoadLocalizationFile(wszLocalizationFile, true) = false Then
         MessageBox( 0, _
@@ -180,7 +181,7 @@ function WinMain( _
     
     ' Load the Segoe Fluent Icons ttf file that is used for displaying the various
     ' icons used within the editor.
-    dim as CWSTR wszFontFile 
+    dim as DWSTRING wszFontFile 
     wszFontFile = AfxGetExePathName + "\bin\SegoeFluentIcons.ttf"
     if AddFontResourceEx(wszFontFile.vptr, FR_PRIVATE, NULL) = 0 then
         MessageBox( 0, _

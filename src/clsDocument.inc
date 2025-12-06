@@ -422,7 +422,7 @@ function clsDocument.SaveFile( byval bSaveAs as boolean = false ) as boolean
     dim wszFilename  as wstring * MAX_PATH
     dim wszExtension as wstring * MAX_PATH
     dim wszText      as wstring * MAX_PATH  
-    dim wst          as CWSTR
+    dim wst          as DWSTRING
     
     ' if this is a new Untitled document then set flag to display SaveAs dialog.
     if this.IsNewFlag then bSaveAs = true
@@ -452,7 +452,7 @@ function clsDocument.SaveFile( byval bSaveAs as boolean = false ) as boolean
     dim as zstring ptr psz = cast( zstring ptr, SciExec(this.hWindow(0), SCI_GETCHARACTERPOINTER, 0, 0) )
     dim as long sciCodePage = SciMsg(pSci, SCI_GETCODEPAGE, 0, 0)   ' 0 or SC_CP_UTF8 
 
-    dim as CWSTR wszSaveFilename
+    dim as DWSTRING wszSaveFilename
     if AfxFileExists(wszFilename) then AfxDeleteFile(wszFilename)
     wszSaveFilename = wszFilename
 
@@ -502,7 +502,7 @@ function clsDocument.SaveFile( byval bSaveAs as boolean = false ) as boolean
                    pStream.Write wst.m_pBuffer, wst.m_BufferLen
                 else
                     ' need to convert ansi to unicode
-                    dim as CWSTR wst = Wstr(*psz)
+                    dim as DWSTRING wst = Wstr(*psz)
                     pStream.Write wst.m_pBuffer, wst.m_BufferLen
                 end if    
                 
@@ -531,7 +531,7 @@ end function
 
 ''
 ''
-function clsDocument.SaveTempFile( byval wszFilename as CWSTR ) as boolean
+function clsDocument.SaveTempFile( byval wszFilename as DWSTRING ) as boolean
     ' Save this document as a temp disk file in order to Quick Run
     dim as any ptr pSci = this.GetActiveScintillaPtr()
     
@@ -544,13 +544,13 @@ function clsDocument.SaveTempFile( byval wszFilename as CWSTR ) as boolean
     dim as zstring ptr psz = cast( zstring ptr, SciExec(this.hWindow(0), SCI_GETCHARACTERPOINTER, 0, 0) )
     dim as long sciCodePage = SciMsg(pSci, SCI_GETCODEPAGE, 0, 0)   ' 0 or SC_CP_UTF8 
 
-    dim as CWSTR wszSaveFilename
+    dim as DWSTRING wszSaveFilename
     if AfxFileExists(wszFilename) then AfxDeleteFile(wszFilename)
     wszSaveFilename = wszFilename
 
     dim pStream as CFileStream
     if pStream.Open(wszSaveFilename, STGM_CREATE or STGM_WRITE) = S_OK then
-        dim as CWSTR wst          
+        dim as DWSTRING wst          
         dim as string st
         select case this.FileEncoding
             case FILE_ENCODING_ANSI
@@ -595,7 +595,7 @@ function clsDocument.SaveTempFile( byval wszFilename as CWSTR ) as boolean
                    pStream.Write wst.m_pBuffer, wst.m_BufferLen
                 else
                     ' need to convert ansi to unicode
-                    dim as CWSTR wst = Wstr(*psz)
+                    dim as DWSTRING wst = Wstr(*psz)
                     pStream.Write wst.m_pBuffer, wst.m_BufferLen
                 end if    
                 

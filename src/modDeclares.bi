@@ -175,7 +175,7 @@ dim shared as HWND HWND_FRMOPTIONSKEYWORDS, HWND_FRMOPTIONSKEYWORDSWINAPI
 dim shared as HWND HWND_FRMFINDREPLACE, HWND_FRMFINDINFILES, HWND_FRMFINDREPLACE_SHADOW
 dim shared as HWND HWND_FRMBUILDCONFIG, HWND_FRMUSERTOOLS, HWND_FRMABOUT
 dim shared as HWND HWND_FRMKEYBOARD, HWND_FRMKEYBOARD_LISTVIEW, HWND_FRMKEYBOARDEDIT
-dim shared as HWND HWND_FRMDEBUG
+dim shared as HWND HWND_FRMDEBUG, HWND_FRMDEBUG_OUTPUT
 
 dim shared as HWND HWND_FRMMAIN_TOPTABS, HWND_FRMMAIN_TOPTABS_SHADOW
 dim shared as HWND HWND_FRMEXPLORER, HWND_FRMEXPLORER_LISTBOX
@@ -216,15 +216,15 @@ type FINDREPLACE_TYPE
     bFirstTimeInvoked   as boolean = true
     hCueBannerFont      as HFONT
     foundCount          as long 
-    txtFind             as CWSTR
-    txtReplace          as CWSTR
-    txtFindCombo(10)    as CWSTR
-    txtReplaceCombo(10) as CWSTR
-    txtFilesCombo(10)   as CWSTR
-    txtFolderCombo(10)  as CWSTR
-    txtLastFind         as CWSTR
-    txtFiles            as CWSTR         ' *.*, *.bas, etc (FindInFolder)
-    txtFolder           as CWSTR         ' start search from this folder (FindInFolder)
+    txtFind             as DWSTRING
+    txtReplace          as DWSTRING
+    txtFindCombo(10)    as DWSTRING
+    txtReplaceCombo(10) as DWSTRING
+    txtFilesCombo(10)   as DWSTRING
+    txtFolderCombo(10)  as DWSTRING
+    txtLastFind         as DWSTRING
+    txtFiles            as DWSTRING         ' *.*, *.bas, etc (FindInFolder)
+    txtFolder           as DWSTRING         ' start search from this folder (FindInFolder)
     nSearchSubFolders   as long          ' search sub folders as well (FindInFolder)
     nWholeWord          as long          ' find/replace whole word search
     nMatchCase          as long          ' match case when searching
@@ -233,7 +233,7 @@ type FINDREPLACE_TYPE
     nSearchCurrentDoc   as long
     nSearchAllOpenDocs  as long
     nSearchProject      as long
-    wszResults          as CWSTR
+    wszResults          as DWSTRING
     bExpanded           as boolean
     rcExpand            as RECT
     rcMatchCase         as RECT
@@ -252,7 +252,7 @@ dim shared gFindInFiles as FINDREPLACE_TYPE
 
 
 TYPE MENUBAR_ITEM
-    wszText as CWSTR
+    wszText as DWSTRING
     rcItem  as RECT
     id      as long
 end type
@@ -264,7 +264,7 @@ dim shared as long gMenuLastCurSel = -1
 dim shared as boolean gPrevent_WM_NCACTIVATE = false
 
 ' array that holds the names of all fonts on the target system
-dim shared gFontNames( any ) as CWSTR
+dim shared gFontNames( any ) as DWSTRING
 
 
 const MENUITEM_HEIGHT = 24

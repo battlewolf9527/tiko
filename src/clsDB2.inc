@@ -30,9 +30,9 @@ constructor clsDB2
     parser.objectStartLine = -1
     parser.objectEndLine = -1
 
-    dim as CWSTR wszMainStr = _
+    dim as DWSTRING wszMainStr = _
     "boolean|byte|ubyte|short|ushort|integer|uinteger|long|ulong|longint|ulongint|single|" & _
-    "double|string|wstring|zstring|true|false|CWSTR|DWSTR"
+    "double|string|wstring|zstring|true|false|DWSTRING|DWSTR"
 
     dim as integer nCount = AfxStrParseCount(wszMainStr, "|")
     
@@ -141,7 +141,7 @@ end function
 ''
 function clsDB2.dbDelete( byref wszFilename as wstring ) as integer
     dim nCount as integer 
-    dim as CWSTR wszFile = ucase(wszFilename)
+    dim as DWSTRING wszFile = ucase(wszFilename)
     for i as integer = lbound(m_arrData) to ubound(m_arrData)
         if m_arrData(i).deleted = true then continue for
         if ucase(m_arrData(i).fileName) = wszFile then
@@ -293,7 +293,7 @@ function clsDB2.dbDebug() as integer
     dim pStream as CTextStream
     pStream.Create("_debug.txt")
 
-    dim as CWSTR wszTitle
+    dim as DWSTRING wszTitle
     dim as integer dataType
     
     dim pData as DB2_DATA ptr
@@ -320,7 +320,7 @@ function clsDB2.dbDebug() as integer
             if pData->id <> dataType then continue do
             'if len(pData->fileName) = 0 then continue do  ' bypass any predefined data
             
-            dim as CWSTR wszFileType
+            dim as DWSTRING wszFileType
             select case pData->nFileType
                 case DB2_FILETYPE_FB:        wszFileType = "DB2_FILETYPE_FB"
                 case DB2_FILETYPE_WINAPI:    wszFileType = "DB2_FILETYPE_WINAPI"

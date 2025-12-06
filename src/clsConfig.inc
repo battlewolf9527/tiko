@@ -33,7 +33,7 @@
 ''  CONSTRUCTOR
 ''
 constructor clsConfig
-    dim as CWSTR exe_path = AfxGetExePathName 
+    dim as DWSTRING exe_path = AfxGetExePathName 
     ConfigFilename            = exe_path & "settings\settings.ini" 
     FBKeywordsFilename        = exe_path & "settings\keywords\freebasic_keywords.txt" 
     WinApiKeywordsFilename    = exe_path & "settings\keywords\winapi_keywords.txt" 
@@ -87,7 +87,7 @@ end function
 ''
 function clsConfig.LoadCodetipsFB() as boolean
 
-    dim as CWSTR wst
+    dim as DWSTRING wst
     dim as long i
     
     dim parser as ctxParser
@@ -121,11 +121,11 @@ end function
 ''
 ''
 function clsConfig.LoadCodetipsGeneric( _
-            byval wszFilename as CWSTR, _
+            byval wszFilename as DWSTRING, _
             byval nFileType as long _
             ) as boolean
                                         
-    dim as CWSTR wst, wsID, wsTypeName, wsTypeElements, wsParts, wsPart, wsBaseType
+    dim as DWSTRING wst, wsID, wsTypeName, wsTypeElements, wsParts, wsPart, wsBaseType
     dim as long i, nCount
     
     dim parser as ctxParser
@@ -240,7 +240,7 @@ function fonts_EnumFontName( _
             HWnd as HWnd _
             ) as long
     dim as long ub = ubound(gFontNames)
-    redim preserve gFontNames(ub + 1) as CWSTR
+    redim preserve gFontNames(ub + 1) as DWSTRING
     gFontNames(ub + 1) = lf.lfFaceName 
     function = true
 end function
@@ -248,7 +248,7 @@ end function
 ' ========================================================================================
 ' Search the gFontNames() array to see if the font name exists
 ' ========================================================================================
-function isFontNameExist( byval wszFontName as CWSTR ) as boolean
+function isFontNameExist( byval wszFontName as DWSTRING ) as boolean
     wszFontName = ucase(wszFontName)
     for i as long = lbound(gFontnames) to ubound(gFontNames)
         if wszFontName = ucase(gFontNames(i)) then return true   
@@ -422,9 +422,9 @@ function clsConfig.SaveConfigFile() as long
     ' Do not modify the this.CompilerIncludes directly because that will put the
     ' {CURDRIVE} macro back into the path names causing future compiles to fail
     ' because that macro only gets resolved on LoadConfig.
-    dim as CWSTR allIncludes = rtrim(this.CompilerIncludes, ";")
-    dim as CWSTR SaveCompilerIncludes
-    dim as CWSTR includePath
+    dim as DWSTRING allIncludes = rtrim(this.CompilerIncludes, ";")
+    dim as DWSTRING SaveCompilerIncludes
+    dim as DWSTRING includePath
     dim as long numpaths = AfxStrParseCount(allIncludes, ";")
     for i as long = 1 to numpaths
         includePath = trim(AfxStrParse(allIncludes, i, ";"))
@@ -474,7 +474,7 @@ function clsConfig.SaveConfigFile() as long
         pStream.Write this.Tools(i).IsMinimized & "|-|"  
         pStream.Write this.Tools(i).IsWaitFinish & "|-|"
         pStream.Write this.Tools(i).IsDisplayMenu & "|-|"    
-        pStream.WriteLine this.Tools(i).Action   
+        pStream.WriteLine wstr(this.Tools(i).Action)   
     next
 
     pStream.WriteLine ""
@@ -517,7 +517,7 @@ function clsConfig.SaveConfigFile() as long
     next         
     
     dim hCtl as hwnd = GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES)
-    dim wszText as CWSTR = wstr("NOTES-START") + vbcrlf + _
+    dim wszText as DWSTRING = wstr("NOTES-START") + vbcrlf + _
                             gApp.NonProjectNotes + vbcrlf + _
                             wstr("NOTES-END") + vbcrlf
     pStream.WriteLine ""
@@ -541,10 +541,10 @@ end function
 ' the editor to work better with external tools that manually modify the
 ' settings.ini file.
 function clsConfig.WriteMRU() as long 
-    dim as CWSTR wszKeyName, wszValue
+    dim as DWSTRING wszKeyName, wszValue
     
     ' Delete the section name
-    dim as CWSTR wszSectionName = "MRU"
+    dim as DWSTRING wszSectionName = "MRU"
     WritePrivateProfileString( wszSectionName, null, null, this.ConfigFilename )
     
     ' Write the new values.
@@ -564,10 +564,10 @@ end function
 ' the editor to work better with external tools that manually modify the
 ' settings.ini file.
 function clsConfig.WriteMRUProjects() as long 
-    dim as CWSTR wszKeyName, wszValue
+    dim as DWSTRING wszKeyName, wszValue
     
     ' Delete the section name
-    dim as CWSTR wszSectionName = "MRUPROJECTS"
+    dim as DWSTRING wszSectionName = "MRUPROJECTS"
     WritePrivateProfileString( wszSectionName, null, null, this.ConfigFilename )
     
     ' Write the new values.
@@ -587,10 +587,10 @@ end function
 ' the editor to work better with external tools that manually modify the
 ' settings.ini file.
 function clsConfig.WriteMRUSessions() as long 
-    dim as CWSTR wszKeyName, wszValue
+    dim as DWSTRING wszKeyName, wszValue
     
     ' Delete the section name
-    dim as CWSTR wszSectionName = "MRUSESSIONS"
+    dim as DWSTRING wszSectionName = "MRUSESSIONS"
     WritePrivateProfileString( wszSectionName, null, null, this.ConfigFilename )
     
     ' Write the new values.
@@ -641,7 +641,7 @@ end function
 function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as long
     gApp.PreventConfigLoad = true
 
-    dim as CWSTR wst, wKey, wData
+    dim as DWSTRING wst, wKey, wData
     dim nData          as long  
     dim i              as long
     dim bReadingNote   as boolean
@@ -686,7 +686,7 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
             wKey = "": wData = "": nData = 0
             
             wKey  = left(wst, i-1)
-            wData = mid(wst.wstr, i+1)
+            wData = mid(wst, i+1)
             nData = val(wData)
             
 
@@ -842,9 +842,9 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
     end if
     
     ' Iterate the optional semi colon separated list of compiler include paths
-    dim as CWSTR allIncludes = rtrim(this.CompilerIncludes, ";")
+    dim as DWSTRING allIncludes = rtrim(this.CompilerIncludes, ";")
     this.CompilerIncludes = ""
-    dim as CWSTR includePath
+    dim as DWSTRING includePath
     dim as long numpaths = AfxStrParseCount(allIncludes, ";")
     for i as long = 1 to numpaths
         includePath = trim(AfxStrParse(allIncludes, i, ";"))
@@ -865,7 +865,7 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
     ' Set some defaults if the config file was missing.
     ' if no Tools exist then create some default ones...
     if (ubound(this.Tools) = -1) andalso (bNewConfigFile = true) then
-        dim wszTools(1) as CWSTR
+        dim wszTools(1) as DWSTRING
         wszTools(0) = "ASCII Chart|-|.\settings\tools\asciichart32.exe|-||-|1|-||-|1|-|0|-|0|-|0|-|0|-|0|-|1|-|0"
         wszTools(1) = "GUID Generator|-|.\settings\tools\GUIDgen32.exe|-||-|2|-||-|1|-|0|-|0|-|0|-|0|-|0|-|1|-|0"
         for i = lbound(wszTools) to ubound(wszTools)
@@ -982,7 +982,7 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
     end if
 
     ' Attempt to fill in any missing compiler paths and help files
-    dim as CWSTR wszText
+    dim as DWSTRING wszText
     if len(this.FBWINCompiler32) = 0 then
         wszText = AfxGetExePathName & "toolchains\" & gwszDefaultToolchain & "\fbc32.exe"      
         if AfxFileExists(wszText) then this.FBWINCompiler32 = wszText
@@ -1023,7 +1023,7 @@ function clsConfig.SaveSessionFile( byref wszSessionFile as wstring ) as boolean
         return true
     end if
 
-    dim as CWSTR wszText 
+    dim as DWSTRING wszText 
     dim as long nCount 
 
     dim pDoc as clsDocument ptr
@@ -1056,7 +1056,7 @@ function clsConfig.SaveSessionFile( byref wszSessionFile as wstring ) as boolean
             pStream.WriteLine "Position=" & SendMessage( pDoc->hWindow(0), SCI_GETCURRENTPOS, 0, 0)  
             pStream.WriteLine "FirstLine1=" & SendMessage( pDoc->hWindow(1), SCI_GETFIRSTVISIBLELINE, 0, 0) 
             pStream.WriteLine "Position1=" & SendMessage( pDoc->hWindow(1), SCI_GETCURRENTPOS, 0, 0)  
-            pStream.WriteLine "SplitMode=" & pDoc->EditorSplitMode
+            pStream.WriteLine "SplitMode=" & wstr(pDoc->EditorSplitMode)
             pStream.WriteLine "SplitPositionX=" & pDoc->SplitX
             pStream.WriteLine "SplitPositionY=" & pDoc->SplitY
             pStream.WriteLine "FocusEdit=" & iif(pDoc->hWndActiveScintilla = pDoc->hWindow(0), 0, 1)
@@ -1112,7 +1112,7 @@ function clsConfig.LoadSessionFile( byref wszSessionFile as wstring ) as boolean
     frmOutput_ResetAllControls()
 
     dim pDoc as clsDocument ptr
-    dim as CWSTR wst, wKey, wData, wszFilename, wszProjectName
+    dim as DWSTRING wst, wKey, wData, wszFilename, wszProjectName
         
     dim as string sBookmarks
     dim as string sBreakPoints
@@ -1124,7 +1124,7 @@ function clsConfig.LoadSessionFile( byref wszSessionFile as wstring ) as boolean
 
     ' Info saved for each File and used to create the file once Fileend is found
     dim as long nTabIndex
-    dim as CWSTR wszFileType
+    dim as DWSTRING wszFileType
     dim as boolean bLoadInTab
     
     dim pStream as CTextStream  ' (utf16)
@@ -1265,7 +1265,7 @@ end function
 ' ========================================================================================
 function clsConfig.ProjectSaveToFile() as boolean    
 
-    dim as CWSTR cwzRelative, wszText 
+    dim as DWSTRING cwzRelative, wszText 
     dim as long nCount 
     dim as long i
 
@@ -1349,7 +1349,7 @@ function clsConfig.ProjectSaveToFile() as boolean
 
     ' if project is active then save NOTES to config file.
     if gApp.IsProjectActive then
-        dim wszText as CWSTR = wstr("NOTES-START") + vbcrlf + _
+        dim wszText as DWSTRING = wstr("NOTES-START") + vbcrlf + _
                                 gApp.ProjectNotes + vbcrlf + _
                                 wstr("NOTES-END") + vbcrlf
         pStream.WriteLine ""
@@ -1368,10 +1368,10 @@ end function
 ' ========================================================================================
 ' Load all options for the Project from a diskfile
 ' ========================================================================================
-function clsConfig.ProjectLoadFromFile( byval wszFile as CWSTR ) as boolean    
+function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean    
 
     dim pDoc as clsDocument ptr
-    dim as CWSTR wst, wKey, wData, wszFilename
+    dim as DWSTRING wst, wKey, wData, wszFilename
         
     dim sBookmarks as string
     dim sBreakPoints as string
@@ -1383,7 +1383,7 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as CWSTR ) as boolean
 
     ' Info saved for each File and used to create the file once Fileend is found
     dim as long nTabIndex
-    dim as CWSTR wszFileType
+    dim as DWSTRING wszFileType
     dim as boolean bLoadInTab
     dim as boolean bReadingNote
     

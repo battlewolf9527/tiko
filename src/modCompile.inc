@@ -40,12 +40,12 @@ function code_Compile( byval wID as long ) as boolean
     
     dim wszTemp        as wstring * MAX_PATH 
     dim wszFileExe     as wstring * MAX_PATH
-    dim wszIconCompile as CWSTR
-    dim wszCommand     as CWSTR 
-    dim wszParams      as CWSTR
+    dim wszIconCompile as DWSTRING
+    dim wszCommand     as DWSTRING 
+    dim wszParams      as DWSTRING
     dim sConsoleText   as string 
     
-    dim as CWSTR wExeCmd, wDQ, wsLogSt, wst
+    dim as DWSTRING wExeCmd, wDQ, wsLogSt, wst
             
     dim as boolean fCompile32, fCompile64
     
@@ -170,7 +170,7 @@ function code_Compile( byval wID as long ) as boolean
 
     ' Iterate the optional semi colon separated list of compiler include paths
     gCompile.CompileIncludes = ""
-    dim as CWSTR includePath
+    dim as DWSTRING includePath
     dim as long numpaths = AfxStrParseCount(gConfig.CompilerIncludes, ";")
     for i as long = 1 to numpaths
         includePath = rtrim(AfxStrParse(gConfig.CompilerIncludes, i, ";"))
@@ -354,8 +354,8 @@ function code_Compile( byval wID as long ) as boolean
     ' So the main module file must be called twice in the command line:
     ' - after compile option '-m', but without specified extension,
     ' - and also like any module to compile, but there with its specified extension.
-    'dim as CWSTR wszMfile = wDQ + AfxStrPathName("PATH", gCompile.MainFilename) + AfxStrPathName("NAME", gCompile.MainFilename) + wDQ
-    'dim as CWSTR wszMfile = AfxStrPathName("NAME", gCompile.MainFilename) 
+    'dim as DWSTRING wszMfile = wDQ + AfxStrPathName("PATH", gCompile.MainFilename) + AfxStrPathName("NAME", gCompile.MainFilename) + wDQ
+    'dim as DWSTRING wszMfile = AfxStrPathName("NAME", gCompile.MainFilename) 
     'wszParams = "-m " + wszMfile + " " + wDQ + gCompile.MainFilename + wDQ 
     wszParams = "-m " + wDQ + gCompile.MainFilename + wDQ 
 
@@ -480,23 +480,23 @@ End function
 ''
 ''
 ''
-function AddPathsToLinkModules( byval modules as CWSTR ) as CWSTR
+function AddPathsToLinkModules( byval modules as DWSTRING ) as DWSTRING
     ' SEARCH ORDER
     ' (1) Current folder
     ' (2) User defined Include paths
     ' (3) \inc folder for the selected compiler toolchain
 
-    dim as CWSTR wszResult  ' the final fully path qualified list of space separated module filenames
-    dim as CWSTR wszTemp
+    dim as DWSTRING wszResult  ' the final fully path qualified list of space separated module filenames
+    dim as DWSTRING wszTemp
     
-    dim as CWSTR wszCurrentFolder = AfxStrPathname("PATH", gCompile.MainFilename)
-    dim as CWSTR wszIconCompilerIncFolder = AfxStrPathname("PATH", gCompile.CompilerPath) & "inc\"
+    dim as DWSTRING wszCurrentFolder = AfxStrPathname("PATH", gCompile.MainFilename)
+    dim as DWSTRING wszIconCompilerIncFolder = AfxStrPathname("PATH", gCompile.CompilerPath) & "inc\"
     
-    dim as CWSTR wszLinkModules = AfxStrShrink(gCompile.LinkModules)  
+    dim as DWSTRING wszLinkModules = AfxStrShrink(gCompile.LinkModules)  
     
     dim as long nummodules = AfxStrParseCount(wszLinkModules, " ")
     for i as long = 1 to nummodules
-        dim as CWSTR modulename = trim(AfxStrParse(wszLinkModules, i, " "))
+        dim as DWSTRING modulename = trim(AfxStrParse(wszLinkModules, i, " "))
         ' Remove any enclosing double quotes from the filename
         modulename = AfxStrRemove(modulename, chr(34))
 
@@ -512,7 +512,7 @@ function AddPathsToLinkModules( byval modules as CWSTR ) as CWSTR
         ' (2) User defined Include paths
         ' Iterate the optional semi colon separated list of compiler include paths
         gCompile.CompileIncludes = ""
-        dim as CWSTR includePath
+        dim as DWSTRING includePath
         dim as long numpaths = AfxStrParseCount(gConfig.CompilerIncludes, ";")
         for i as long = 1 to numpaths
             includePath = rtrim(AfxStrParse(gConfig.CompilerIncludes, i, ";"))

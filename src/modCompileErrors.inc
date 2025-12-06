@@ -86,8 +86,8 @@ end function
 ''
 ''
 function RedirConsoleToFile( _
-            byval wszExe as CWSTR, _
-            byval wszCmdLine as CWSTR, _
+            byval wszExe as DWSTRING, _
+            byval wszCmdLine as DWSTRING, _
             byref sConsoleText as string _
             ) as long
 
@@ -199,12 +199,12 @@ end sub
 ''
 function RunEXE( _
             byval pDocMain as clsDocument ptr, _
-            byref wszFileExe as CWSTR, _
-            byref wszParam as CWSTR _
+            byref wszFileExe as DWSTRING, _
+            byref wszParam as DWSTRING _
             ) as long
                             
-    dim as CWSTR wszPath = AfxStrPathname("PATH", wszFileExe)
-    dim as CWSTR wszBatchFile = RUNBATCHFILE
+    dim as DWSTRING wszPath = AfxStrPathname("PATH", wszFileExe)
+    dim as DWSTRING wszBatchFile = RUNBATCHFILE
     
     ' if option is specified to launch command window prior to running the
     ' compiled program then we do so by executing a shell to a batch file.
@@ -291,7 +291,7 @@ function SetLogFileTextbox() as long
     ' - FBC version, exe name, file size, compile time
     ' - raw log file output
     ' - compile command line used
-    dim as CWSTR wszText
+    dim as DWSTRING wszText
     
     if len(gCompile.wszOutputMsg) then 
         gCompile.wszOutputMsg = gCompile.wszOutputMsg + vbcrlf
@@ -312,7 +312,7 @@ end function
 ''
 ''
 function ParseLogForError( _
-            byref wsLogSt as CWSTR, _
+            byref wsLogSt as DWSTRING, _
             byval bAllowSuccessMessage as boolean, _
             byval wID as long, _
             byval fCompile64 as boolean, _
@@ -328,7 +328,7 @@ function ParseLogForError( _
     dim as long NumWarnings, NumErrors, NumDirectives, IsError, IsWarning
     dim as long nFirstErrorLine = -1
     dim as HWND hLV
-    dim as CWSTR wDQ, wst1, wst2, wst3, wst, wst_ucase, wszOutputMsg, wszText        
+    dim as DWSTRING wDQ, wst1, wst2, wst3, wst, wst_ucase, wszOutputMsg, wszText        
     dim as boolean fGoodCompile
 
     wDQ = wchr(34) ' unicode double quotes
@@ -503,7 +503,7 @@ function ParseLogForError( _
     ' the Output window (log file).
     if fGoodCompile = false then NumErrors = NumErrors + 1
 
-    dim as CWSTR wszIconCompileMsg
+    dim as DWSTRING wszIconCompileMsg
 
     ' if the EXE output file was never created then throw an error
     if fCompilingObjFiles = false then
@@ -562,7 +562,7 @@ function ParseLogForError( _
                         L(192, "Warnings") & " " & NumWarnings & _
                         "  [ " & AfxStrPathname("NAMEX", gCompile.OutputFilename) & "  " & _
                         rtrim(AfxStrFormatKBSize(nFileSize)) & " (" & _
-                        nFileSize & " " & L(199,"bytes") & ") ]"
+                        wstr(nFileSize) & " " & L(199,"bytes") & ") ]"
         SetCompileStatusBarMessage( wszIconCompileMsg, ghIconGood )
         
         if gConfig.DisableCompileBeep = false then MessageBeep(MB_OK)

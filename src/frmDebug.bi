@@ -21,6 +21,7 @@
 #define IDC_BTN_STEP_OVER       1005
 #define IDC_BTN_STEP_INTO       1006
 #define IDC_BTN_STEP_OUT        1007
+#define IDC_FRMDEBUG_TXTOUTPUT  1008
 
 enum DEBUG_BUTTONS explicit
     BUTTON_FIRST         = 0
@@ -34,9 +35,9 @@ enum DEBUG_BUTTONS explicit
 end enum
 
 type DEBUG_BUTTONS_TYPE
-    wszToolTip as CWSTR
-    wszIcon    as CWSTR
-    wszText    as CWSTR
+    wszToolTip as DWSTRING
+    wszIcon    as DWSTRING
+    wszText    as DWSTRING
     rc         as RECT            ' client coordinates 
     nID        as long            ' id to invoke if clicked on
     isHot      as boolean

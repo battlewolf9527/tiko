@@ -384,9 +384,8 @@ END FUNCTION
 
 ' ========================================================================================
 ' Processes window messages
-' // Uses IsDialogMessage in the message pump
-' // Note: To process arrow keys, characters, enter, insert, backspace or delete keys, set USEDLGMSG = 0.
-' // Or you can leave it as is and process the WM_GETDLGCODE message:
+' // Uses IsDialogMessage in the message pump. To process arrow keys, characters, enter,
+' // insert, backspace or delete keys, you can process the WM_GETDLGCODE message:
 ' // CASE WM_GETDLGCODE
 ' //    FUNCTION = DLGC_WANTALLKEYS
 ' // If you are only interested in arrow keys and characters...
@@ -1484,7 +1483,7 @@ PRIVATE FUNCTION CWindow.AddControl ( _
       CASE "LABEL"
          ' Adds a label to the window.
          wsClassName = "Static"
-         IF dwStyle = -1 THEN dwStyle = WS_VISIBLE OR SS_LEFT OR WS_GROUP OR SS_NOTIFY
+         IF dwStyle = -1 THEN dwStyle = WS_VISIBLE OR SS_LEFT OR SS_NOTIFY
       CASE "BITMAPLABEL"
          ' Adds an image label to the window.
          ' You must delete the bitmap before the application ends.

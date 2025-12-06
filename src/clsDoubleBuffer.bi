@@ -77,7 +77,7 @@ type clsDoubleBuffer
                 byval nBottom as long _
                 ) as long
     declare function PaintText( _
-                byval wszText as CWSTR, _
+                byval wszText as DWSTRING, _
                 byval rc as RECT ptr, _ 
                 byval wsStyle as DWORD, _
                 byval bHitTest as boolean = false _

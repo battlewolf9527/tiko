@@ -244,11 +244,11 @@ end function
 ' ========================================================================================
 function frmMain_ProcessFilesArray( _
             byval hwnd as HWND, _
-            wszFiles() as CWSTR _
+            wszFiles() as DWSTRING _
             ) as long
 
     dim wszExt as wstring * MAX_PATH
-    dim as CWSTR wszArg
+    dim as DWSTRING wszArg
     dim as integer numProcessed
     
     for i as integer = lbound(wszFiles) to ubound(wszFiles)
@@ -311,7 +311,7 @@ function frmMain_ProcessCommandLine( byval hwnd as HWND ) as long
     dim wszPath as wstring * MAX_PATH
     dim wszArg  as wstring * MAX_PATH
     dim as integer numProcessed
-    dim wszFiles(any) as CWSTR
+    dim wszFiles(any) as DWSTRING
     
     if IsIconic(hwnd) then 
         dim WinPla as WINDOWPLACEMENT
@@ -1035,7 +1035,7 @@ function frmMain_OnDropFiles( _
     
     dim as long i, nLen
     dim wszPath as wstring * MAX_PATH
-    dim wszFiles(any) as CWSTR
+    dim wszFiles(any) as DWSTRING
 
     for i = 0 To nCount - 1
         nLen = DragQueryFile(hDrop, i, @wszPath, MAX_PATH)
@@ -1389,7 +1389,7 @@ function frmMain_WndProc( _
 '            ' Set text color and draw text
 '            SetBkMode(pdis->hDC, TRANSPARENT)
 '            SetTextColor(pdis->hDC, textColor)
-'            dim as CWSTR wszMenuText = "Menu Text"
+'            dim as DWSTRING wszMenuText = "Menu Text"
 '            DrawText(pdis->hDC, wszMenuText, -1, @pdis->rcItem, DT_SINGLELINE or DT_VCENTER or DT_LEFT or DT_NOPREFIX)
 '            return true
 
@@ -1454,10 +1454,10 @@ function frmMain_WndProc( _
             dim pDataToGet as COPYDATASTRUCT ptr = cast(COPYDATASTRUCT ptr, lParam)
             if pDataToGet then
                 if pDataToGet->dwData = IDM_COPYDATA_COMMANDLINE then  
-                    dim as CWSTR wszCommandLine = *cast(wstring ptr, pDataToGet->lpData)
+                    dim as DWSTRING wszCommandLine = *cast(wstring ptr, pDataToGet->lpData)
                     
                     dim as integer numfiles = AfxStrParseCount(wszCommandLine, ";")
-                    dim wszFiles(numfiles) as CWSTR
+                    dim wszFiles(numfiles) as DWSTRING
 
                     for i as integer = 1 to numfiles
                         wszFiles(i) = AfxStrParse(wszCommandLine, i, ";")

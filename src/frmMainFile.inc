@@ -59,7 +59,7 @@ function OnCommand_FileOpen( _
     pItems->lpVtbl->GetCount(pItems, @dwItemCount)
     
     ' Variable length array to hold all filenames to open. 
-    dim AllFilenames(dwItemCount - 1) as CWSTR
+    dim AllFilenames(dwItemCount - 1) as DWSTRING
     
     ' Variable length array to hold sequence of TabCtrl tabs to open. We save the sequence
     ' here and open them only after all over documents have been loaded. This will look
@@ -197,7 +197,7 @@ function OnCommand_FileSave( _
         If (cbool(SciExec( pDoc->hWindow(0), SCI_GETMODIFY, 0, 0 ) <> 0)) orelse _
            (pDoc->UserModified = true) orelse (bSaveAs = true) then   
             ' Do the actual saving to disk
-            dim wszFilename as CWSTR = pDoc->DiskFilename
+            dim wszFilename as DWSTRING = pDoc->DiskFilename
             if pDoc->SaveFile(bSaveAs) = false then
                 pDoc->ApplyProperties
                 pDoc->ParseDocument()

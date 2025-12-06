@@ -27,9 +27,9 @@ type clsApp
         idTimerOutputPanel         as long = 110        ' used for handling single/double click of Output window splitter bar
         doubleClickReceived        as boolean           ' used for handling single/double click of Output window splitter bar
         hWndPanel                  as HWND              ' the panel being split left/right or up/down
-        IncludeFilename            as CWSTR
-        NonProjectNotes            as CWSTR             ' Save/load from config file
-        wszPanelText               as CWSTR             ' Current file loading or being compiled (for statusbar updating)
+        IncludeFilename            as DWSTRING
+        NonProjectNotes            as DWSTRING             ' Save/load from config file
+        wszPanelText               as DWSTRING             ' Current file loading or being compiled (for statusbar updating)
         hIconPanel                 as long              ' Success/failure of most previous compile (for Statusbar updating)
         FileLoadingCount           as long              ' Track count of files loading for statusbar display
         IsNewProjectFlag           as boolean
@@ -37,9 +37,9 @@ type clsApp
         IsFileLoading              as boolean           ' File loading. Disable some screen updating.
         IsCompiling                as boolean           ' File/Project currently being compiled (spinning mouse cursor).
         IsShutDown                 as boolean           ' App is currently closing
-        wszCommandLine             as CWSTR             ' non-project commandline (not saved to file)
-        wszLastOpenFolder          as CWSTR             ' remembers the last opened folder for the Open Dialog
-        wszQuickRunFilename        as CWSTR
+        wszCommandLine             as DWSTRING             ' non-project commandline (not saved to file)
+        wszLastOpenFolder          as DWSTRING             ' remembers the last opened folder for the Open Dialog
+        wszQuickRunFilename        as DWSTRING
         
         bShowSpinner               as boolean           ' Display the loading/compiling spinner
         SpinnerCurrentFrame        as long = 0          ' The index of the icon to use when timer fires.
@@ -49,17 +49,17 @@ type clsApp
         DebugTimerID               as long = 102
         
         IsSessionActive            as boolean
-        SessionName                as CWSTR
-        SessionFilename            as CWSTR
+        SessionName                as DWSTRING
+        SessionFilename            as DWSTRING
         
         IsProjectActive            as boolean
         ProjectBuild               as string            ' default build configuration for the project (GUID)
-        ProjectName                as CWSTR
-        ProjectFilename            as CWSTR
-        ProjectOther32             as CWSTR             ' compile flags 32 bit compiler
-        ProjectOther64             as CWSTR             ' compile flags 64 bit compiler
-        ProjectNotes               as CWSTR             ' Save/Load from project file
-        ProjectCommandLine         as CWSTR
+        ProjectName                as DWSTRING
+        ProjectFilename            as DWSTRING
+        ProjectOther32             as DWSTRING             ' compile flags 32 bit compiler
+        ProjectOther64             as DWSTRING             ' compile flags 64 bit compiler
+        ProjectNotes               as DWSTRING             ' Save/Load from project file
+        ProjectCommandLine         as DWSTRING
         ProjectManifest            as long              ' T/F create a generic resource and manifest file
 
         declare function IsValidDocumentPointer( byval pDocSearch as clsDocument ptr ) as boolean
@@ -76,7 +76,7 @@ type clsApp
         declare function GetSourceDocumentPtr( byval pDocIn as clsDocument ptr ) as clsDocument ptr
         declare function GetHeaderDocumentPtr( byval pDocIn as clsDocument ptr ) as clsDocument ptr
         declare function SaveProject( byval bSaveas as boolean = False ) as boolean
-        declare function ProjectSetFileType( byval pDoc as clsDocument ptr, byval wszFiletype as CWSTR ) as LRESULT
+        declare function ProjectSetFileType( byval pDoc as clsDocument ptr, byval wszFiletype as DWSTRING ) as LRESULT
         declare function GetProjectCompiler() as long
         
 end type

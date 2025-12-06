@@ -32,8 +32,8 @@ END CONSTRUCTOR
 ' =====================================================================================
 ' * Creates a Pen object that uses a specified color and width.
 ' =====================================================================================
-PRIVATE CONSTRUCTOR CGpPen (BYVAL colour AS ARGB, BYVAL nWidth AS SINGLE = 1.0)
-   m_Status = GdipCreatePen1(colour, nWidth, UnitWorld, @m_pPen)
+PRIVATE CONSTRUCTOR CGpPen (BYVAL colour AS ARGB, BYVAL nWidth AS SINGLE = 1.0, BYVAL unit AS GpUnit = UnitWorld)
+   m_Status = GdipCreatePen1(colour, nWidth, unit, @m_pPen)
 END CONSTRUCTOR
 ' =====================================================================================
 
@@ -41,8 +41,8 @@ END CONSTRUCTOR
 ' Creates a Pen object that uses the attributes of a brush and a real number to set the
 ' width of this Pen object.
 ' =====================================================================================
-PRIVATE CONSTRUCTOR CGpPen (BYVAL pBrush AS CGpBrush PTR, BYVAL nWidth AS SINGLE = 1.0)
-   m_Status = GdipCreatePen2(pBrush->m_pBrush, nWidth, UnitWorld, @m_pPen)
+PRIVATE CONSTRUCTOR CGpPen (BYVAL pBrush AS CGpBrush PTR, BYVAL nWidth AS SINGLE = 1.0, BYVAL unit AS GpUnit = UnitWorld)
+   m_Status = GdipCreatePen2(pBrush->m_pBrush, nWidth, unit, @m_pPen)
 END CONSTRUCTOR
 ' =====================================================================================
 
@@ -240,8 +240,6 @@ END FUNCTION
 
 ' =====================================================================================
 ' Gets the world transformation of this Pen object.
-' GdipGetPenTransform is wrongly defined in the FB headers. The second parameter must be
-' BYVAL matrix AS GpMatrix PTR PTR, not BYVAL matrix AS GpMatrix PTR.
 ' =====================================================================================
 PRIVATE FUNCTION CGpPen.GetTransform (BYVAL pMatrix AS CGpMatrix PTR) AS GpStatus
    RETURN SetStatus(GdipGetPenTransform(m_pPen, cast(GpMatrix PTR, @pMatrix->m_pMatrix)))
@@ -411,7 +409,7 @@ END FUNCTION
 ' =====================================================================================
 ' Gets the number of elements in a dash pattern array.
 ' =====================================================================================
-PRIVATE FUNCTION CGpPen.GetCompoundArrayCount () AS GpStatus
+PRIVATE FUNCTION CGpPen.GetCompoundArrayCount () AS INT_
    DIM nCount AS INT_
    m_Status = GdipGetPenCompoundCount(m_pPen, @nCount)
    RETURN nCount

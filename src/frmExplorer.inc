@@ -22,7 +22,7 @@
 #define NODE_INDEX_SIZE    5     ' size of field holding array index into gConfig.Cat()
 #define NODE_STATE_SIZE    1     ' size of field holding 0 collapsed, 1 expanded
 
-function getExplorerNodeHeaderIndex( byval wszCaption as CWSTR ) as long
+function getExplorerNodeHeaderIndex( byval wszCaption as DWSTRING ) as long
     ' wszCaption will be in this formt:
     '  %NODE_INDEX_SIZE%NODE_STATE_SIZE%Description
         '       %    0%1%Files
@@ -40,7 +40,7 @@ function getExplorerNodeHeaderIndex( byval wszCaption as CWSTR ) as long
     end if
 end function
 
-function getExplorerNodeHeaderState( byval wszCaption as CWSTR ) as long
+function getExplorerNodeHeaderState( byval wszCaption as DWSTRING ) as long
     ' wszCaption will be in this formt:
     '  %NODE_INDEX_SIZE%NODE_STATE_SIZE%Description
         '       %    0%1%Files
@@ -54,7 +54,7 @@ function getExplorerNodeHeaderState( byval wszCaption as CWSTR ) as long
     return nState
 end function
 
-function getExplorerNodeHeaderDescription( byval wszCaption as CWSTR ) as CWSTR
+function getExplorerNodeHeaderDescription( byval wszCaption as DWSTRING ) as DWSTRING
     ' wszCaption will be in this formt:
     '  %NODE_INDEX_SIZE%NODE_STATE_SIZE%Description
         '       %    0%1%Files
@@ -236,7 +236,7 @@ function frmExplorer_OnDrawItem( _
         b.SetBackColors(backclr, backclr)
 
         ' if this is a "node" header then use that icon
-        dim as CWSTR wszCaption = AfxGetListBoxText(lpdis->hwndItem, lpdis->ItemID)
+        dim as DWSTRING wszCaption = AfxGetListBoxText(lpdis->hwndItem, lpdis->ItemID)
         if left(wszCaption, 1) = "%" then isNodeHeader = true
         if getExplorerNodeHeaderState(wszCaption) = 1 then isIconDown = true
         
@@ -253,7 +253,7 @@ function frmExplorer_OnDrawItem( _
         if isNodeHeader then
             b.SetFont( SYMBOLFONT_10 )
             rcBitmap.right = rcBitmap.left + pWindow->ScaleX(20)
-            dim as CWSTR wszBitmap = iif(isIconDown, wszIconChevronDown, wszIconChevronRight) 
+            dim as DWSTRING wszBitmap = iif(isIconDown, wszIconChevronDown, wszIconChevronRight) 
             b.PaintText( wszBitmap, @rcBitmap, DT_CENTER )
 
             b.SetFont( GUIFONT_10 )
@@ -353,7 +353,7 @@ function frmExplorerListBox_SubclassProc ( _
     dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMEXPLORER)
     static as long accumDelta
     
-    static as CWSTR wszPrevTooltip 
+    static as DWSTRING wszPrevTooltip 
     static as HWND hToolTip
     if (uMsg = WM_DESTROY) andalso (IsWindow(hToolTip)) then DestroyWindow(hToolTip)
         
@@ -414,7 +414,7 @@ function frmExplorerListBox_SubclassProc ( _
             end if
                         
         case WM_MOUSEHOVER
-            dim as CWSTR wszTooltip 
+            dim as DWSTRING wszTooltip 
             dim as long idx = Listbox_ItemFromPoint( hWin, GET_X_LPARAM(_lParam), GET_Y_LPARAM(_lParam)) 
             ' The return value contains the index of the nearest item in the LOWORD. The HIWORD is zero 
             ' if the specified point is in the client area of the list box, or one if it is outside the 
@@ -466,7 +466,7 @@ function frmExplorerListBox_SubclassProc ( _
                     dim as long nextIdx = 0
                     for i as long = 0 to ListBox_GetCount( hWin ) - 1
                         if ListBox_GetSel( hWin, i ) then
-                            dim as CWSTR wszCaption = AfxGetListBoxText( hWin, i )
+                            dim as DWSTRING wszCaption = AfxGetListBoxText( hWin, i )
                             if left(wszCaption, 1) = "%" then 
                                 pDocArray(nextIdx) = 0
                             else   
@@ -514,7 +514,7 @@ function frmExplorerListBox_SubclassProc ( _
                 ' if the specified point is in the client area of the list box, or one if it is outside the 
                 ' client area.
                 if hiword(idx) <> 1 then
-                    dim as CWSTR wszCaption = AfxGetListBoxText( hWin, idx )
+                    dim as DWSTRING wszCaption = AfxGetListBoxText( hWin, idx )
                     if left(wszCaption, 1) = "%" then
                         ' Toggle the show/hide of files under this node
                         dim as long idxArray = getExplorerNodeHeaderIndex(wszCaption)
@@ -543,9 +543,9 @@ function frmExplorerListBox_SubclassProc ( _
             ' if the specified point is in the client area of the list box, or one if it is outside the 
             ' client area.
             if hiword(idx) <> 1 then
-                dim as CWSTR wszCaption = AfxGetListBoxText( hWin, idx )
+                dim as DWSTRING wszCaption = AfxGetListBoxText( hWin, idx )
                 if left(wszCaption, 1) <> "%" then
-                    dim as CWSTR wszFilename
+                    dim as DWSTRING wszFilename
                     dim as clsDocument ptr pDoc = cast(clsDocument ptr, ListBox_GetItemData( hWin, idx ))
                     if pDoc then
                         wszFilename = pDoc->DiskFilename
@@ -594,9 +594,8 @@ function frmExplorer_Show( byval hWndParent as HWND ) as LRESULT
         WS_CHILD or WS_CLIPSIBLINGS or WS_CLIPCHILDREN or WS_TABSTOP or _
         LBS_NOINTEGRALHEIGHT or LBS_EXTENDEDSEL or LBS_MULTIPLESEL or _
         LBS_OWNERDRAWFIXED or LBS_HASSTRINGS or LBS_NOTIFY, _
-        WS_EX_LEFT or WS_EX_RIGHTSCROLLBAR, , _
-        cast(SUBCLASSPROC, @frmExplorerListBox_SubclassProc), _
-        IDC_FRMEXPLORER_LISTBOX, cast(DWORD_PTR, @pWindow))
+        WS_EX_LEFT or WS_EX_RIGHTSCROLLBAR)
+        pWindow->SetControlSubclass(HWND_FRMEXPLORER_LISTBOX, @frmExplorerListBox_SubclassProc, IDC_FRMEXPLORER_LISTBOX, @pWindow)
 
     function = 0
     

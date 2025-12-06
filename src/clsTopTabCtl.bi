@@ -19,7 +19,7 @@ type clsDocument_ as clsDocument
 
 type TOPTABS_TYPE
     pDoc    as clsDocument_ ptr
-    wszText as CWSTR
+    wszText as DWSTRING
     rcTab   as RECT          ' client coordinates 
     rcIcon  as RECT          ' client coordinates 
     rcText  as RECT          ' client coordinates 

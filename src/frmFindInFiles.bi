@@ -45,8 +45,8 @@ end enum
 type REPLACE_RESULTS
     NumReplaced as integer
     FilesSearched as integer
-    wszResults as CWSTR
-    wszFileText as CWSTR
+    wszResults as DWSTRING
+    wszFileText as DWSTRING
     pDoc as clsDocument ptr
     pSci as any ptr
 end type

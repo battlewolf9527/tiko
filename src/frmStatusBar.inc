@@ -262,7 +262,7 @@ function frmStatusBar_WndProc( _
         next   
 
     case WM_MOUSEHOVER
-        dim as CWSTR wszTooltip
+        dim as DWSTRING wszTooltip
         if IsMouseOverRECT(hwnd,  gSBPanels(BUILD_DIALOG_PANEL).rc ) then 
             wszTooltip = L(277,"Build Configurations") & "..."
         end if
@@ -322,7 +322,7 @@ function frmStatusBar_WndProc( _
                         dim as long halfWidth = (rcBitmap.right-rcBitmap.left) / 2
                         rcBitmap.right = rcBitmap.left + halfWidth - pWindow->ScaleX((txtWidth / 2))
                         rcBitmap.left = rcBitmap.right - pWindow->ScaleX(16)
-                        dim as CWSTR wszText = wszIconCompileResult
+                        dim as DWSTRING wszText = wszIconCompileResult
                         
                         ' If a Spinner is active then that will take precedence over the good/bad compile icon.
                         if gApp.bShowSpinner then

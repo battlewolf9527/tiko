@@ -28,7 +28,7 @@ end enum
 
 ' type and array to hold values related to the statusbar panels
 type STATUSBAR_PANEL_TYPE
-    wszText as CWSTR
+    wszText as DWSTRING
     rc      as RECT            ' client coordinates 
     nID     as long            ' id to invoke if clicked on
     isHot   as boolean

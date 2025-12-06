@@ -62,7 +62,7 @@ function OnCommand_SearchGotoDefinition( byval pDoc as clsDocument ptr ) as LRES
     If pDoc = 0 Then Exit Function
     
     dim pData as DB2_DATA ptr
-    dim as CWSTR wszFilename
+    dim as DWSTRING wszFilename
     dim as string sTypeName, sFunctionName, sLookFor, sTrigger
     dim as long nLineNum = 0
     
@@ -153,7 +153,7 @@ function OnCommand_SearchGotoFile( _
     if pDoc = 0 then exit function
     
     dim pDocFile as clsDocument ptr
-    dim as CWSTR wszFilename
+    dim as DWSTRING wszFilename
 
     dim as HWND hEdit = pDoc->hWndActiveScintilla
     

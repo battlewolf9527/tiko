@@ -119,7 +119,7 @@ function OnCommand_ProjectNew( byval hwnd As HWND ) As LRESULT
         ' variable wText because passing gApp.ProjectFilename will cause that variable
         ' to get reset because the parameter is byref and eventually that variable
         ' gets assigned a null.
-        dim as CWSTR wszText = gApp.ProjectFilename
+        dim as DWSTRING wszText = gApp.ProjectFilename
         frmMain_OpenProjectSafely(HWND_FRMMAIN, wszText) 
     end if
         
@@ -167,7 +167,7 @@ function OnCommand_ProjectSetFileType( _
             ) as LRESULT
 
     ' This code also handles right click messages from the Explorer Treeview. 
-    dim as CWSTR wszFileType
+    dim as DWSTRING wszFileType
 
     select case id
         case IDM_SETFILENORMAL, IDM_SETFILENORMAL_EXPLORERTREEVIEW 
