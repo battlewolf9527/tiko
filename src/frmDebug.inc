@@ -231,7 +231,6 @@ function frmDebug_WndProc( _
             KillTimer( HWND_FRMDEBUG, gApp.DebugTimerID )
             ' Kill the GDB process
             gdb_close( gdb_session )
-            LogClose()
             
         case WM_NCDESTROY
             dim pWindow as CWindow ptr = AfxCWindowPtr(hwnd)
@@ -239,6 +238,11 @@ function frmDebug_WndProc( _
             gdb_session.KillMessageThread = true
             ThreadWait( gdb_session.hThreadMessages )
             MutexDestroy( gdb_session.hThreadMutex )
+
+            gdb_session.hThreadMessages   = 0
+            gdb_session.hThreadMutex      = 0
+            gdb_session.KillMessageThread = false
+            gdb_session.initialized       = false
 
             ' Remove any yellow arrow debugger current line marker
             dim pDoc as clsDocument ptr = gApp.pDocList
@@ -248,6 +252,8 @@ function frmDebug_WndProc( _
             loop
 
             gApp.IsDebuggerActive = false
+            
+            LogClose()
 
         case WM_TIMER
             if wParam = gApp.DebugTimerID then

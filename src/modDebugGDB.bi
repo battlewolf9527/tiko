@@ -123,10 +123,10 @@ function gdb_init(byref session as GDBSession, byval executable as DWSTRING = ""
     
     ' Set up startup info
     si.cb = sizeof(STARTUPINFO)
-    si.hStdError = hStdErrWrite
-    si.hStdOutput = hStdOutWrite
-    si.hStdInput = hStdInRead
-    si.dwFlags = STARTF_USESTDHANDLES or STARTF_USESHOWWINDOW
+    si.hStdError   = hStdErrWrite
+    si.hStdOutput  = hStdOutWrite
+    si.hStdInput   = hStdInRead
+    si.dwFlags     = STARTF_USESTDHANDLES or STARTF_USESHOWWINDOW
     si.wShowWindow = SW_HIDE
     
     ' Build command line
@@ -140,6 +140,8 @@ function gdb_init(byref session as GDBSession, byval executable as DWSTRING = ""
     ret = CreateProcess(NULL, cmdline, NULL, NULL, TRUE, _
                         CREATE_NO_WINDOW, NULL, NULL, @si, @pi)
     
+LM( "GDB CreateProcess ret=" & str(ret) & iif(ret = 0, "  (ERROR)", "  (OKAY)") )
+
     if ret = 0 then
         dim as DWORD err_code = GetLastError()
         print "CreateProcess failed with error code: "; err_code
@@ -174,13 +176,15 @@ function gdb_init(byref session as GDBSession, byval executable as DWSTRING = ""
     CloseHandle(hStdErrWrite)
     
     ' Store session info
-    session.hProcess = pi.hProcess
-    session.hThread = pi.hThread
+    session.hProcess    = pi.hProcess
+    session.hThread     = pi.hThread
     session.hStdInWrite = hStdInWrite
     session.hStdOutRead = hStdOutRead
     session.hStdErrRead = hStdErrRead
     session.dwProcessId = pi.dwProcessId
     session.initialized = true
+
+LM("Pipe OKAY")
     
     return true
 end function
@@ -189,12 +193,14 @@ end function
 ' Clear any pending output from pipe
 sub gdb_clear_pipe(byref session as GDBSession)
     if session.initialized = false then return 
-    
+
     dim as string buffer = space(4096)
     dim as DWORD bytes_read, bytes_avail
     
     ' Read and discard any pending data
     do
+        if session.KillMessageThread = true then exit do
+        
         if PeekNamedPipe(session.hStdOutRead, NULL, 0, NULL, @bytes_avail, NULL) = 0 then exit do
         if bytes_avail = 0 then exit do
         
@@ -214,7 +220,9 @@ function gdb_send(byref session as GDBSession, cmd as string) as boolean
     
     ret = WriteFile(session.hStdInWrite, strptr(full_cmd), len(full_cmd), @bytes_written, NULL)
     FlushFileBuffers(session.hStdInWrite)
-    
+
+LM( "gdb_send cmd=" & cmd & "  ret=" & str(ret) & "  hStdInWrite=" & str(session.hStdInWrite))
+     
     return iif(ret <> 0 andalso bytes_written > 0, true, false)
 end function
 
@@ -233,6 +241,7 @@ function gdb_receive( byref session as GDBSession ) as boolean
     
     do
         if session.KillMessageThread = true then return false
+        if session.initialized = false then return false
         
         ret = PeekNamedPipe(session.hStdOutRead, NULL, 0, NULL, @bytes_avail, NULL)
         
@@ -241,7 +250,7 @@ function gdb_receive( byref session as GDBSession ) as boolean
             
             ret = ReadFile(session.hStdOutRead, strptr(buffer), bytes_avail, @bytes_read, NULL)
             
-            if ret <> 0 andalso bytes_read > 0 then
+            if (ret <> 0) andalso (bytes_read > 0) then
                 response += left(buffer, bytes_read)
                 start_time = timer
             end if
@@ -264,7 +273,8 @@ function gdb_receive( byref session as GDBSession ) as boolean
         
         if (timer - start_time) * 1000 > timeout_ms then exit do
     loop
-    
+
+LM( "gdb_receive exited" )    
     return false
 end function
 
@@ -274,13 +284,19 @@ sub gdb_threadListener( byval userdata as any ptr )
     do until session->KillMessageThread = true
         gdb_receive(*session ) 
     loop    
+LM( "gdb_threadListener finished" )
 end sub
 
 
 ' Close GDB session
-sub gdb_close(byref session as GDBSession)
+sub gdb_close( byref session as GDBSession )
     if session.initialized then
-      ' Try to quit gracefully
+        session.KillMessageThread = true
+
+        ' Clear the message queue
+        clearQueue( session )
+    
+        ' Try to quit gracefully
         gdb_send(session, "quit")
         sleep 200
         
@@ -303,12 +319,18 @@ sub gdb_close(byref session as GDBSession)
                 end if
             end if
         end if
-                
+
         CloseHandle(session.hStdInWrite)
         CloseHandle(session.hStdOutRead)
         CloseHandle(session.hStdErrRead)
         CloseHandle(session.hThread)
         CloseHandle(session.hProcess)
+
+        session.hStdInWrite = 0
+        session.hStdOutRead = 0
+        session.hStdErrRead = 0
+        session.hThread     = 0
+        session.hProcess    = 0
         
         session.initialized = false
     end if
