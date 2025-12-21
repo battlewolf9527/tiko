@@ -137,10 +137,10 @@ function frmDebug_PositionWindows() as LRESULT
     nLeft = gDbgBtns(i).rc.right + nSpacer
 
     i = DEBUG_BUTTONS.STEP_INTO
-    gDbgBtns(i).nID        = IDM_DEBUG_STEPNEXT
+    gDbgBtns(i).nID        = IDM_DEBUG_STEPINTO
     gDbgBtns(i).wszToolTip = getMenuText(gDbgBtns(i).nID)
     gDbgBtns(i).wszIcon    = wszIconStepNext
-    gDbgBtns(i).wszText    = L(311,"Step Next")
+    gDbgBtns(i).wszText    = L(311,"Step Into")
     gDbgBtns(i).rc.Left    = nLeft
     gDbgBtns(i).rc.top     = rc.top
     gDbgBtns(i).rc.right   = nLeft + _
@@ -409,22 +409,34 @@ function frmDebug_WndProc( _
             gdb_send(gdb_session, "-exec-continue")
         
         case IDM_DEBUG_STOPDEBUGGING
-            gdb_send(gdb_session, "kill")
+'            gdb_send(gdb_session, "kill")
+            gdb_send(gdb_session, "-exec-abort")
             sleep 200
             PostMessage( HWND_FRMDEBUG, WM_CLOSE, 0, 0 )
         
-        case IDM_DEBUG_STEPNEXT
-            gdb_send(gdb_session, "step")
+        case IDM_DEBUG_STEPINTO
+'            gdb_send(gdb_session, "step")
+            gdb_send(gdb_session, "-exec-step")
         
         case IDM_DEBUG_STEPOVER
-            gdb_send(gdb_session, "next")
+'            gdb_send(gdb_session, "next")
+            gdb_send(gdb_session, "-exec-next")
         
         case IDM_DEBUG_STEPOUT
-            gdb_send(gdb_session, "finish")
+'            gdb_send(gdb_session, "finish")
+            gdb_send(gdb_session, "-exec-finish")
 
         case IDM_DEBUG_RUNTOCURSOR
             'TODO: Set a temp breakpoint?
-
+            ' Line numbers in GDB are 1 based whereas Scintilla is 0 based.
+            dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
+            if pDoc then
+                dim as string bp_line = str(pDoc->GetCurrentLineNumber() + 1)
+                dim as string bp_cmd = "tbreak " & chr(34) & pDoc->DiskFilename & chr(34) & ":" & bp_line
+                gdb_send( gdb_session, bp_cmd )
+                gdb_send(gdb_session, "-exec-continue")
+            end if
+            
     end select
 
     
@@ -537,7 +549,8 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as string ) a
         exit function            
     end if
     
-    gdb_send(gdb_session, "run")
+'    gdb_send(gdb_session, "run")
+    gdb_send(gdb_session, "-exec-run")
     
     ShowWindow( HWND_FRMDEBUG, SW_SHOW )
     

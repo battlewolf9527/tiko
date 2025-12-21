@@ -31,7 +31,7 @@ function OnCommand_DebugCommon( byval id as long ) as LRESULT
             code_Compile(id)
             
         case IDM_DEBUG_STARTDEBUGGING, IDM_DEBUG_STOPDEBUGGING, _
-            IDM_DEBUG_STEPNEXT, IDM_DEBUG_STEPOVER, IDM_DEBUG_STEPOUT, IDM_DEBUG_RUNTOCURSOR
+            IDM_DEBUG_STEPINTO, IDM_DEBUG_STEPOVER, IDM_DEBUG_STEPOUT, IDM_DEBUG_RUNTOCURSOR
             SendMessage( HWND_FRMDEBUG, id, 0, 0 )
 
         case IDM_DEBUG_TOGGLEBREAKPOINT

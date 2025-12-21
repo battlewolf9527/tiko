@@ -184,8 +184,6 @@ LM( "GDB CreateProcess ret=" & str(ret) & iif(ret = 0, "  (ERROR)", "  (OKAY)") 
     session.dwProcessId = pi.dwProcessId
     session.initialized = true
 
-LM("Pipe OKAY")
-    
     return true
 end function
 
@@ -221,8 +219,6 @@ function gdb_send(byref session as GDBSession, cmd as string) as boolean
     ret = WriteFile(session.hStdInWrite, strptr(full_cmd), len(full_cmd), @bytes_written, NULL)
     FlushFileBuffers(session.hStdInWrite)
 
-LM( "gdb_send cmd=" & cmd & "  ret=" & str(ret) & "  hStdInWrite=" & str(session.hStdInWrite))
-     
     return iif(ret <> 0 andalso bytes_written > 0, true, false)
 end function
 
@@ -274,7 +270,6 @@ function gdb_receive( byref session as GDBSession ) as boolean
         if (timer - start_time) * 1000 > timeout_ms then exit do
     loop
 
-LM( "gdb_receive exited" )    
     return false
 end function
 
