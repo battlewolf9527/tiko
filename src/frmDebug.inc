@@ -79,6 +79,7 @@ LM( "  line_number:   " & str(line_number) )
         if (len(file_name) > 0) andalso (line_number >= 0) then
             dim as clsDocument ptr pDoc = OpenSelectedDocument( file_name, "", line_number)
             if pDoc then
+AfxSetWindowText( HWND_FRMDEBUG_OUTPUT, response )
                 SciExec( pDoc->hWndActiveScintilla, SCI_MARKERDELETEALL, MARKER_DEBUGGER_CURLINE, 0 )
                 pDoc->ToggleMarker( line_number, MARKER_DEBUGGER_CURLINE )
             end if    
