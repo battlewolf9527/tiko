@@ -58,7 +58,11 @@ sub gdb_processResponse( byval response as string )
     dim as string function_args
     dim as integer line_number
 
-
+    ' Display value of local variables within scope
+    if instr( response, "^done,variables=") then 
+        AfxSetWindowText( HWND_FRMDEBUG_OUTPUT, response )
+    end if
+    
     if instr( response, "*stopped,reason=" & chr(34) & "breakpoint-hit" & chr(34)) orelse _
        instr( response, "*stopped,reason=" & chr(34) & "end-stepping-range" & chr(34)) then
         ' Line numbers in GDB are 1 based whereas Scintilla is 0 based.
@@ -79,9 +83,10 @@ LM( "  line_number:   " & str(line_number) )
         if (len(file_name) > 0) andalso (line_number >= 0) then
             dim as clsDocument ptr pDoc = OpenSelectedDocument( file_name, "", line_number)
             if pDoc then
-AfxSetWindowText( HWND_FRMDEBUG_OUTPUT, response )
                 SciExec( pDoc->hWndActiveScintilla, SCI_MARKERDELETEALL, MARKER_DEBUGGER_CURLINE, 0 )
                 pDoc->ToggleMarker( line_number, MARKER_DEBUGGER_CURLINE )
+                ' Ask to get list of variables and values for current context
+                gdb_send( gdb_session, "-stack-list-variables 1" )
             end if    
         end if
     end if
