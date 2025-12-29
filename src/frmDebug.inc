@@ -51,6 +51,61 @@ function gdb_findFunctionArguments( byref response as string, byref token as str
 end function
 
 
+type VARITEMS_TYPE
+    varname  as string
+    varvalue as string
+end type
+
+function gdb_parseVariablesResponse( byref response as string ) as integer
+    dim as integer i = 1
+    dim as integer nItems = 0
+    dim as integer p1 = 0
+    dim as integer p2 = 0
+    dim as string  keyValue
+    dim as string  valValue
+    
+    dim as VARITEMS_TYPE varItems() 
+
+    erase varItems
+
+    ' name="vr$29",value="<optimized out>"
+
+    while i <= len(response)
+        '' find name="
+        p1 = instr(i, response, "name=" & chr(34))
+        if p1 = 0 then exit while
+        p1 += 6
+        p2 = instr(p1, response, chr(34))
+        keyValue = mid(response, p1, p2 - p1)
+
+        '' find value="
+        p1 = instr(p2, response, "value=" & chr(34))
+        if p1 = 0 then exit while
+        p1 += 7
+        p2 = instr(p1, response, chr(34))
+        valValue = mid(response, p1, p2 - p1)
+
+        redim preserve varItems(nItems)
+        varItems(nItems).varname  = keyValue
+        varItems(nItems).varvalue = valValue
+        
+        nItems += 1
+        i = p2 + 1
+    wend
+
+    dim as DWSTRING st
+    for i as long = lbound(varItems) to ubound(varItems)
+        if left(varItems(i).varname, 3) = "vr$" then continue for
+        if left(varItems(i).varname, 4) = "TMP$" then continue for
+        if instr(varItems(i).varvalue, "<optimized out>") then continue for
+        st = st & varItems(i).varname & " | " & varItems(i).varvalue & chr(13,10)
+    next
+
+    AfxSetWindowText( HWND_FRMDEBUG_OUTPUT, st )
+
+    return nItems
+end function
+
 
 sub gdb_processResponse( byval response as string ) 
     dim as string file_name 
@@ -60,9 +115,11 @@ sub gdb_processResponse( byval response as string )
 
     ' Display value of local variables within scope
     if instr( response, "^done,variables=") then 
-        AfxSetWindowText( HWND_FRMDEBUG_OUTPUT, response )
+LM( response )
+        gdb_parseVariablesResponse( response )
     end if
     
+    ' Process hitting a Breakpoint
     if instr( response, "*stopped,reason=" & chr(34) & "breakpoint-hit" & chr(34)) orelse _
        instr( response, "*stopped,reason=" & chr(34) & "end-stepping-range" & chr(34)) then
         ' Line numbers in GDB are 1 based whereas Scintilla is 0 based.
@@ -118,18 +175,6 @@ function frmDebug_PositionWindows() as LRESULT
     dim as long nPadding    = 10   ' 5 left 5 right
     dim as long nImageWidth = DEBUG_BUTTON_IMAGE_WIDTH
 
-    i = DEBUG_BUTTONS.CONTINUE_DEBUGGING
-    gDbgBtns(i).nID        = IDM_DEBUG_STARTDEBUGGING
-    gDbgBtns(i).wszToolTip = getMenuText(gDbgBtns(i).nID)
-    gDbgBtns(i).wszIcon    = wszIconContinue
-    gDbgBtns(i).wszText    = L(321,"Continue")
-    gDbgBtns(i).rc.Left    = nLeft
-    gDbgBtns(i).rc.top     = rc.top
-    gDbgBtns(i).rc.right   = nLeft + _
-        pWindow->ScaleX( getTextWidth(HWND_FRMDEBUG, gDbgBtns(i).wszText, GUIFONT_9) + nPadding + nImageWidth)
-    gDbgBtns(i).rc.bottom  = rc.top + nHeight
-    nLeft = gDbgBtns(i).rc.right + nSpacer
-
     i = DEBUG_BUTTONS.STOP_DEBUGGING
     gDbgBtns(i).nID        = IDM_DEBUG_STOPDEBUGGING
     gDbgBtns(i).wszToolTip = getMenuText(gDbgBtns(i).nID)
@@ -142,11 +187,11 @@ function frmDebug_PositionWindows() as LRESULT
     gDbgBtns(i).rc.bottom  = rc.top + nHeight
     nLeft = gDbgBtns(i).rc.right + nSpacer
 
-    i = DEBUG_BUTTONS.STEP_INTO
-    gDbgBtns(i).nID        = IDM_DEBUG_STEPINTO
+    i = DEBUG_BUTTONS.CONTINUE_DEBUGGING
+    gDbgBtns(i).nID        = IDM_DEBUG_STARTDEBUGGING
     gDbgBtns(i).wszToolTip = getMenuText(gDbgBtns(i).nID)
-    gDbgBtns(i).wszIcon    = wszIconStepNext
-    gDbgBtns(i).wszText    = L(311,"Step Into")
+    gDbgBtns(i).wszIcon    = wszIconContinue
+    gDbgBtns(i).wszText    = L(321,"Continue")
     gDbgBtns(i).rc.Left    = nLeft
     gDbgBtns(i).rc.top     = rc.top
     gDbgBtns(i).rc.right   = nLeft + _
@@ -159,6 +204,18 @@ function frmDebug_PositionWindows() as LRESULT
     gDbgBtns(i).wszToolTip = getMenuText(gDbgBtns(i).nID)
     gDbgBtns(i).wszIcon    = wszIconStepOver
     gDbgBtns(i).wszText    = L(312,"Step Over")
+    gDbgBtns(i).rc.Left    = nLeft
+    gDbgBtns(i).rc.top     = rc.top
+    gDbgBtns(i).rc.right   = nLeft + _
+        pWindow->ScaleX( getTextWidth(HWND_FRMDEBUG, gDbgBtns(i).wszText, GUIFONT_9) + nPadding + nImageWidth)
+    gDbgBtns(i).rc.bottom  = rc.top + nHeight
+    nLeft = gDbgBtns(i).rc.right + nSpacer
+
+    i = DEBUG_BUTTONS.STEP_INTO
+    gDbgBtns(i).nID        = IDM_DEBUG_STEPINTO
+    gDbgBtns(i).wszToolTip = getMenuText(gDbgBtns(i).nID)
+    gDbgBtns(i).wszIcon    = wszIconStepNext
+    gDbgBtns(i).wszText    = L(311,"Step Into")
     gDbgBtns(i).rc.Left    = nLeft
     gDbgBtns(i).rc.top     = rc.top
     gDbgBtns(i).rc.right   = nLeft + _
@@ -192,8 +249,10 @@ function frmDebug_PositionWindows() as LRESULT
 
     AfxRedrawWindow( HWND_FRMDEBUG )
 
-    dim as HWND hCtl = _
-        pWindow->AddControl("RICHEDIT", , IDC_FRMDEBUG_TXTOUTPUT, "", _
+    dim as HWND hCtl 
+    
+    if HWND_FRMDEBUG_OUTPUT = 0 then
+        hCtl = pWindow->AddControl("RICHEDIT", , IDC_FRMDEBUG_TXTOUTPUT, "", _
                     0, 0, 0, 0, _
                     WS_CHILD or WS_TABSTOP or WS_VSCROLL or _
                     ES_MULTILINE or ES_LEFT or ES_AUTOVSCROLL or ES_WANTRETURN, _
@@ -202,11 +261,13 @@ function frmDebug_PositionWindows() as LRESULT
         SendMessage( hCtl, EM_SHOWSCROLLBAR, SB_VERT, FALSE)
         SendMessage( hCtl, EM_SHOWSCROLLBAR, SB_HORZ, FALSE)
         
-    HWND_FRMDEBUG_OUTPUT = hCtl
+        HWND_FRMDEBUG_OUTPUT = hCtl
+    end if
     
     GetClientRect(HWND_FRMDEBUG, @rc)
-    SetWindowPos( hCtl, 0, 0, nHeight, rc.right, rc.bottom - nHeight, SWP_NOZORDER or SWP_SHOWWINDOW )
-
+    SetWindowPos( HWND_FRMDEBUG_OUTPUT, 0, 0, nHeight, rc.right, rc.bottom - nHeight, SWP_NOZORDER or SWP_SHOWWINDOW )
+    AfxRedrawWindow( HWND_FRMDEBUG_OUTPUT )
+    
     function = 0
 end function
 
@@ -520,7 +581,7 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as string ) a
     dim pWindow as CWindow ptr = new CWindow
 
     HWND_FRMDEBUG = pWindow->Create( hWndParent, "DEBUGGER", @frmDebug_WndProc, 0, 0, 0, 0, _
-        WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
+        WS_POPUP or WS_THICKFRAME  or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
         WS_EX_CONTROLPARENT or WS_EX_LEFT )
     pWindow->SetClientSize(625, 460)
     pWindow->Center(pWindow->hWindow, hWndParent)

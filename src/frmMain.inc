@@ -1363,36 +1363,6 @@ function frmMain_WndProc( _
         HWND_FRMMAIN = 0
         return 0
 
-'        case WM_MEASUREITEM
-'            dim mi as LPMEASUREITEMSTRUCT = cast(LPMEASUREITEMSTRUCT, lParam)
-'            mi->itemWidth = AfxScaleX(150)
-'            mi->itemHeight = AfxScaleY(24)
-'            return true
-
-'        case WM_DRAWITEM
-'            dim pdis as DRAWITEMSTRUCT ptr = cast(DRAWITEMSTRUCT ptr, lParam)
-'            dim as HBRUSH hBrush
-'            dim as COLORREF bgColor = ghPopup.BackColor
-'            dim as COLORREF textColor = ghPopup.ForeColor
-
-'            if (pdis->itemState and ODS_SELECTED) then
-'                ' Hover/selected state colors
-'                bgColor = ghPopup.BackColorHot
-'                textColor = ghPopup.ForeColorHot
-'            end if
-
-'            ' Draw background
-'            hBrush = CreateSolidBrush(bgColor)
-'            FillRect(pdis->hDC, @pdis->rcItem, hBrush)
-'            DeleteObject(hBrush)
-
-'            ' Set text color and draw text
-'            SetBkMode(pdis->hDC, TRANSPARENT)
-'            SetTextColor(pdis->hDC, textColor)
-'            dim as DWSTRING wszMenuText = "Menu Text"
-'            DrawText(pdis->hDC, wszMenuText, -1, @pdis->rcItem, DT_SINGLELINE or DT_VCENTER or DT_LEFT or DT_NOPREFIX)
-'            return true
-
         case WM_ERASEBKGND
             return true      ' prevents painting the background
             

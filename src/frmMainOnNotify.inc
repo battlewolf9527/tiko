@@ -353,13 +353,13 @@ function Scintilla_OnNotify( _
                         AfxRedrawWindow( HWND_FRMEDITOR_VSCROLLBAR(1) )
                     end if    
 
-                    '// Has the caret changed position
+                    ' Has the caret changed position
                     var caretPos = SciExec( pDoc->hWndActiveScintilla, SCI_GETCURRENTPOS, 0, 0)
 
                     if pDoc->lastCaretPos <> caretPos then
                         pDoc->lastCaretPos = caretPos
 
-                        '// If the xOffset has changed then we need to update the horizontal scrollbar
+                        ' If the xOffset has changed then we need to update the horizontal scrollbar
                         dim as long GetXOffset = SciExec( pDoc->hWndActiveScintilla, SCI_GETXOFFSET, 0, 0 )
                         if pDoc->lastXOffsetPos <> GetXOffset then
                             pDoc->lastXOffsetPos = GetXOffset
@@ -367,7 +367,7 @@ function Scintilla_OnNotify( _
                             AfxRedrawWindow( HWND_FRMEDITOR_HSCROLLBAR(1) )
                         end if
 
-                        '// Update any occurrence highlights
+                        ' Update any occurrence highlights
                         if gConfig.OccurrenceHighlight then
                             static as string sCurWord, sPrevWord
                             sCurWord = pDoc->GetWord()
@@ -377,18 +377,16 @@ function Scintilla_OnNotify( _
                             end if
                         end if
                         
-                        '// We are typing in the editor so ensure that no active index
-                        '// or focus remains on the menubar
+                        ' We are typing in the editor so ensure that no active index
+                        ' or focus remains on the menubar
                         if gActiveMenuBarIndex <> -1 then
                             gActiveMenuBarIndex = -1
                             AfxRedrawWindow(HWND_FRMMAIN_MENUBAR)
                         end if
 
-                        '// Update any brace highlighting
+                        ' Update any brace highlighting
                         frmMain_DoBraceMatching( pDoc->hWndActiveScintilla )
-
                     end if
-                    
                 end if
             end if
             return true

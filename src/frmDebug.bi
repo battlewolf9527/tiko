@@ -24,10 +24,10 @@
 
 enum DEBUG_BUTTONS explicit
     BUTTON_FIRST         = 0
-    CONTINUE_DEBUGGING   = 0
-    STOP_DEBUGGING       = 1
-    STEP_INTO            = 2
-    STEP_OVER            = 3
+    STOP_DEBUGGING       = 0
+    CONTINUE_DEBUGGING   = 1
+    STEP_OVER            = 2
+    STEP_INTO            = 3
     STEP_OUT             = 4
     RUN_TO_CURSOR        = 5
     BUTTON_LAST          = RUN_TO_CURSOR
