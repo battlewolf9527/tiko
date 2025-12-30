@@ -64,7 +64,7 @@ function gdb_parseVariablesResponse( byref response as string ) as integer
     dim as string  keyValue
     dim as string  valValue
     
-    dim as VARITEMS_TYPE varItems() 
+    dim as VARITEMS_TYPE varItems(any) 
 
     erase varItems
 
