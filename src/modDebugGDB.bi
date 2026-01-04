@@ -140,8 +140,6 @@ function gdb_init(byref session as GDBSession, byval executable as DWSTRING = ""
     ret = CreateProcess(NULL, cmdline, NULL, NULL, TRUE, _
                         CREATE_NO_WINDOW, NULL, NULL, @si, @pi)
     
-LM( "GDB CreateProcess ret=" & str(ret) & iif(ret = 0, "  (ERROR)", "  (OKAY)") )
-
     if ret = 0 then
         dim as DWORD err_code = GetLastError()
         print "CreateProcess failed with error code: "; err_code
@@ -241,7 +239,7 @@ function gdb_receive( byref session as GDBSession ) as boolean
         
         ret = PeekNamedPipe(session.hStdOutRead, NULL, 0, NULL, @bytes_avail, NULL)
         
-        if ret <> 0 andalso bytes_avail > 0 then
+        if (ret <> 0) andalso (bytes_avail > 0) then
             if bytes_avail > 4096 then bytes_avail = 4096
             
             ret = ReadFile(session.hStdOutRead, strptr(buffer), bytes_avail, @bytes_read, NULL)
@@ -251,25 +249,25 @@ function gdb_receive( byref session as GDBSession ) as boolean
                 start_time = timer
             end if
         else
-            sleep 10
-        end if
-        
-        if instr(response, "(gdb)") > 0 orelse instr(response, "^done") > 0 orelse _
-           instr(response, "^running") > 0 orelse instr(response, "^error") > 0 orelse _
-           instr(response, "*stopped") > 0 then
-            ' Clear any old data first
-            gdb_clear_pipe(session)
-            ' Create a new message record and add it to the message queue. The WM_TIMER will
-            ' check the message queue for any pending messages.
-            MutexLock( gdb_session.hThreadMutex )
-            gdb_enqueue_message( session, response )
-            MutexUnLock( gdb_session.hThreadMutex )
             exit do
         end if
         
         if (timer - start_time) * 1000 > timeout_ms then exit do
     loop
 
+    if instr(response, "(gdb)") > 0 orelse instr(response, "^done") > 0 orelse _
+       instr(response, "^running") > 0 orelse instr(response, "^error") > 0 orelse _
+       instr(response, "*stopped") > 0 then
+        ' Clear any old data first
+        gdb_clear_pipe(session)
+
+        ' Create a new message record and add it to the message queue. The WM_TIMER will
+        ' check the message queue for any pending messages.
+        MutexLock( gdb_session.hThreadMutex )
+        gdb_enqueue_message( session, response )
+        MutexUnLock( gdb_session.hThreadMutex )
+    end if
+        
     return false
 end function
 

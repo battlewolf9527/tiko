@@ -63,43 +63,46 @@ function gdb_parseVariablesResponse( byref response as string ) as integer
     dim as integer p2 = 0
     dim as string  keyValue
     dim as string  valValue
-    
+
+    dim as DWSTRING st
+
     dim as VARITEMS_TYPE varItems(any) 
 
     erase varItems
 
     ' name="vr$29",value="<optimized out>"
+    response = trim(response)
+    if len(response) then
+        do while i <= len(response)
+            '' find name="
+            p1 = instr(i, response, "name=" & chr(34))
+            if p1 = 0 then exit do
+            p1 += 6
+            p2 = instr(p1, response, chr(34))
+            keyValue = mid(response, p1, p2 - p1)
 
-    while i <= len(response)
-        '' find name="
-        p1 = instr(i, response, "name=" & chr(34))
-        if p1 = 0 then exit while
-        p1 += 6
-        p2 = instr(p1, response, chr(34))
-        keyValue = mid(response, p1, p2 - p1)
+            '' find value="
+            p1 = instr(p2, response, "value=" & chr(34))
+            if p1 = 0 then exit do
+            p1 += 7
+            p2 = instr(p1, response, chr(34))
+            valValue = mid(response, p1, p2 - p1)
 
-        '' find value="
-        p1 = instr(p2, response, "value=" & chr(34))
-        if p1 = 0 then exit while
-        p1 += 7
-        p2 = instr(p1, response, chr(34))
-        valValue = mid(response, p1, p2 - p1)
+            redim preserve varItems(nItems)
+            varItems(nItems).varname  = keyValue
+            varItems(nItems).varvalue = valValue
+            
+            nItems += 1
+            i = p2 + 1
+        loop
 
-        redim preserve varItems(nItems)
-        varItems(nItems).varname  = keyValue
-        varItems(nItems).varvalue = valValue
-        
-        nItems += 1
-        i = p2 + 1
-    wend
-
-    dim as DWSTRING st
-    for i as long = lbound(varItems) to ubound(varItems)
-        if left(varItems(i).varname, 3) = "vr$" then continue for
-        if left(varItems(i).varname, 4) = "TMP$" then continue for
-        if instr(varItems(i).varvalue, "<optimized out>") then continue for
-        st = st & varItems(i).varname & " | " & varItems(i).varvalue & chr(13,10)
-    next
+        for i as long = lbound(varItems) to ubound(varItems)
+            if left(varItems(i).varname, 3) = "vr$" then continue for
+            if left(varItems(i).varname, 4) = "TMP$" then continue for
+            if instr(varItems(i).varvalue, "<optimized out>") then continue for
+            st = st & varItems(i).varname & " | " & varItems(i).varvalue & chr(13,10)
+        next
+    end if
 
     AfxSetWindowText( HWND_FRMDEBUG_OUTPUT, st )
 
@@ -115,7 +118,8 @@ sub gdb_processResponse( byval response as string )
 
     ' Display value of local variables within scope
     if instr( response, "^done,variables=") then 
-LM( response )
+'LM( response )
+LM( "^done,variables RECEIVED  len=" & len(response) )
         gdb_parseVariablesResponse( response )
     end if
     
@@ -130,7 +134,7 @@ LM( response )
         function_name = gdb_findResultValue( response, "func" )
         function_args = gdb_findFunctionArguments( response, "args" )
 
-LM( response )
+'LM( response )
 LM( "STOP: BREAKPOINT OR STEPPING" )
 LM( "  file_name:     " & file_name )
 LM( "  function_name: " & function_name )
@@ -138,7 +142,18 @@ LM( "  function_args: " & function_args )
 LM( "  line_number:   " & str(line_number) )
 
         if (len(file_name) > 0) andalso (line_number >= 0) then
-            dim as clsDocument ptr pDoc = OpenSelectedDocument( file_name, "", line_number)
+            ' Get the filename as represented in the gApp doc list. That filename is in correct
+            ' lettercase format whereas the filename returned via GDB is all uppercase. If that
+            ' source file has not yet been loaded in the editor then simply use the GDB returned name.
+            dim as DWSTRING wszFilename = file_name
+            dim as clsDocument ptr pDoc = gApp.GetDocumentPtrByFilename(wszFilename)
+            if pDoc then 
+                wszFilename = pDoc->DiskFilename
+            else
+                dim as DWSTRING wszTemp = AfxGetRealFilename( file_name )
+                if AfxFileExists(wszTemp) then wszFilename = wszTemp
+            end if
+            pDoc = OpenSelectedDocument( wszFilename, "", line_number)
             if pDoc then
                 SciExec( pDoc->hWndActiveScintilla, SCI_MARKERDELETEALL, MARKER_DEBUGGER_CURLINE, 0 )
                 pDoc->ToggleMarker( line_number, MARKER_DEBUGGER_CURLINE )
@@ -558,14 +573,14 @@ function frmDebug_SetInitialBreakpoints( byref session as GDBSession ) as long
 
     ' If no breakpoints exist then set a temporary breakpoint in the main file
     if numBreakpoints = 0 then
-LM( "Set Temp Breakpoint on Main")
+'LM( "Set Temp Breakpoint on Main")
         bp_cmd = "tbreak main"
 '        bp_cmd = "-break-insert -t main"
         gdb_send( gdb_session, bp_cmd )
         
     else    
-LM( "Set Breakpoints:")
-LM( bp_cmd & chr(13,10) )
+'LM( "Set Breakpoints:")
+'LM( bp_cmd & chr(13,10) )
         bp_cmd = rtrim(bp_cmd, chr(10))
         gdb_send( gdb_session, bp_cmd )
     end if
