@@ -1,11 +1,11 @@
 ' ========================================================================================
 ' tiko editor 
 ' Windows FreeBASIC Editor (Windows 64 bit)
-' Paul Squires (2016-2025)
+' Paul Squires (2016-2026)
 ' ========================================================================================
 
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@ using AfxNova
 #define QUICKRUNBAS         wstr("_tiko_quickrun.bas")
 #define QUICKRUNEXE         wstr("_tiko_quickrun.exe")
 
-#define APPCOPYRIGHT   wstr("Paul Squires, PlanetSquires Software, Copyright (C) 2016-2025") 
+#define APPCOPYRIGHT   wstr("Paul Squires, PlanetSquires Software, Copyright (C) 2016-2026") 
 dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.0"
 
 

@@ -1,5 +1,5 @@
 ''    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-''    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+''    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 ''
 ''    This program is free software: you can redistribute it and/or modify
 ''    it under the terms of the GNU General Public License as published by
@@ -164,7 +164,18 @@ function code_Compile( byval wID as long ) as boolean
     gCompile.ResourceFile = ""    ' default that there is no resource
     gCompile.CompileFlags = gConfig.Builds(idxBuild).wszOptions
     
+    ' If debugging, then ensure that we use the GCC compiler rather than GAS and
+    ' also include the -g compile flag.
     if gCompile.CompileID = IDM_DEBUG_STARTDEBUGGING then
+        ' If gas already exists then no need to replace chosen backend. Only do
+        ' the replacements if gcc is not found.
+        if instr( gCompile.CompileFlags, " -gen gcc" ) = 0 then
+            ' Replace llvm, gas, gas64 with gcc (ensure replacement string is same size as search string)
+            ' Search for gas64 before gas because gas will match before gas64.
+            gCompile.CompileFlags = AfxStrReplace( gCompile.CompileFlags, " -gen gas64", " -gen gcc  " )
+            gCompile.CompileFlags = AfxStrReplace( gCompile.CompileFlags, " -gen gas", " -gen gcc" )
+            gCompile.CompileFlags = AfxStrReplace( gCompile.CompileFlags, " -gen llvm", " -gen gcc " )
+        end if
         gCompile.CompileFlags = gCompile.CompileFlags & " -g "
     end if
 

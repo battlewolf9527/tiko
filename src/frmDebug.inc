@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -294,7 +294,8 @@ function frmDebug_WndProc( _
         case WM_CLOSE
             DestroyWindow( hwnd )
             
-        case WM_DESTROY    
+        case WM_DESTROY
+            HWND_FRMDEBUG_OUTPUT = 0    
             KillTimer( HWND_FRMDEBUG, gApp.DebugTimerID )
             ' Kill the GDB process
             gdb_close( gdb_session )

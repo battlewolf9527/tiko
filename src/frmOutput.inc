@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -70,6 +70,8 @@ function frmOutput_UpdateToDoListview() as long
             ltrim(wstr(pData->ElementData))
         frmListView_AddString( hLV, wszText )
     loop until pData = 0
+
+    frmListView_Refresh( hLV )
 
     function = 0
 end function
