@@ -150,7 +150,7 @@ LM( "  line_number:   " & str(line_number) )
             if pDoc then 
                 wszFilename = pDoc->DiskFilename
             else
-                dim as DWSTRING wszTemp = AfxGetRealFilename( file_name )
+                dim as DWSTRING wszTemp = AfxFilenameOriginalCase( file_name )
                 if AfxFileExists(wszTemp) then wszFilename = wszTemp
             end if
             pDoc = OpenSelectedDocument( wszFilename, "", line_number)

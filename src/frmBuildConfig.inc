@@ -724,10 +724,10 @@ function frmBuildConfig_OnCommand( _
 
         case IDC_FRMBUILDCONFIG_CMDINSERT
             if codeNotify = BN_CLICKED then
+                redim preserve gConfig.BuildsTemp(ubound(gConfig.BuildsTemp) + 1)
                 if ubound(gConfig.BuildsTemp) = -1 then
                     redim gConfig.BuildsTemp(0)
                     nCurSel = 0
-                    redim preserve gConfig.BuildsTemp(ubound(gConfig.BuildsTemp)+1)
                 else
                     if nCurSel = -1 then nCurSel = 0
                     ' insert the item above current entry in the internal array
@@ -874,7 +874,6 @@ function frmBuildConfig_Show( byval hWndParent as HWND ) as LRESULT
             @frmBuildConfig_WndProc, 0, 0, 0, 0, _
             WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
             WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
-'    pWindow->SetClientSize(622, 436)
     pWindow->SetClientSize(675, 500)
     pWindow->Center(pWindow->hWindow, hWndParent)
 

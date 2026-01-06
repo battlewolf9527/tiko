@@ -835,42 +835,26 @@ end function
 ' Get the original case filename as stored by Windows (used when converting the GDB
 ' returned filename from uppercase to original case).
 ' ========================================================================================
-function AfxGetRealFilename( byref filename as string ) as DWSTRING
-    dim as handle hfile
-    dim as wstring * 1024 buffer
-    dim as dword result
+function AfxFilenameOriginalCase( byval filename as DWSTRING ) as DWSTRING
+    dim as long bufSize = 1024
+    dim as DWSTRING buffer = wspace(bufSize \ 2)
 
-    '' 1. open the file handle (ansi version)
-    hfile = createfile(filename, _
-                       generic_read, _
-                       file_share_read, _
-                       null, _
-                       open_existing, _
-                       file_attribute_normal, _
-                       null)
+    dim as HANDLE hfile = CreateFileW(filename, GENERIC_READ, FILE_SHARE_READ, _
+                                null, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, null)
 
-    if hfile = INVALID_HANDLE_VALUE then
-LM( "error: could not open file. code: " & str(getlasterror) )
-        exit function
-    end if
+    if hfile = INVALID_HANDLE_VALUE then exit function
 
-    '' 2. get the required buffer size or the path itself
-    '' flags: volume_name_dos (0x0) and file_name_normalized (0x0)
-    result = GetFinalPathNameByHandlew(hfile, @buffer, sizeof(buffer), FILE_NAME_NORMALIZED)
+    dim as DWORD result = GetFinalPathNameByHandleW( hfile, *buffer, bufSize, FILE_NAME_NORMALIZED )
 
-LM( "original path: " & filename )
-LM( "final path:    " & buffer )
-LM( "result: " & result )
-
-    if (result > 0) andalso (result < sizeof(buffer)) then
+    if (result > 0) andalso (result < bufSize) then
+        ' Good data returned but still need to remove the mapping characters
+        if left(buffer, 4) = "\\?\" then buffer = mid(buffer, 5)
     else
-LM( "error: could not retrieve path. result code: " & result )
+        ' error: could not retrieve path. 
     end if
 
-    '' 3. clean up
-    closehandle(hfile)
-    
-    if left(buffer, 4) = "\\?\" then buffer = mid(buffer, 5)
+    ' clean up
+    CloseHandle(hfile)
     
     function = buffer
 end function
