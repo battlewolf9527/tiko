@@ -51,12 +51,7 @@ function gdb_findFunctionArguments( byref response as string, byref token as str
 end function
 
 
-type VARITEMS_TYPE
-    varname  as string
-    varvalue as string
-end type
-
-function gdb_parseVariablesResponse( byref response as string ) as integer
+function gdb_parseVariablesResponse( byref session as GDBSession, byref response as string ) as integer
     dim as integer i = 1
     dim as integer nItems = 0
     dim as integer p1 = 0
@@ -65,10 +60,6 @@ function gdb_parseVariablesResponse( byref response as string ) as integer
     dim as string  valValue
 
     dim as DWSTRING st
-
-    dim as VARITEMS_TYPE varItems(any) 
-
-    erase varItems
 
     ' name="vr$29",value="<optimized out>"
     response = trim(response)
@@ -88,19 +79,19 @@ function gdb_parseVariablesResponse( byref response as string ) as integer
             p2 = instr(p1, response, chr(34))
             valValue = mid(response, p1, p2 - p1)
 
-            redim preserve varItems(nItems)
-            varItems(nItems).varname  = keyValue
-            varItems(nItems).varvalue = valValue
+            redim preserve session.variable_array(nItems)
+            session.variable_array(nItems).varname  = keyValue
+            session.variable_array(nItems).varvalue = valValue
             
             nItems += 1
             i = p2 + 1
         loop
 
-        for i as long = lbound(varItems) to ubound(varItems)
-            if left(varItems(i).varname, 3) = "vr$" then continue for
-            if left(varItems(i).varname, 4) = "TMP$" then continue for
-            if instr(varItems(i).varvalue, "<optimized out>") then continue for
-            st = st & varItems(i).varname & " | " & varItems(i).varvalue & chr(13,10)
+        for i as long = lbound(session.variable_array) to ubound(session.variable_array)
+            if left(session.variable_array(i).varname, 3) = "vr$" then continue for
+            if left(session.variable_array(i).varname, 4) = "TMP$" then continue for
+            if instr(session.variable_array(i).varvalue, "<optimized out>") then continue for
+            st = st & session.variable_array(i).varname & " | " & session.variable_array(i).varvalue & chr(13,10)
         next
     end if
 
@@ -110,7 +101,7 @@ function gdb_parseVariablesResponse( byref response as string ) as integer
 end function
 
 
-sub gdb_processResponse( byval response as string ) 
+sub gdb_processResponse( byref session as GDBSession, byval response as string ) 
     dim as string file_name 
     dim as string function_name 
     dim as string function_args
@@ -120,7 +111,7 @@ sub gdb_processResponse( byval response as string )
     if instr( response, "^done,variables=") then 
 'LM( response )
 LM( "^done,variables RECEIVED  len=" & len(response) )
-        gdb_parseVariablesResponse( response )
+        gdb_parseVariablesResponse( session, response )
     end if
     
     ' Process hitting a Breakpoint
@@ -133,6 +124,13 @@ LM( "^done,variables RECEIVED  len=" & len(response) )
         file_name = AfxStrReplace( file_name, "/", "\" )
         function_name = gdb_findResultValue( response, "func" )
         function_args = gdb_findFunctionArguments( response, "args" )
+
+        ' If the current function name or filename has changed then reset the variable array.
+        ' The new values for the array are set in gdb_parseVariablesResponse()
+        if (file_name <> session.current_file_name) orelse _
+            (function_name <> session.current_function_name) then
+            erase session.variable_array
+        end if    
 
 'LM( response )
 LM( "STOP: BREAKPOINT OR STEPPING" )
@@ -345,7 +343,7 @@ function frmDebug_WndProc( _
                     MutexLock( gdb_session.hThreadMutex )
                     dim as string message = gdb_dequeue_message( gdb_session )
                     MutexUnLock( gdb_session.hThreadMutex )
-                    gdb_processResponse( message )    
+                    gdb_processResponse( gdb_session, message )    
                 end if
             end if
 
@@ -601,6 +599,10 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as string ) a
         WS_EX_CONTROLPARENT or WS_EX_LEFT )
     pWindow->SetClientSize(625, 460)
     pWindow->Center(pWindow->hWindow, hWndParent)
+
+    ' Set the small and large icon for the main window (must be set after main window is created)
+    pWindow->BigIcon   = LoadImage( pWindow->InstanceHandle, "IMAGE_AAA_MAINICON", IMAGE_ICON, 32, 32, LR_SHARED)
+    pWindow->SmallIcon = LoadImage( pWindow->InstanceHandle, "IMAGE_AAA_MAINICON", IMAGE_ICON, 16, 16, LR_SHARED)
 
     dim as long nvalue = false
     if instr(gConfig.ThemeShortFilename, "_dark") then nvalue = true

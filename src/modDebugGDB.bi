@@ -14,8 +14,13 @@
 type _GDBMessage as GDBMessage
 
 type GDBMessage
-    message as string
+    message   as string
     pNextNode as _GDBMessage ptr
+end type
+
+type VariableType
+    VarName  as string
+    VarValue as string
 end type
 
 type GDBSession
@@ -29,6 +34,10 @@ type GDBSession
     hThreadMessages   as any ptr
     KillMessageThread as boolean
     hThreadMutex      as any ptr
+
+    current_file_name     as string
+    current_function_name as string
+    variable_array(any)   as VariableType
     
     ' Message fifo queue
     head              as GDBMessage ptr
@@ -324,6 +333,10 @@ sub gdb_close( byref session as GDBSession )
         session.hStdErrRead = 0
         session.hThread     = 0
         session.hProcess    = 0
+
+        session.current_file_name     = ""
+        session.current_function_name = ""
+        erase session.variable_array
         
         session.initialized = false
     end if
