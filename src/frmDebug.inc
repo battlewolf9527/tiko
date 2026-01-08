@@ -70,6 +70,7 @@ function gdb_parseVariablesResponse( byref session as GDBSession, byref response
             if p1 = 0 then exit do
             p1 += 6
             p2 = instr(p1, response, chr(34))
+            if p2 = 0 then exit do
             keyValue = mid(response, p1, p2 - p1)
 
             '' find value="
@@ -77,24 +78,58 @@ function gdb_parseVariablesResponse( byref session as GDBSession, byref response
             if p1 = 0 then exit do
             p1 += 7
             p2 = instr(p1, response, chr(34))
+            if p2 = 0 then exit do
             valValue = mid(response, p1, p2 - p1)
 
-            redim preserve session.variable_array(nItems)
-            session.variable_array(nItems).varname  = keyValue
-            session.variable_array(nItems).varvalue = valValue
+            dim as boolean bAddVariable = true
+            if left(keyValue, 3) = "vr$" then bAddVariable = false
+            if left(keyValue, 4) = "TMP$" then bAddVariable = false
+            if instr(keyValue, "<optimized out>") then bAddVariable = false
+
+            if (bAddVariable = true) andalso (session.is_new_variables = true) then
+                redim preserve session.variable_array(nItems)
+                session.variable_array(nItems).varname  = keyValue
+                session.variable_array(nItems).varvalue = valValue
+                nItems += 1
+            else
+                if (bAddVariable = true) andalso (session.is_new_variables = false) then
+                    ' The variable list already exists so simply find the variable name and update its value
+                    for i as long = lbound(session.variable_array) to ubound(session.variable_array)
+                        if session.variable_array(i).varname = keyValue then
+                            session.variable_array(i).varvalue = valValue
+                            exit for
+                        end if
+                    next
+                end if
+            end if
             
-            nItems += 1
             i = p2 + 1
         loop
+    end if
+    
+    if session.is_new_variables = true then
+        dim as VariableType temp
 
-        for i as long = lbound(session.variable_array) to ubound(session.variable_array)
-            if left(session.variable_array(i).varname, 3) = "vr$" then continue for
-            if left(session.variable_array(i).varname, 4) = "TMP$" then continue for
-            if instr(session.variable_array(i).varvalue, "<optimized out>") then continue for
-            st = st & session.variable_array(i).varname & " | " & session.variable_array(i).varvalue & chr(13,10)
-        next
+        for i as integer = lbound(session.variable_array) to ubound(session.variable_array) - 1
+            for j as integer = i + 1 to ubound(session.variable_array)
+                if session.variable_array(i).VarName > session.variable_array(j).VarName then
+                    temp = session.variable_array(i)
+                    session.variable_array(i) = session.variable_array(j)
+                    session.variable_array(j) = temp
+                end if
+            next j
+        next i
+
     end if
 
+    ' Now set the flag that the array has variable names
+    session.is_new_variables = false
+
+    ' Create the string to display in the textbox
+    st = ""
+    for i as long = lbound(session.variable_array) to ubound(session.variable_array)
+        st = st & session.variable_array(i).varname & " | " & session.variable_array(i).varvalue & chr(13,10)
+    next
     AfxSetWindowText( HWND_FRMDEBUG_OUTPUT, st )
 
     return nItems
@@ -130,6 +165,7 @@ LM( "^done,variables RECEIVED  len=" & len(response) )
         if (file_name <> session.current_file_name) orelse _
             (function_name <> session.current_function_name) then
             erase session.variable_array
+            session.is_new_variables = true
         end if    
 
 'LM( response )

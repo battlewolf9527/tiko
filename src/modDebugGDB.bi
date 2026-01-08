@@ -38,6 +38,7 @@ type GDBSession
     current_file_name     as string
     current_function_name as string
     variable_array(any)   as VariableType
+    is_new_variables      as boolean 
     
     ' Message fifo queue
     head              as GDBMessage ptr
@@ -140,9 +141,9 @@ function gdb_init(byref session as GDBSession, byval executable as DWSTRING = ""
     
     ' Build command line
     if len(executable) > 0 then
-        cmdline = "gdb.exe -q -i=mi " & chr(34) & executable & chr(34)
+        cmdline = "gdb.exe -q -i=mi2 " & chr(34) & executable & chr(34)
     else
-        cmdline = "gdb.exe -q -i=mi"
+        cmdline = "gdb.exe -q -i=mi2"
     end if
     
     ' Create the GDB process
@@ -216,7 +217,7 @@ end sub
 
 
 ' Send command to GDB (synchronous)
-function gdb_send(byref session as GDBSession, cmd as string) as boolean
+function gdb_send(byref session as GDBSession, byref cmd as string) as boolean
     if session.initialized = false then return false
     
     dim as string full_cmd = cmd + chr(13) + chr(10)
@@ -253,8 +254,10 @@ function gdb_receive( byref session as GDBSession ) as boolean
             
             ret = ReadFile(session.hStdOutRead, strptr(buffer), bytes_avail, @bytes_read, NULL)
             
+LM( "ret: " & ret & "  bytes_read: " & bytes_read )
             if (ret <> 0) andalso (bytes_read > 0) then
-                response += left(buffer, bytes_read)
+                response = response & left(buffer, bytes_read)
+LM( "APPEND RESPONSE " & len(response) )                
                 start_time = timer
             end if
         else
@@ -273,6 +276,7 @@ function gdb_receive( byref session as GDBSession ) as boolean
         ' Create a new message record and add it to the message queue. The WM_TIMER will
         ' check the message queue for any pending messages.
         MutexLock( gdb_session.hThreadMutex )
+LM( "Message length queued: " & len(response) & chr(13,10) & response )
         gdb_enqueue_message( session, response )
         MutexUnLock( gdb_session.hThreadMutex )
     end if
