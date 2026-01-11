@@ -59,7 +59,7 @@ function gdb_parseVariablesResponse( byref session as GDBSession, byref response
     dim as string  keyValue
     dim as string  valValue
 
-    dim as DWSTRING st
+    dim as DWSTRING wszText
 
     ' name="vr$29",value="<optimized out>"
     response = trim(response)
@@ -125,12 +125,26 @@ function gdb_parseVariablesResponse( byref session as GDBSession, byref response
     ' Now set the flag that the array has variable names
     session.is_new_variables = false
 
-    ' Create the string to display in the textbox
-    st = ""
+'    ' Create the string to display in the textbox
+'    st = ""
+'    for i as long = lbound(session.variable_array) to ubound(session.variable_array)
+'        st = st & session.variable_array(i).varname & " | " & session.variable_array(i).varvalue & chr(13,10)
+'    next
+'    AfxSetWindowText( HWND_FRMDEBUG_OUTPUT, st )
+
+    dim hLV as HWND = HWND_FRMDEBUG_OUTPUT
+
+    frmListView_DeleteAllItems( hLV )
+
     for i as long = lbound(session.variable_array) to ubound(session.variable_array)
-        st = st & session.variable_array(i).varname & " | " & session.variable_array(i).varvalue & chr(13,10)
+        wszText = "" & chr(9) & _
+                    session.variable_array(i).varname & chr(9) & _
+                    session.variable_array(i).varvalue & chr(9) & _
+                    "column 3"
+        frmListView_AddString( hLV, wszText )
     next
-    AfxSetWindowText( HWND_FRMDEBUG_OUTPUT, st )
+    frmListView_Refresh( hLV )
+
 
     return nItems
 end function
@@ -301,15 +315,24 @@ function frmDebug_PositionWindows() as LRESULT
     dim as HWND hCtl 
     
     if HWND_FRMDEBUG_OUTPUT = 0 then
-        hCtl = pWindow->AddControl("RICHEDIT", , IDC_FRMDEBUG_TXTOUTPUT, "", _
-                    0, 0, 0, 0, _
-                    WS_CHILD or WS_TABSTOP or WS_VSCROLL or _
-                    ES_MULTILINE or ES_LEFT or ES_AUTOVSCROLL or ES_WANTRETURN, _
-                    WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR )
-        SendMessage( hCtl, EM_SETEVENTMASK, 0, cast(LPARAM, ENM_SELCHANGE or ENM_CHANGE or ENM_UPDATE) )
-        SendMessage( hCtl, EM_SHOWSCROLLBAR, SB_VERT, FALSE)
-        SendMessage( hCtl, EM_SHOWSCROLLBAR, SB_HORZ, FALSE)
+'        hCtl = pWindow->AddControl("RICHEDIT", , IDC_FRMDEBUG_TXTOUTPUT, "", _
+'                    0, 0, 0, 0, _
+'                    WS_CHILD or WS_TABSTOP or WS_VSCROLL or _
+'                    ES_MULTILINE or ES_LEFT or ES_AUTOVSCROLL or ES_WANTRETURN, _
+'                    WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR )
+'        SendMessage( hCtl, EM_SETEVENTMASK, 0, cast(LPARAM, ENM_SELCHANGE or ENM_CHANGE or ENM_UPDATE) )
+'        SendMessage( hCtl, EM_SHOWSCROLLBAR, SB_VERT, FALSE)
+'        SendMessage( hCtl, EM_SHOWSCROLLBAR, SB_HORZ, FALSE)
         
+        hCtl = frmListView_Show( HWND_FRMDEBUG )
+            frmListView_AddColumn( hCtl, 0, "", pWindow->ScaleX(20) )
+            frmListView_AddColumn( hCtl, 1, L(253, "Line"), pWindow->ScaleX(75) )
+            frmListView_AddColumn( hCtl, 2, L(254, "File"), pWindow->ScaleX(250) )
+            frmListView_AddColumn( hCtl, 3, L(255, "Description"), pWindow->ScaleX(480) )
+            frmListView_SetForeColors( hCtl, ghOutput.ForeColor, ghOutput.ForeColorHot )
+            frmListView_SetBackColors( hCtl, ghOutput.BackColor, ghOutput.ForeColorScrollBar )
+            frmListView_SetScrollBarColors( hCtl, ghOutput.BackColorScrollBar, ghOutput.ForeColorScrollBar, ghOutput.ScrollBarDivider )
+
         HWND_FRMDEBUG_OUTPUT = hCtl
     end if
     
