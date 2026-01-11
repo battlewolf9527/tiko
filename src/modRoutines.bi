@@ -74,9 +74,11 @@ declare function frmListView_GetCount( byval hLV as HWND ) as long
 declare function frmListView_AddString( byval hLV as HWND, byval wszText as DWSTRING ) as long
 declare function frmListView_DeleteAllItems( byval hLV as HWND ) as long
 declare function frmListView_GetItemText( byval hLV as HWND, byval nLineNum as long, byval nColNum as long ) as DWSTRING
+declare function frmListView_SetItemText( byval hLV as HWND, byval nLineNum as long, byval nColNum as long, byval wszText as DWSTRING ) as long
 declare function frmListView_GetSelection( byval hLV as HWND ) as long
 declare function frmListView_AddColumn( _
     byval hLV as HWND, byval nColNum as long, byval wszText as DWSTRING, byval nWidth as long ) as long
+declare function frmListView_SetColumnWidth( byval hLV as HWND, byval nColNum as long, byval nWidth as long ) as long
 declare function frmListView_SetForeColors( _
     byval hLV as HWND, byval ForeColor as COLORREF, byval ForeColorHot as COLORREF ) as long
 declare function frmListView_SetBackColors( _

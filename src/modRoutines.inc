@@ -49,8 +49,44 @@ end function
 ' ========================================================================================
 function frmListView_GetItemText( byval hLV as HWND, byval nLineNum as long, byval nColNum as long ) as DWSTRING
     dim as HWND hListBox = GetDlgItem( hLV, IDC_FRMLISTVIEW_LISTBOX )
-    dim as DWSTRING wszCaption = AfxGetListBoxText( hListBox, nLineNum )
-    return AfxStrParse( wszCaption, nColNum + 1, chr(9) )
+    dim as DWSTRING wszText = AfxGetListBoxText( hListBox, nLineNum )
+    return AfxStrParse( wszText, nColNum + 1, chr(9) )
+end function
+
+
+' ========================================================================================
+' frmListView_SetItemText
+' ========================================================================================
+function frmListView_SetItemText( byval hLV as HWND, _
+        byval nLineNum as long, byval nColNum as long, byval wszText as DWSTRING ) as long
+    dim as HWND hListBox = GetDlgItem( hLV, IDC_FRMLISTVIEW_LISTBOX )
+    dim as DWSTRING wszExistingText = AfxGetListBoxText( hListBox, nLineNum )
+    dim as DWSTRING wszNewText
+    
+    dim as long nCount = AfxStrParseCount( wszExistingText, chr(9) )
+    for i as long = 0 to nCount - 1
+        if i = nColNum then
+            wszNewText = wszNewText & wszText & chr(9)
+        else    
+            wszNewText = wszNewText & AfxStrParse( wszExistingText, i + 1, chr(9) ) & chr(9)
+        end if
+    next
+
+    wszNewText = rtrim(wszNewText, chr(9))
+    
+    dim as long curSel = SendMessage(hListBox, LB_GETCURSEL, 0, 0)
+    dim as long topIdx = SendMessage(hListBox, LB_GETTOPINDEX, 0, 0)
+    dim as long itemData = SendMessage(hListBox, LB_GETITEMDATA, nLineNum, 0)
+
+    SendMessage(hListBox, LB_DELETESTRING, nLineNum, 0)
+    SendMessage(hListBox, LB_INSERTSTRING, nLineNum, cast(LPARAM, wszNewText.vptr))
+    SendMessage(hListBox, LB_SETITEMDATA, nLineNum, itemData)
+
+    if (curSel = nLineNum) then SendMessage(hListBox, LB_SETCURSEL, nLineNum, 0)
+    SendMessage(hListBox, LB_SETTOPINDEX, topIdx, 0)
+
+    AfxRedrawWindow( hListBox )
+    return 0
 end function
 
 
@@ -96,7 +132,6 @@ function frmListView_AddString( byval hLV as HWND, byval wszText as DWSTRING ) a
 end function
 
 
-
 ' ========================================================================================
 ' frmListView_AddColumn
 ' ========================================================================================
@@ -116,6 +151,27 @@ function frmListView_AddColumn( _
     pData->ColData(nColNum).wszText = wszText
     pData->ColData(nColNum).nWidth = nWidth
     
+    return 0
+end function
+
+
+
+' ========================================================================================
+' frmListView_SetColumnWidth
+' ========================================================================================
+function frmListView_SetColumnWidth( _
+            byval hLV as HWND, _
+            byval nColNum as long, _
+            byval nWidth as long _
+            ) as long
+    dim as LISTVIEW_DATA_TYPE ptr pData = frmListView_GetPointer(hLV)
+    if pData = 0 then return 1
+    
+    if (nColNum >= lbound(pData->ColData)) andalso _
+        (nColNum <= ubound(pData->ColData)) then
+        pData->ColData(nColNum).nWidth = nWidth
+    end if
+        
     return 0
 end function
 
