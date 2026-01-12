@@ -166,12 +166,16 @@ function gdb_parseVariablesResponse( byref session as GDBSession, byref response
         nVarValueColWidth = MAX( nVarValueColWidth, nTextWidth )
     next
     ' Set the column widths based on the variable name and values
-    ' Add a little extra padding tot he widths
+    ' Add a little extra padding to the widths
     nVarNameColWidth = nVarNameColWidth + 10
     nVarValueColWidth = nVarValueColWidth + 10
     frmListView_SetColumnWidth( hLV, 1, AfxScaleX(nVarNameColWidth) )
     frmListView_SetColumnWidth( hLV, 2, AfxScaleX(nVarValueColWidth) )
 
+    dim as long nShow = iif( frmListView_GetCount(hLV) = 0, SW_HIDE, SW_SHOW )
+
+LM( "nShow=" & nShow & "  " & frmListView_GetCount(hLV) & "  " & SW_HIDE & "  " & SW_SHOW )
+    ShowWindow( hLV, nShow )
     frmListView_Refresh( hLV )
 
     return nItems
@@ -355,10 +359,8 @@ function frmDebug_PositionWindows() as LRESULT
 
         HWND_FRMDEBUG_OUTPUT = hCtl
     end if
-    
     GetClientRect(HWND_FRMDEBUG, @rc)
-    SetWindowPos( HWND_FRMDEBUG_OUTPUT, 0, 0, nHeight, rc.right, rc.bottom - nHeight, SWP_NOZORDER or SWP_SHOWWINDOW )
-    AfxRedrawWindow( HWND_FRMDEBUG_OUTPUT )
+    SetWindowPos( HWND_FRMDEBUG_OUTPUT, 0, 0, nHeight, rc.right, rc.bottom - nHeight, SWP_NOZORDER )
     
     function = 0
 end function
@@ -413,8 +415,6 @@ function frmDebug_WndProc( _
 
             gApp.IsDebuggerActive = false
             
-            LogClose()
-
         case WM_TIMER
             if wParam = gApp.DebugTimerID then
                 ' Check for any pending message
@@ -524,8 +524,8 @@ function frmDebug_WndProc( _
             b.BeginDoubleBuffer(hwnd)
 
             ' Set default back and fore colors
-            b.SetForeColors( ghTopTabs.ForeColor, ghTopTabs.ForeColorHot )
-            b.SetBackColors( ghTopTabs.BackColor, ghTopTabs.BackColorHot )
+            b.SetForeColors( ghTopTabs.ForeColor, ghTopTabs.ForeColor )
+            b.SetBackColors( ghTopTabs.BackColor, ghTopTabs.BackColor )
 
             ' Clear the entire back client area
             b.PaintClientRect()
@@ -692,8 +692,6 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as string ) a
     
     frmDebug_PositionWindows()
 
-    LogInit( "_debug.txt" )
-    
     SetTimer(HWND_FRMDEBUG, gApp.DebugTimerID, 20, null)   ' 20 ms
     
     ' The debug executable has been sucessfully created so start the debug thread

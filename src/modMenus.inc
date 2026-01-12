@@ -538,6 +538,9 @@ function CreateScintillaContextMenu() as HMENU
     AppendMenu hPopupMenu, MF_ENABLED, IDM_PASTE, L(19,"Paste")
     AppendMenu hPopupMenu, MF_SEPARATOR, 0, ""
     AppendMenu hPopupMenu, MF_ENABLED, IDM_DEBUG_TOGGLEBREAKPOINT, L(313,"Toggle Breakpoint") 
+    if gApp.IsDebuggerActive = true then
+        AppendMenu hPopupMenu, MF_ENABLED, IDM_DEBUG_RUNTOCURSOR, L(320,"Run to Cursor") 
+    end if
     AppendMenu hPopupMenu, MF_SEPARATOR, 0, ""
     AppendMenu hPopupMenu, MF_ENABLED, IDM_INDENTBLOCK, L(23,"Block Indent") 
     AppendMenu hPopupMenu, MF_ENABLED, IDM_UNINDENTBLOCK, L(24,"Block Unindent")

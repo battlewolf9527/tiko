@@ -53,6 +53,7 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 'TODO: Refactor AutoSave functionality. Until then, just disable it in the editor.
 #define ENABLE_AUTOSAVE false
 
+#define LOGGING_ENABLED
 #include once "logging.bas"
 
 #include once "modScintilla.bi"
@@ -147,6 +148,8 @@ function WinMain( _
             byval nCmdShow      as long _
             ) as long
 
+    LogInit( "_debug.txt" )
+    
     ' Load configuration files 
     gConfig.LoadConfigFile()
     gConfig.LoadKeywords()
@@ -246,6 +249,8 @@ function WinMain( _
     
     ' Uninitialize the COM library
     CoUninitialize
+
+    LogClose()
 
 end function
 

@@ -71,7 +71,7 @@ function frmOutput_UpdateToDoListview() as long
         frmListView_AddString( hLV, wszText )
     loop until pData = 0
 
-    frmListView_Refresh( hLV )
+    frmOutput_PositionWindows
 
     function = 0
 end function
@@ -184,10 +184,9 @@ function frmOutput_ShowHideOutputControls( byval hwnd as HWND ) as LRESULT
     if hLV then 
         ' Only display the owner drawn listview if it has items otherwise the wm_drawitem will
         ' not fire and the whole area will display as white.
-        if frmListView_GetCount(hLV) > 0 then
-            SetWindowPos( hCtrl, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE or SWP_NOSIZE or SWP_SHOWWINDOW )
-            frmListView_Refresh( hLV )
-        end if    
+        dim as long nShow = iif( frmListView_GetCount( hLV ) = 0, SW_HIDE, SW_SHOW )
+        ShowWindow( hLV, nShow )
+        frmListView_PositionWindows( hLV )
     end if
 
     if hTextBox then
