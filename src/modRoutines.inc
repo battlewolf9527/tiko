@@ -48,8 +48,14 @@ end function
 ' frmListView_GetItemText
 ' ========================================================================================
 function frmListView_GetItemText( byval hLV as HWND, byval nLineNum as long, byval nColNum as long ) as DWSTRING
-    dim as HWND hListBox = GetDlgItem( hLV, IDC_FRMLISTVIEW_LISTBOX )
-    dim as DWSTRING wszText = AfxGetListBoxText( hListBox, nLineNum )
+    dim as LISTVIEW_DATA_TYPE ptr pData = frmListView_GetPointer(hLV)
+    if pData = 0 then return 1
+    
+    dim as DWSTRING wszText
+    if (nLineNum >= lbound(pData->rowData)) andalso _
+        (nLineNum <= ubound(pData->rowData)) then
+         wszText = pData->rowData(nLineNum)
+    end if
     return AfxStrParse( wszText, nColNum + 1, chr(9) )
 end function
 
@@ -59,10 +65,12 @@ end function
 ' ========================================================================================
 function frmListView_SetItemText( byval hLV as HWND, _
         byval nLineNum as long, byval nColNum as long, byval wszText as DWSTRING ) as long
-    dim as HWND hListBox = GetDlgItem( hLV, IDC_FRMLISTVIEW_LISTBOX )
-    dim as DWSTRING wszExistingText = AfxGetListBoxText( hListBox, nLineNum )
-    dim as DWSTRING wszNewText
+    dim as LISTVIEW_DATA_TYPE ptr pData = frmListView_GetPointer(hLV)
+    if pData = 0 then return 1
     
+    dim as DWSTRING wszExistingText = pData->rowData( nLineNum )
+    dim as DWSTRING wszNewText
+
     dim as long nCount = AfxStrParseCount( wszExistingText, chr(9) )
     for i as long = 0 to nCount - 1
         if i = nColNum then
@@ -71,21 +79,10 @@ function frmListView_SetItemText( byval hLV as HWND, _
             wszNewText = wszNewText & AfxStrParse( wszExistingText, i + 1, chr(9) ) & chr(9)
         end if
     next
-
     wszNewText = rtrim(wszNewText, chr(9))
-    
-    dim as long curSel = SendMessage(hListBox, LB_GETCURSEL, 0, 0)
-    dim as long topIdx = SendMessage(hListBox, LB_GETTOPINDEX, 0, 0)
-    dim as long itemData = SendMessage(hListBox, LB_GETITEMDATA, nLineNum, 0)
 
-    SendMessage(hListBox, LB_DELETESTRING, nLineNum, 0)
-    SendMessage(hListBox, LB_INSERTSTRING, nLineNum, cast(LPARAM, wszNewText.vptr))
-    SendMessage(hListBox, LB_SETITEMDATA, nLineNum, itemData)
+    pData->rowData(nLineNum) = wszNewText
 
-    if (curSel = nLineNum) then SendMessage(hListBox, LB_SETCURSEL, nLineNum, 0)
-    SendMessage(hListBox, LB_SETTOPINDEX, topIdx, 0)
-
-    AfxRedrawWindow( hListBox )
     return 0
 end function
 
@@ -94,11 +91,13 @@ end function
 ' frmListView_DeleteAllItems
 ' ========================================================================================
 function frmListView_DeleteAllItems( byval hLV as HWND ) as long
-    dim as HWND hListBox = GetDlgItem( hLV, IDC_FRMLISTVIEW_LISTBOX )
-    ListBox_ResetContent( hListBox )
+    dim as LISTVIEW_DATA_TYPE ptr pData = frmListView_GetPointer(hLV)
+    if pData = 0 then return 1
+    erase pData->rowData
+    frmListView_SetCount( hLV, 0 )
     ' Hide the ownerdraw listboxes because the wm_drawitem will not fire if
     ' no items exist thereby causing white space to show.
-    ShowWindow( hListBox, SW_HIDE )
+    ShowWindow( pData->hListBox, SW_HIDE )
     return 0
 end function
 
@@ -107,8 +106,20 @@ end function
 ' frmListView_GetCount
 ' ========================================================================================
 function frmListView_GetCount( byval hLV as HWND ) as long
-    dim as HWND hListBox = GetDlgItem( hLV, IDC_FRMLISTVIEW_LISTBOX )
-    return ListBox_GetCount( hListBox )
+    dim as LISTVIEW_DATA_TYPE ptr pData = frmListView_GetPointer(hLV)
+    if pData = 0 then return 1
+    return ubound(pData->rowData) + 1
+end function
+
+
+' ========================================================================================
+' frmListView_SetCount
+' ========================================================================================
+function frmListView_SetCount( byval hLV as HWND, byval itemCount as long ) as long
+    dim as LISTVIEW_DATA_TYPE ptr pData = frmListView_GetPointer(hLV)
+    if pData = 0 then return 1
+    SendMessage(pData->hListBox, LB_SETCOUNT, itemCount, 0)
+    return 0
 end function
 
 
@@ -125,9 +136,14 @@ end function
 ' frmListView_AddString
 ' ========================================================================================
 function frmListView_AddString( byval hLV as HWND, byval wszText as DWSTRING ) as long
-    dim as HWND hListBox = GetDlgItem( hLV, IDC_FRMLISTVIEW_LISTBOX )
-    ListBox_AddString( hListBox, wszText.vptr )
-    AfxRedrawWindow( hListBox )
+    dim as LISTVIEW_DATA_TYPE ptr pData = frmListView_GetPointer(hLV)
+    if pData = 0 then return 1
+    
+    dim as long ub = ubound(pData->rowData) + 1
+    redim preserve pData->rowData(ub)
+    pData->rowData(ub) = wszText
+
+    frmListView_SetCount( hLV, ub + 1 )
     return 0
 end function
 

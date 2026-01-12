@@ -19,16 +19,18 @@
 #define IDC_FRMLISTVIEW_LISTBOX              1001
 #define IDC_FRMLISTVIEW_VSCROLL              1002
 
+
 type LISTVIEW_COLUMN_TYPE
-    wszText as DWSTRING            ' row 0 is the header data
-    nWidth as long
+    wszText as DWSTRING             ' column header destription
+    nWidth as long                  ' column width
 end type
 
 type LISTVIEW_DATA_TYPE
     hVScroll as HWND            ' manually allocated needs to be delete
     hHeader as HWND             ' normal child control
     hListBox as HWND            ' normal child control
-    ColData(any) as LISTVIEW_COLUMN_TYPE
+    colData(any) as LISTVIEW_COLUMN_TYPE
+    rowData(any) as DWSTRING    ' chr(9) deliminated string for columns in the row
     ForeColor as COLORREF
     ForeColorHot as COLORREF
     BackColor as COLORREF

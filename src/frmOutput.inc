@@ -1013,6 +1013,16 @@ function frmOutput_WndProc( _
         HWND_FRMOUTPUT_LVTODO    = 0
         return 0
 
+
+    case MSG_USER_LISTVIEW_LBUTTONDBLCLK
+        dim as HWND hLV = cast(HWND, wParam)
+        select case hLV
+            case HWND_FRMOUTPUT_LVRESULTS, _
+                 HWND_FRMOUTPUT_LVSEARCH, _
+                 HWND_FRMOUTPUT_LVTODO
+                SetDocumentErrorPosition( hLV, gCompile.CompileID )    
+        end select
+        
     case MSG_USER_RICHEDIT_SELECTALL
         dim as HWND hCtrl = cast(HWND, wParam) 
         SetFocus( hCtrl )

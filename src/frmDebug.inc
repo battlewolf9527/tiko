@@ -109,8 +109,6 @@ function gdb_parseVariablesResponse( byref session as GDBSession, byref response
         loop
     end if
     
-    
-LM( "session.is_new_variables=" & session.is_new_variables )
 
     if session.is_new_variables = false then
         ' Simply update the value held in the ListView
@@ -124,7 +122,7 @@ LM( "session.is_new_variables=" & session.is_new_variables )
         next    
     end if
     
-    
+   
     if session.is_new_variables = true then
         ' Add all of new array to the ListView
         dim as VariableType temp

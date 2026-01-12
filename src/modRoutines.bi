@@ -71,6 +71,7 @@ declare function GetRunExecutableFilename() as DWSTRING
 declare function GetListBoxEmptyClientArea( byval hListBox as HWND ) as RECT
 declare function frmListView_SelectItem( byval hLV as HWND, byval nLineNum as long ) as long
 declare function frmListView_GetCount( byval hLV as HWND ) as long
+declare function frmListView_SetCount( byval hLV as HWND, byval itemCount as long ) as long
 declare function frmListView_AddString( byval hLV as HWND, byval wszText as DWSTRING ) as long
 declare function frmListView_DeleteAllItems( byval hLV as HWND ) as long
 declare function frmListView_GetItemText( byval hLV as HWND, byval nLineNum as long, byval nColNum as long ) as DWSTRING
