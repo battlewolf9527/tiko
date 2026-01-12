@@ -167,6 +167,13 @@ function code_Compile( byval wID as long ) as boolean
     ' If debugging, then ensure that we use the GCC compiler rather than GAS and
     ' also include the -g compile flag.
     if gCompile.CompileID = IDM_DEBUG_STARTDEBUGGING then
+        ' Remove any -O optimization flags and add no inline flag.
+        gCompile.CompileFlags = AfxStrRemove( gCompile.CompileFlags, " -Wc" )
+        gCompile.CompileFlags = AfxStrRemove( gCompile.CompileFlags, " -O1" )
+        gCompile.CompileFlags = AfxStrRemove( gCompile.CompileFlags, " -O2" )
+        gCompile.CompileFlags = AfxStrRemove( gCompile.CompileFlags, " -O3" )
+        gCompile.CompileFlags = AfxStrRemove( gCompile.CompileFlags, " -Os" )
+        gCompile.CompileFlags = AfxStrRemove( gCompile.CompileFlags, " -Ofast" )
         ' If gas already exists then no need to replace chosen backend. Only do
         ' the replacements if gcc is not found.
         if instr( gCompile.CompileFlags, " -gen gcc" ) = 0 then

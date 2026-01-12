@@ -90,8 +90,9 @@ function gdb_parseVariablesResponse( byref session as GDBSession, byref response
 
             if (bAddVariable = true) andalso (session.is_new_variables = true) then
                 redim preserve session.variable_array(nItems)
-                session.variable_array(nItems).varname  = keyValue
-                session.variable_array(nItems).varvalue = valValue
+                session.variable_array(nItems).VarName  = keyValue
+                session.variable_array(nItems).VarNameDisplay  = AfxStrExtract(1, keyValue, "$")
+                session.variable_array(nItems).VarValue = valValue
                 nItems += 1
             else
                 if (bAddVariable = true) andalso (session.is_new_variables = false) then
@@ -115,7 +116,7 @@ function gdb_parseVariablesResponse( byref session as GDBSession, byref response
         for i as long = lbound(session.variable_array) to ubound(session.variable_array) - 1
             for j as long = 0 to frmListView_GetCount( hLV ) - 1
                 if frmListView_GetItemText(hLV, j, 1) = session.variable_array(i).VarName then
-                    frmListView_SetItemText(hLV, j, 2, session.variable_array(i).VarValue)
+                    frmListView_SetItemText(hLV, j, 3, session.variable_array(i).VarValue)
                     exit for
                 end if
             next
@@ -142,8 +143,9 @@ function gdb_parseVariablesResponse( byref session as GDBSession, byref response
 
         for i as long = lbound(session.variable_array) to ubound(session.variable_array)
             wszText = "" & chr(9) & _
-                        session.variable_array(i).varname & chr(9) & _
-                        session.variable_array(i).varvalue 
+                        session.variable_array(i).VarName & chr(9) & _
+                        session.variable_array(i).VarNameDisplay & chr(9) & _
+                        session.variable_array(i).VarValue
             frmListView_AddString( hLV, wszText )
         next
     end if
@@ -155,6 +157,7 @@ function gdb_parseVariablesResponse( byref session as GDBSession, byref response
     ' Set the column widths to the size of the max text widths
     dim as long nTextWidth
     dim as long nVarNameColWidth = getTextWidth( hLV, L(437, "Variable"), GUIFONT_9 )
+    dim as long nVarNameDisplayColWidth = nVarNameColWidth
     dim as long nVarValueColWidth = getTextWidth( hLV, L(438, "Value"), GUIFONT_9 )
     
     for i as long = lbound(session.variable_array) to ubound(session.variable_array)
@@ -162,19 +165,21 @@ function gdb_parseVariablesResponse( byref session as GDBSession, byref response
         ' widths after all lines have been evaluated.
         nTextWidth = getTextWidth( hLV, session.variable_array(i).varname, GUIFONT_9 )
         nVarNameColWidth = MAX( nVarNameColWidth, nTextWidth )
+        nTextWidth = getTextWidth( hLV, session.variable_array(i).VarNameDisplay, GUIFONT_9 )
+        nVarNameDisplayColWidth = MAX( nVarNameDisplayColWidth, nTextWidth )
         nTextWidth = getTextWidth( hLV, session.variable_array(i).varvalue, GUIFONT_9 )
         nVarValueColWidth = MAX( nVarValueColWidth, nTextWidth )
     next
     ' Set the column widths based on the variable name and values
     ' Add a little extra padding to the widths
     nVarNameColWidth = nVarNameColWidth + 10
+    nVarNameDisplayColWidth = nVarNameDisplayColWidth + 10
     nVarValueColWidth = nVarValueColWidth + 10
     frmListView_SetColumnWidth( hLV, 1, AfxScaleX(nVarNameColWidth) )
-    frmListView_SetColumnWidth( hLV, 2, AfxScaleX(nVarValueColWidth) )
+    frmListView_SetColumnWidth( hLV, 2, AfxScaleX(nVarNameDisplayColWidth) )
+    frmListView_SetColumnWidth( hLV, 3, AfxScaleX(nVarValueColWidth) )
 
     dim as long nShow = iif( frmListView_GetCount(hLV) = 0, SW_HIDE, SW_SHOW )
-
-LM( "nShow=" & nShow & "  " & frmListView_GetCount(hLV) & "  " & SW_HIDE & "  " & SW_SHOW )
     ShowWindow( hLV, nShow )
     frmListView_Refresh( hLV )
 
@@ -190,8 +195,8 @@ sub gdb_processResponse( byref session as GDBSession, byval response as string )
 
     ' Display value of local variables within scope
     if instr( response, "^done,variables=") then 
-'LM( response )
 LM( "^done,variables RECEIVED  len=" & len(response) )
+'LM( response )
         gdb_parseVariablesResponse( session, response )
     end if
     
@@ -352,7 +357,8 @@ function frmDebug_PositionWindows() as LRESULT
         hCtl = frmListView_Show( HWND_FRMDEBUG )
             frmListView_AddColumn( hCtl, 0, "", pWindow->ScaleX(20) )
             frmListView_AddColumn( hCtl, 1, L(437, "Variable"), pWindow->ScaleX(75) )
-            frmListView_AddColumn( hCtl, 2, L(438, "Value"), pWindow->ScaleX(250) )
+            frmListView_AddColumn( hCtl, 2, L(437, "Variable"), pWindow->ScaleX(75) )
+            frmListView_AddColumn( hCtl, 3, L(438, "Value"), pWindow->ScaleX(250) )
             frmListView_SetForeColors( hCtl, ghOutput.ForeColor, ghOutput.ForeColorHot )
             frmListView_SetBackColors( hCtl, ghOutput.BackColor, ghOutput.ForeColorScrollBar )
             frmListView_SetScrollBarColors( hCtl, ghOutput.BackColorScrollBar, ghOutput.ForeColorScrollBar, ghOutput.ScrollBarDivider )

@@ -19,8 +19,9 @@ type GDBMessage
 end type
 
 type VariableType
-    VarName  as string
-    VarValue as string
+    VarName        as string
+    VarNameDisplay as string
+    VarValue       as string
 end type
 
 type GDBSession
