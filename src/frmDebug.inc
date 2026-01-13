@@ -51,6 +51,54 @@ function gdb_findFunctionArguments( byref response as string, byref token as str
 end function
 
 
+function gdb_getVariableDisplayName( byref session as GDBSession, byval varName as string ) as string
+    dim as string varDisplayString = AfxStrExtract( 1, varName, "$" )
+    if varDisplayString = varName then return varDisplayString
+    if len(varName) = 0 then return ""
+    
+    dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
+    if pDoc = 0 then exit function
+
+    dim as long r, startPos, endPos
+
+    dim as HWND hEdit = pDoc->hWndActiveScintilla
+
+    ' Try to find the variable within the source code starting at the function line
+    startPos = SciExec( hEdit, SCI_POSITIONFROMLINE, session.current_function_linenum, 0)
+    endPos = SciExec( hEdit, SCI_GETLENGTH, 0, 0)
+
+    dim as string txtFind = varDisplayString
+    SciExec( hEdit, SCI_SETTARGETSTART, startPos, 0)
+    SciExec( hEdit, SCI_SETTARGETEND, endPos, 0)
+    r = SciExec( hEdit, SCI_SEARCHINTARGET, len(txtFind), strptr(txtFind))
+    if r then
+        varDisplayString = pDoc->GetTextRange( r, r + len(txtFind) )
+    end if
+
+    function = varDisplayString
+end function
+
+
+function gdb_getVariableDisplayValue( byref session as GDBSession, byval varValue as string ) as string
+    dim as string varDisplayString = varValue
+    
+    if left(varValue, 5) = "{data" then
+        dim as string wszExtractString = AfxStrExtract( 1, varValue, "'", "'" )
+        if len(wszExtractString) then
+            varDisplayString = chr(34) & wszExtractString & chr(34) & "  (len = " & len(wszExtractString) & ")"
+        end if    
+    end if
+    
+    ' Try converting a Hex number to Decimal
+    if left(varValue, 2) = "0x" then
+        dim as string wszHexString = "&H" & mid(varValue, 3)
+        varDisplayString = wszHexString & "  (dec = " & str(val(wszHexString)) & ")"
+    end if
+
+    function = varDisplayString
+end function
+
+
 function gdb_parseVariablesResponse( byref session as GDBSession, byref response as string ) as integer
     dim as integer i = 1
     dim as integer nItems = 0
@@ -86,20 +134,20 @@ function gdb_parseVariablesResponse( byref session as GDBSession, byref response
             dim as boolean bAddVariable = true
             if left(keyValue, 3) = "vr$" then bAddVariable = false
             if left(keyValue, 4) = "TMP$" then bAddVariable = false
-            if instr(keyValue, "<optimized out>") then bAddVariable = false
+            if instr(valValue, "<optimized out>") then bAddVariable = false
 
             if (bAddVariable = true) andalso (session.is_new_variables = true) then
                 redim preserve session.variable_array(nItems)
                 session.variable_array(nItems).VarName  = keyValue
-                session.variable_array(nItems).VarNameDisplay  = AfxStrExtract(1, keyValue, "$")
-                session.variable_array(nItems).VarValue = valValue
+                session.variable_array(nItems).VarNameDisplay = gdb_getVariableDisplayName( session, keyValue )
+                session.variable_array(nItems).VarValue = gdb_getVariableDisplayValue( session, valValue )
                 nItems += 1
             else
                 if (bAddVariable = true) andalso (session.is_new_variables = false) then
                     ' The variable list already exists so simply find the variable name and update its value
                     for i as long = lbound(session.variable_array) to ubound(session.variable_array)
                         if session.variable_array(i).varname = keyValue then
-                            session.variable_array(i).varvalue = valValue
+                            session.variable_array(i).varvalue = gdb_getVariableDisplayValue( session, valValue )
                             exit for
                         end if
                     next
@@ -220,6 +268,7 @@ LM( "^done,variables RECEIVED  len=" & len(response) )
         end if    
         session.current_file_name = file_name
         session.current_function_name = function_name
+        session.current_function_linenum = line_number
         
 'LM( response )
 LM( "STOP: BREAKPOINT OR STEPPING" )
@@ -355,9 +404,9 @@ function frmDebug_PositionWindows() as LRESULT
     
     if HWND_FRMDEBUG_OUTPUT = 0 then
         hCtl = frmListView_Show( HWND_FRMDEBUG )
-            frmListView_AddColumn( hCtl, 0, "", pWindow->ScaleX(20) )
+            frmListView_AddColumn( hCtl, 0, "", pWindow->ScaleX(10) )
             frmListView_AddColumn( hCtl, 1, L(437, "Variable"), pWindow->ScaleX(75) )
-            frmListView_AddColumn( hCtl, 2, L(437, "Variable"), pWindow->ScaleX(75) )
+            frmListView_AddColumn( hCtl, 2, "", pWindow->ScaleX(75) )
             frmListView_AddColumn( hCtl, 3, L(438, "Value"), pWindow->ScaleX(250) )
             frmListView_SetForeColors( hCtl, ghOutput.ForeColor, ghOutput.ForeColorHot )
             frmListView_SetBackColors( hCtl, ghOutput.BackColor, ghOutput.ForeColorScrollBar )

@@ -1007,11 +1007,6 @@ function frmFindReplace_Show( _
         cf.dwMask = CFM_COLOR
         cf.crTextColor = ghFindReplace.TextBoxForeColor
 
-'        hCtlFind = pWindow->AddControl("RICHEDIT", , IDC_FRMFINDREPLACE_TXTFIND, "", _
-'                    0, 0, 166, 24, _
-'                    WS_CHILD or WS_VISIBLE or WS_TABSTOP or ES_LEFT or ES_AUTOHSCROLL, _
-'                    WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR, _
-'                    0, @frmFindReplace_RichEdit_SubclassProc, IDC_FRMFINDREPLACE_TXTFIND, null )
         hCtlFind = pWindow->AddControl("RICHEDIT", , IDC_FRMFINDREPLACE_TXTFIND, "", _
                     0, 0, 166, 24, _
                     WS_CHILD or WS_VISIBLE or WS_TABSTOP or ES_LEFT or ES_AUTOHSCROLL, _
@@ -1025,11 +1020,6 @@ function frmFindReplace_Show( _
         SendMessage( hCtlFind, EM_SETRECT, 0, cast(LPARAM, @rc) )
         SendMessage( hCtlFind, EM_SETEVENTMASK, 0, cast(LPARAM, ENM_SELCHANGE or ENM_CHANGE) )
         
-'        hCtlReplace = pWindow->AddControl("RICHEDIT", , IDC_FRMFINDREPLACE_TXTREPLACE, wstr(gFind.txtReplace), _
-'                    0, 0, 190, 24, _
-'                    WS_CHILD or WS_VISIBLE or WS_TABSTOP or ES_LEFT or ES_AUTOHSCROLL, _
-'                    WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR, _
-'                    0, @frmFindReplace_RichEdit_SubclassProc, IDC_FRMFINDREPLACE_TXTREPLACE, null )
         hCtlReplace = pWindow->AddControl("RICHEDIT", , IDC_FRMFINDREPLACE_TXTREPLACE, gFind.txtReplace, _
                     0, 0, 190, 24, _
                     WS_CHILD or WS_VISIBLE or WS_TABSTOP or ES_LEFT or ES_AUTOHSCROLL, _
