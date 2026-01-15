@@ -241,10 +241,9 @@ sub gdb_processResponse( byref session as GDBSession, byval response as string )
     dim as string function_args
     dim as integer line_number
 
-    ' Display value of local variables within scope
     if instr( response, "^done,variables=") then 
 LM( "^done,variables RECEIVED  len=" & len(response) )
-'LM( response )
+LM( response )
         gdb_parseVariablesResponse( session, response )
     end if
     
@@ -294,7 +293,7 @@ LM( "  line_number:   " & str(line_number) )
                 SciExec( pDoc->hWndActiveScintilla, SCI_MARKERDELETEALL, MARKER_DEBUGGER_CURLINE, 0 )
                 pDoc->ToggleMarker( line_number, MARKER_DEBUGGER_CURLINE )
                 ' Ask to get list of variables and values for current context
-                gdb_send( gdb_session, "-stack-list-variables 1" )
+                gdb_send( gdb_session, "-stack-list-variables --all-values" )
             end if    
         end if
     end if

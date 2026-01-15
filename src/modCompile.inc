@@ -183,7 +183,7 @@ function code_Compile( byval wID as long ) as boolean
             gCompile.CompileFlags = AfxStrReplace( gCompile.CompileFlags, " -gen gas", " -gen gcc" )
             gCompile.CompileFlags = AfxStrReplace( gCompile.CompileFlags, " -gen llvm", " -gen gcc " )
         end if
-        gCompile.CompileFlags = gCompile.CompileFlags & " -g "
+        gCompile.CompileFlags = gCompile.CompileFlags & " -g -nostrip "
     end if
 
     ' Iterate the optional semi colon separated list of compiler include paths

@@ -256,10 +256,8 @@ function gdb_receive( byref session as GDBSession ) as boolean
             
             ret = ReadFile(session.hStdOutRead, strptr(buffer), bytes_avail, @bytes_read, NULL)
             
-LM( "ret: " & ret & "  bytes_read: " & bytes_read )
             if (ret <> 0) andalso (bytes_read > 0) then
                 response = response & left(buffer, bytes_read)
-LM( "APPEND RESPONSE " & len(response) )                
                 start_time = timer
             end if
         else
@@ -278,7 +276,6 @@ LM( "APPEND RESPONSE " & len(response) )
         ' Create a new message record and add it to the message queue. The WM_TIMER will
         ' check the message queue for any pending messages.
         MutexLock( gdb_session.hThreadMutex )
-LM( "Message length queued: " & len(response) & chr(13,10) & response )
         gdb_enqueue_message( session, response )
         MutexUnLock( gdb_session.hThreadMutex )
     end if
