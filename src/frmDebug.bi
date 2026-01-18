@@ -22,6 +22,16 @@
 #define IDC_BTN_STEP_OUT        1007
 #define IDC_FRMDEBUG_TXTOUTPUT  1008
 
+type DebugWindowPosition
+    bInitialized as boolean = false
+    bMaximized   as boolean = false
+    nLeft        as long
+    nTop         as long
+    nRight       as long
+    nBottom      as long
+end type
+dim shared gDebugPos as DebugWindowPosition
+        
 enum DEBUG_BUTTONS explicit
     BUTTON_FIRST         = 0
     STOP_DEBUGGING       = 0

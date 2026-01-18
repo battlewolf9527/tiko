@@ -126,7 +126,7 @@ function OnCommand_FileOpen( _
 
 
     ' Loop through all files that are tagged to be displayed in the top tabcontrol.
-    ' Files being added to a Project do not get added to the tabe control.
+    ' Files being added to a Project do not get added to the tabs control.
     dim as long iTab = -1
     for i = lbound(pDocTabs) to ubound(pDocTabs)
         if pDocTabs(i) = 0 then continue for
@@ -373,6 +373,13 @@ function OnCommand_FileClose( _
             bRemoveFile = true
         else
             bRemoveFile = iif( gApp.IsProjectActive, false, true )
+            ' If the file was added to the tab control via a right-click include open then it
+            ' is not technically part of the project. We need to remove it from the gApp doc
+            ' list because if we try to later do an "Add files to Project" then the load will
+            ' fail because the document is already in the gApp doc list.
+            if (gApp.IsProjectActive = true) andalso (pDoc->ProjectFileType = FILETYPE_UNDEFINED) then
+                bRemoveFile = true
+            end if
         end if
 
         if bRemoveFile then

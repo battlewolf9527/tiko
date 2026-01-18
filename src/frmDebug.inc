@@ -38,10 +38,10 @@ function gdb_findFunctionArguments( byref response as string, byref token as str
     dim as string result
     
     token = token & "=" & "["
-    dim as integer iStart = instr( response, token )
+    dim as long iStart = instr( response, token )
     if iStart > 0 then
         iStart = iStart + len(token)
-        dim as integer iEnd = instr( iStart, response, "]" )
+        dim as long iEnd = instr( iStart, response, "]" )
         if iEnd > 0 then
             result = mid( response, iStart, iEnd - iStart ) 
         end if
@@ -81,11 +81,27 @@ end function
 
 function gdb_getVariableDisplayValue( byref session as GDBSession, byval varValue as string ) as string
     dim as string varDisplayString = varValue
-    
+
+' {name="JSONPAYLOAD$1",value="{data = 0xf64620 '{'#13#10'  \"message\": \"Upload file via FreeBASIC\",'#10'  \"content\": \"\"'#10'  \"tab\": \"\"'#9'}', len = 74, size = 108}
+
+    ' If dealing with a string then try to extract out the string
     if left(varValue, 5) = "{data" then
-        dim as string wszExtractString = AfxStrExtract( 1, varValue, "'", "'" )
+        dim as string st = varValue
+        st = AfxStrReplace( st, "'#13#10'", "(CRLF)" )
+        st = AfxStrReplace( st, "'#10'", "(LF)" )
+        st = AfxStrReplace( st, "'#13'", "(CR)" )
+        st = AfxStrReplace( st, "'#9'", "(TAB)" )
+        st = AfxStrReplace( st, "\""", chr(34) )
+
+        dim as string token = " len = "
+        dim as long nLen
+        dim as long i = instr( st, token )
+        if i then nLen = val( mid(st, i + len(token)) )
+
+        dim as string wszExtractString = AfxStrExtract( 1, st, "'", "'" )
         if len(wszExtractString) then
-            varDisplayString = chr(34) & wszExtractString & chr(34) & "  (len = " & len(wszExtractString) & ")"
+            if nLen = 0 then nLen = len(wszExtractString)
+            varDisplayString = chr(34) & wszExtractString & chr(34) & "  (len = " & str(nLen) & ")"
         end if    
     end if
     
@@ -447,6 +463,20 @@ function frmDebug_WndProc( _
             KillTimer( HWND_FRMDEBUG, gApp.DebugTimerID )
             ' Kill the GDB process
             gdb_close( gdb_session )
+
+            ' Save the current size of the debugger window so that we can re-use
+            ' this position should th euser invoke the debugger again.
+            dim WinPla as WINDOWPLACEMENT
+            WinPla.Length = sizeof(WinPla)
+            GetWindowPlacement( HWND_FRMDEBUG, @WinPla )
+            With gDebugPos
+                .nLeft   = WinPla.rcNormalPosition.Left 
+                .nTop    = WinPla.rcNormalPosition.Top
+                .nRight  = WinPla.rcNormalPosition.Right
+                .nBottom = WinPla.rcNormalPosition.Bottom
+                .bMaximized = iif( WinPla.showCmd = SW_MAXIMIZE, true, false )
+                .bInitialized = true
+            end With
             
         case WM_NCDESTROY
             dim pWindow as CWindow ptr = AfxCWindowPtr(hwnd)
@@ -718,7 +748,8 @@ function frmDebug_SetInitialBreakpoints( byref session as GDBSession ) as long
 
     function = 0    
 end function
-        
+
+
 ' ========================================================================================
 ' frmDebug_Show
 ' ========================================================================================
@@ -730,8 +761,22 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as string ) a
     HWND_FRMDEBUG = pWindow->Create( hWndParent, "DEBUGGER", @frmDebug_WndProc, 0, 0, 0, 0, _
         WS_POPUP or WS_THICKFRAME  or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
         WS_EX_CONTROLPARENT or WS_EX_LEFT )
-    pWindow->SetClientSize(625, 460)
-    pWindow->Center(pWindow->hWindow, hWndParent)
+
+    if gDebugPos.bInitialized then
+        dim WinPla as WINDOWPLACEMENT
+        with WinPla
+            .Length = sizeof(WinPla)
+            .rcNormalPosition.Left   = gDebugPos.nLeft
+            .rcNormalPosition.Top    = gDebugPos.nTop
+            .rcNormalPosition.Right  = gDebugPos.nRight
+            .rcNormalPosition.Bottom = gDebugPos.nBottom
+            .showCmd = iif( gDebugPos.bMaximized, SW_MAXIMIZE, SW_SHOWNORMAL )
+        end with
+        SetWindowPlacement( pWindow->hWindow, @WinPla )
+    else
+        pWindow->SetClientSize(625, 460)
+        pWindow->Center(pWindow->hWindow, hWndParent)
+    end if
 
     ' Set the small and large icon for the main window (must be set after main window is created)
     pWindow->BigIcon   = LoadImage( pWindow->InstanceHandle, "IMAGE_AAA_MAINICON", IMAGE_ICON, 32, 32, LR_SHARED)

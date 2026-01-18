@@ -572,7 +572,7 @@ function CreateExplorerContextMenu(byval pDoc as clsDocument ptr ) as HMENU
         if gApp.IsProjectActive then
             AppendMenu hPopUpMenu, MF_ENABLED, IDM_FILEOPEN_EXPLORERLISTBOX,   L(75,"Open") 
             AppendMenu hPopUpMenu, MF_SEPARATOR, 0, "" 
-            if (gTTabCtl.GetTabIndexByDocumentPtr( pDoc ) <> -1) orelse (nSelCount > 0) then
+            if (gTTabCtl.GetTabIndexByDocumentPtr( pDoc ) <> -1) orelse (nSelCount > 1) then
                 AppendMenu hPopUpMenu, MF_ENABLED, IDM_FILECLOSE_EXPLORERLISTBOX,  L(5,"Close") 
                 AppendMenu hPopUpMenu, MF_SEPARATOR, 0, "" 
             end if
