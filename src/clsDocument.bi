@@ -13,6 +13,8 @@
 
 #pragma once
 
+#include once "frmDebug.bi"
+
 '  Scintilla Control identifiers
 #define IDC_SCINTILLA              100
 

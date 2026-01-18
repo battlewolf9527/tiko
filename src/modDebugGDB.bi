@@ -11,44 +11,6 @@
 '    MERCHANTABILITY or FITNESS for A PARTICULAR PURPOSE.  See the
 '    GNU General Public License for more details.
 
-type _GDBMessage as GDBMessage
-
-type GDBMessage
-    message   as string
-    pNextNode as _GDBMessage ptr
-end type
-
-type VariableType
-    VarName         as string
-    VarNameDisplay  as string
-    VarValue        as string
-end type
-
-type GDBSession
-    hProcess                 as HANDLE
-    hThread                  as HANDLE
-    hStdInWrite              as HANDLE
-    hStdOutRead              as HANDLE
-    hStdErrRead              as HANDLE
-    dwProcessId              as DWORD
-    initialized              as boolean
-    hThreadMessages          as any ptr
-    KillMessageThread        as boolean
-    hThreadMutex             as any ptr
-
-    current_file_name        as string
-    current_function_name    as string
-    current_function_linenum as long
-    variable_array(any)      as VariableType
-    is_new_variables         as boolean 
-    
-    ' Message fifo queue
-    head                     as GDBMessage ptr
-    tail                     as GDBMessage ptr
-    count                    as integer
-end type
-
-dim shared as GDBSession gdb_session
 
 ' Enqueue - add message to the end of the queue
 sub gdb_enqueue_message( byref q as GDBSession, byref response as string )

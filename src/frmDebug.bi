@@ -52,8 +52,61 @@ type DEBUG_BUTTONS_TYPE
     isHot      as boolean
 end type
 
+
+type _GDBMessage as GDBMessage
+
+type GDBMessage
+    message   as string
+    pNextNode as _GDBMessage ptr
+end type
+
+type VariableType
+    VarName         as string
+    VarNameDisplay  as string
+    VarValue        as string
+end type
+
+type BreakpointType
+    numberId        as long
+    func            as string
+end type
+
+
+type GDBSession
+    hProcess                 as HANDLE
+    hThread                  as HANDLE
+    hStdInWrite              as HANDLE
+    hStdOutRead              as HANDLE
+    hStdErrRead              as HANDLE
+    dwProcessId              as DWORD
+    initialized              as boolean
+    hThreadMessages          as any ptr
+    KillMessageThread        as boolean
+    hThreadMutex             as any ptr
+
+    current_file_name        as string
+    current_function_name    as string
+    current_function_linenum as long
+    variable_array(any)      as VariableType
+    breakpoint_array(any)    as BreakpointType
+    is_new_variables         as boolean 
+    
+    function_breakpoints     as string    ' function where breakpoints are temporarily disabled/enabled  
+    disabled_breakpoints     as string    ' simply list of breakpoint numbers cached for subsequent enable breakpoints.
+    
+    
+    ' Message fifo queue
+    head                     as GDBMessage ptr
+    tail                     as GDBMessage ptr
+    count                    as integer
+end type
+
+dim shared as GDBSession gdb_session
+
 dim shared gDbgBtns(DEBUG_BUTTONS.BUTTON_LAST) as DEBUG_BUTTONS_TYPE
+dim shared gcurrent_debug_action as long      ' IDM_DEBUG_STEPOVER, IDM_DEBUG_STEPOUT, etc
 
 const as long DEBUG_BUTTON_IMAGE_WIDTH = 18
 
+declare function gdb_send(byref session as GDBSession, byref cmd as string) as boolean
 declare function frmDebug_Show( byval hWndParent as HWND, byval executable as string ) as LRESULT

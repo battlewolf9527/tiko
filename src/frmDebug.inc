@@ -51,6 +51,95 @@ function gdb_findFunctionArguments( byref response as string, byref token as str
 end function
 
 
+function gdb_enableBreaksInFunction( byref session as GDBSession ) as long
+    if session.disabled_breakpoints = "" then return 0
+    
+    dim as string send_command = "-break-enable"
+    gdb_send( gdb_session, send_command & session.disabled_breakpoints )
+
+    session.function_breakpoints = ""
+    session.disabled_breakpoints = ""
+
+    return 0
+end function
+
+
+
+function gdb_disableBreaksInFunction( byref session as GDBSession, byref response as string ) as long
+    dim as string token
+    dim as long p1 
+    dim as long p2
+    
+    p1 = instr( response, "body=" )
+    if p1 = 0 then return 0
+    p1 += 6
+    
+    erase session.breakpoint_array
+    
+    do
+        dim as long numberId
+        dim as string func
+        
+        token = "number=" & chr(34)    
+        p1 = instr( p1, response, token )
+        if p1 = 0 then exit do
+        p1 += len(token)
+        numberId = val( mid(response, p1) )
+        
+        token = "func=" & chr(34)
+        p1 = instr( p1, response, token )
+        if p1 = 0 then exit do
+        p1 += len(token)
+        p2 = instr( p1, response, chr(34) )
+        if p2 > 0 then
+            func = mid( response, p1, p2 - p1 ) 
+        end if    
+        p1 = p2 + 1
+        
+        ' Add the newly found breakpoint to the array
+        dim as long ub = ubound(session.breakpoint_array) + 1
+        redim preserve session.breakpoint_array(ub)
+        session.breakpoint_array(ub).numberId = numberId
+        session.breakpoint_array(ub).func     = func
+    loop
+
+    ' Do a batch disable of the breakpoints
+    dim as string send_command = "-break-disable"
+    dim as string breakpoints
+
+    for i as long = lbound(session.breakpoint_array) to ubound(session.breakpoint_array)
+        select case gcurrent_debug_action
+            case IDM_DEBUG_STEPOVER
+                ' Disable all breakpoints EXCEPT those in the current function
+                if session.function_breakpoints <> session.breakpoint_array(i).func then
+                    breakpoints = breakpoints & " " & str(session.breakpoint_array(i).numberId)
+                end if
+            case IDM_DEBUG_STEPOUT    
+                ' Disable all breakpoints ONLY for those in the current function
+                if session.function_breakpoints = session.breakpoint_array(i).func then
+                    breakpoints = breakpoints & " " & str(session.breakpoint_array(i).numberId)
+                end if
+        end select
+    next
+    session.disabled_breakpoints = breakpoints
+    
+    gdb_send( gdb_session, send_command & breakpoints )
+        
+    select case gcurrent_debug_action
+        case IDM_DEBUG_STEPOVER
+            gdb_send(gdb_session, "-exec-next")
+        case IDM_DEBUG_STEPOUT    
+            gdb_send(gdb_session, "-exec-finish")
+    end select
+    ' the response calls: gdb_enableBreaksInFunction to re-enable
+    ' the function's breakpoints after we stepover or stepout.
+    gcurrent_debug_action = 0
+
+    return 0
+end function
+
+
+
 function gdb_getVariableDisplayName( byref session as GDBSession, byval varName as string ) as string
     dim as string varDisplayString = AfxStrExtract( 1, varName, "$" )
     if varDisplayString = varName then return varDisplayString
@@ -82,23 +171,23 @@ end function
 function gdb_getVariableDisplayValue( byref session as GDBSession, byval varValue as string ) as string
     dim as string varDisplayString = varValue
 
-' {name="JSONPAYLOAD$1",value="{data = 0xf64620 '{'#13#10'  \"message\": \"Upload file via FreeBASIC\",'#10'  \"content\": \"\"'#10'  \"tab\": \"\"'#9'}', len = 74, size = 108}
+    ' Clean the response string
+    dim as string st = varValue
+    st = AfxStrReplace( st, "'#13#10'", "(CRLF)" )
+    st = AfxStrReplace( st, "'#10'", "(LF)" )
+    st = AfxStrReplace( st, "'#13'", "(CR)" )
+    st = AfxStrReplace( st, "'#9'", "(TAB)" )
+    st = AfxStrReplace( st, "\" & chr(34), chr(34) )
+    varValue = st
 
     ' If dealing with a string then try to extract out the string
-    if left(varValue, 5) = "{data" then
-        dim as string st = varValue
-        st = AfxStrReplace( st, "'#13#10'", "(CRLF)" )
-        st = AfxStrReplace( st, "'#10'", "(LF)" )
-        st = AfxStrReplace( st, "'#13'", "(CR)" )
-        st = AfxStrReplace( st, "'#9'", "(TAB)" )
-        st = AfxStrReplace( st, "\""", chr(34) )
-
+    if left(ucase(varValue), 7) = "DATA = " then
         dim as string token = " len = "
         dim as long nLen
-        dim as long i = instr( st, token )
-        if i then nLen = val( mid(st, i + len(token)) )
+        dim as long i = instr( varValue, token )
+        if i then nLen = val( mid(varValue, i + len(token)) )
 
-        dim as string wszExtractString = AfxStrExtract( 1, st, "'", "'" )
+        dim as string wszExtractString = AfxStrExtract( 1, varValue, "'", "'" )
         if len(wszExtractString) then
             if nLen = 0 then nLen = len(wszExtractString)
             varDisplayString = chr(34) & wszExtractString & chr(34) & "  (len = " & str(nLen) & ")"
@@ -127,10 +216,14 @@ function gdb_parseVariablesResponse( byref session as GDBSession, byref response
 
     dim as DWSTRING wszText
 
-    ' name="vr$29",value="<optimized out>"
+
     response = trim(response)
     if len(response) then
+        
         do while i <= len(response)
+            keyValue = ""
+            valValue = ""
+            
             '' find name="
             p1 = instr(i, response, "name=" & chr(34))
             if p1 = 0 then exit do
@@ -143,10 +236,17 @@ function gdb_parseVariablesResponse( byref session as GDBSession, byref response
             p1 = instr(p2, response, "value=" & chr(34))
             if p1 = 0 then exit do
             p1 += 7
-            p2 = instr(p1, response, chr(34))
+            ' Check if this Value is a list and if yes then adjust how we search for the terminating token.
+            dim as string endToken = chr(34)
+            if mid(response, p1, 1) = "{" then
+                endToken += "}": p1 += 1
+            end if
+            p2 = instr(p1, response, endToken)
             if p2 = 0 then exit do
             valValue = mid(response, p1, p2 - p1)
 
+            i = p2 + 1
+            
             dim as boolean bAddVariable = true
             if left(keyValue, 3) = "vr$" then bAddVariable = false
             if left(keyValue, 4) = "TMP$" then bAddVariable = false
@@ -170,7 +270,6 @@ function gdb_parseVariablesResponse( byref session as GDBSession, byref response
                 end if
             end if
             
-            i = p2 + 1
         loop
     end if
     
@@ -257,14 +356,26 @@ sub gdb_processResponse( byref session as GDBSession, byval response as string )
     dim as string function_args
     dim as integer line_number
 
+    if instr( response, "^done,BreakpointTable=") then 
+        session.function_breakpoints = session.current_function_name
+        gdb_disableBreaksInFunction( session, response )
+        exit sub
+    end if
+
+
     if instr( response, "^done,variables=") then 
-LM( "^done,variables RECEIVED  len=" & len(response) )
-LM( response )
         gdb_parseVariablesResponse( session, response )
     end if
+
     
+    if instr( response, "*stopped,reason=" & chr(34) & "function-finished" & chr(34)) orelse _   ' StepOut
+       instr( response, "*stopped,reason=" & chr(34) & "end-stepping-range" & chr(34)) then      ' StepOver
+        gdb_enableBreaksInFunction( session )
+    end if
+
     ' Process hitting a Breakpoint
     if instr( response, "*stopped,reason=" & chr(34) & "breakpoint-hit" & chr(34)) orelse _
+       instr( response, "*stopped,reason=" & chr(34) & "function-finished" & chr(34)) orelse _
        instr( response, "*stopped,reason=" & chr(34) & "end-stepping-range" & chr(34)) then
         ' Line numbers in GDB are 1 based whereas Scintilla is 0 based.
         line_number = val( gdb_findResultValue( response, "line" ) ) - 1
@@ -285,12 +396,11 @@ LM( response )
         session.current_function_name = function_name
         session.current_function_linenum = line_number
         
-'LM( response )
-LM( "STOP: BREAKPOINT OR STEPPING" )
-LM( "  file_name:     " & file_name )
-LM( "  function_name: " & function_name )
-LM( "  function_args: " & function_args )
-LM( "  line_number:   " & str(line_number) )
+'LM( "STOP: BREAKPOINT OR STEPPING" )
+'LM( "  file_name:     " & file_name )
+'LM( "  function_name: " & function_name )
+'LM( "  function_args: " & function_args )
+'LM( "  line_number:   " & str(line_number) )
 
         if (len(file_name) > 0) andalso (line_number >= 0) then
             ' Get the filename as represented in the gApp doc list. That filename is in correct
@@ -649,29 +759,45 @@ function frmDebug_WndProc( _
             return 0
 
         case IDM_DEBUG_STARTDEBUGGING
-'            gdb_send(gdb_session, "continue")
+LM( "IDM_DEBUG_STARTDEBUGGING" )
             gdb_send(gdb_session, "-exec-continue")
         
         case IDM_DEBUG_STOPDEBUGGING
+LM( "IDM_DEBUG_STOPDEBUGGING" )
             gdb_send(gdb_session, "kill")
-            'gdb_send(gdb_session, "-exec-kill")
             sleep 200
             PostMessage( HWND_FRMDEBUG, WM_CLOSE, 0, 0 )
         
         case IDM_DEBUG_STEPINTO
-'            gdb_send(gdb_session, "step")
+LM( "IDM_DEBUG_STEPINTO" )
             gdb_send(gdb_session, "-exec-step")
         
         case IDM_DEBUG_STEPOVER
-'            gdb_send(gdb_session, "next")
-            gdb_send(gdb_session, "-exec-next")
+LM( "IDM_DEBUG_STEPOVER" )
+            ' Similar problem to STEPOUT, if breakpoints exist in subfunctions.
+            ' Need to disable all breakpoints except those in the current function.
+            gcurrent_debug_action = IDM_DEBUG_STEPOVER
+LM( "gdb_send(gdb_session, -break-list)" )
+            gdb_send(gdb_session, "-break-list")   
         
         case IDM_DEBUG_STEPOUT
-'            gdb_send(gdb_session, "finish")
-            gdb_send(gdb_session, "-exec-finish")
+LM( "IDM_DEBUG_STEPOUT" )
+            ' If subsequent breakpoints exist in the function then GDB will break on them
+            ' prior to exiting the function. This is not the expected user experience. We
+            ' want to immediately exit back to the calling code. 
+            ' - List all breakpoints.    -break-list
+            ' - Save the list of breakpoints that match the current_function_name.  
+            ' - Temporarily disable those breakpoints.  -break-disable <bpnum>
+            ' - Issue the -exec-finish
+            ' - Re-enable the breakpoints.  -break-enable <bpnum>
+            gcurrent_debug_action = IDM_DEBUG_STEPOUT
+LM( "gdb_send(gdb_session, -break-list)" )
+            gdb_send(gdb_session, "-break-list")   
+            ' the response calls: gdb_disableBreaksInFunction
+            ' the "-exec-finish" is sent from gdb_disableBreaksInFunction after the breakpoints are disabled.
 
         case IDM_DEBUG_RUNTOCURSOR
-            'TODO: Set a temp breakpoint?
+LM( "IDM_DEBUG_RUNTOCURSOR" )
             ' Line numbers in GDB are 1 based whereas Scintilla is 0 based.
             dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
             if pDoc then
@@ -724,7 +850,6 @@ function frmDebug_SetInitialBreakpoints( byref session as GDBSession ) as long
                 ' Line numbers in GDB are 1 based whereas Scintilla is 0 based.
                 bp_line = AfxStrParse( sBreakpoints, i, "," )
                 bp_cmd = bp_cmd & "break " & chr(34) & bp_file & chr(34) & ":" & str(val(bp_line)+1) & chr(10)
-'                bp_cmd = bp_cmd & "-break-insert --source " & chr(34) & bp_file & chr(34) & " --line " & str(val(bp_line)+1) & chr(10)
                 numBreakpoints += 1
             next
         end if
@@ -810,7 +935,6 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as string ) a
         exit function            
     end if
     
-'    gdb_send(gdb_session, "run")
     gdb_send(gdb_session, "-exec-run")
     
     ShowWindow( HWND_FRMDEBUG, SW_SHOW )

@@ -1263,7 +1263,14 @@ end function
 ''
 ''
 function clsDocument.ToggleBreakPoint( byval nLine as long ) as long
-    return this.ToggleMarker( nLine, MARKER_BREAKPOINT )
+     this.ToggleMarker( nLine, MARKER_BREAKPOINT )
+    ' If the Debugger is active then simply make it a temporary breakpoint
+    ' rather than a persistemt breakpoint that will get saved between sessions.
+    if gApp.IsDebuggerActive = true then
+        dim as string bp_cmd = "break " & chr(34) & ucase(this.DiskFilename) & chr(34) & ":" & nLine
+        gdb_send( gdb_session, bp_cmd )
+    end if
+    return 0
 end function
 
 ''
