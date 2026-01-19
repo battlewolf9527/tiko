@@ -22,6 +22,9 @@
 #define IDC_BTN_STEP_OUT        1007
 #define IDC_FRMDEBUG_TXTOUTPUT  1008
 
+#define IDM_LOAD_BREAKPOINT_ARRAY           2000
+#define IDM_DELETE_CURRENT_LINE_BREAKPOINT  2001
+
 type DebugWindowPosition
     bInitialized as boolean = false
     bMaximized   as boolean = false
@@ -69,6 +72,7 @@ end type
 type BreakpointType
     numberId        as long
     func            as string
+    linenum         as long
 end type
 
 
@@ -105,6 +109,7 @@ dim shared as GDBSession gdb_session
 
 dim shared gDbgBtns(DEBUG_BUTTONS.BUTTON_LAST) as DEBUG_BUTTONS_TYPE
 dim shared gcurrent_debug_action as long      ' IDM_DEBUG_STEPOVER, IDM_DEBUG_STEPOUT, etc
+dim shared gbreakpoint_line_to_delete as long   ' line where breakpoint during toggle
 
 const as long DEBUG_BUTTON_IMAGE_WIDTH = 18
 

@@ -1263,13 +1263,29 @@ end function
 ''
 ''
 function clsDocument.ToggleBreakPoint( byval nLine as long ) as long
-     this.ToggleMarker( nLine, MARKER_BREAKPOINT )
-    ' If the Debugger is active then simply make it a temporary breakpoint
+    ' If the Debugger is active then simply make it a breakpoint
     ' rather than a persistemt breakpoint that will get saved between sessions.
     if gApp.IsDebuggerActive = true then
-        dim as string bp_cmd = "break " & chr(34) & ucase(this.DiskFilename) & chr(34) & ":" & nLine
-        gdb_send( gdb_session, bp_cmd )
+        ' Determine if the current line has a breakpoint
+        dim as string bp_cmd
+        dim as any ptr pSci = this.GetActiveScintillaPtr()
+        dim as long fMark = SciMsg( pSci, SCI_MARKERGET, nLine, 0)  ' 32 bit value
+        if bit(fMark, MARKER_BREAKPOINT) then
+            ' Breakpoint exists so delete it.
+            ' Set action to delete the current line breakpoint. When this gdb calls
+            ' response arrives we load the breakpoints array and then call gdb_deleteCurrentLineBreakpoint.
+            gcurrent_debug_action = IDM_DELETE_CURRENT_LINE_BREAKPOINT
+            gbreakpoint_line_to_delete = nLine
+            gdb_send(gdb_session, "-break-list")   
+        else
+            ' Breakpoint does not exist so add it.
+            bp_cmd = "break " & chr(34) & ucase(this.DiskFilename) & chr(34) & ":" & nLine
+            gdb_send( gdb_session, bp_cmd )
+        end if
     end if
+    
+    this.ToggleMarker( nLine, MARKER_BREAKPOINT )
+
     return 0
 end function
 
