@@ -13,62 +13,62 @@
 
 
 ' Enqueue - add message to the end of the queue
-sub gdb_enqueue_message( byref q as GDBSession, byref response as string )
+sub gdb_enqueue_message( byref response as string )
     dim newNode as GDBMessage ptr = new GDBMessage
     newNode->message = response
     newNode->pNextNode = 0
     
-    if q.tail = 0 then
+    if gdb_session.tail = 0 then
         ' Queue is empty
-        q.head = newNode
-        q.tail = newNode
+        gdb_session.head = newNode
+        gdb_session.tail = newNode
     else
         ' Add to end
-        q.tail->pNextNode = newNode
-        q.tail = newNode
+        gdb_session.tail->pNextNode = newNode
+        gdb_session.tail = newNode
     end if
     
-    q.count += 1
+    gdb_session.count += 1
 end sub
 
 ' Dequeue - remove and return message from front of queue
-function gdb_dequeue_message( byref q as GDBSession ) as string
-    if q.head = 0 then
+function gdb_dequeue_message() as string
+    if gdb_session.head = 0 then
         return ""  ' Queue is empty
     end if
     
-    dim tempNode as GDBMessage ptr = q.head
+    dim tempNode as GDBMessage ptr = gdb_session.head
     dim msg as string = tempNode->message
     
-    q.head = q.head->pNextNode
-    if q.head = 0 then
-        q.tail = 0  ' Queue is now empty
+    gdb_session.head = gdb_session.head->pNextNode
+    if gdb_session.head = 0 then
+        gdb_session.tail = 0  ' Queue is now empty
     end if
     
     delete tempNode
-    q.count -= 1
+    gdb_session.count -= 1
     
     return msg
 end function
 
 ' Check if queue is empty
-function gdb_isMessageQueueEmpty( byref q as GDBSession ) as boolean
+function gdb_isMessageQueueEmpty() as boolean
     dim as boolean isEmpty
     MutexLock( gdb_session.hThreadMutex )
-    isEmpty = (q.head = 0)
+    isEmpty = (gdb_session.head = 0)
     MutexUnLock( gdb_session.hThreadMutex )
     return isEmpty
 end function
 
 ' Clear all messages from queue
-sub clearQueue( byref q as GDBSession )
-    while gdb_isMessageQueueEmpty(q) = false
-        gdb_dequeue_message(q)
+sub clearQueue()
+    while gdb_isMessageQueueEmpty() = false
+        gdb_dequeue_message()
     wend
 end sub
 
 ' Initialize GDB session
-function gdb_init(byref session as GDBSession, byval executable as DWSTRING = "") as boolean
+function gdb_init( byval executable as DWSTRING = "" ) as boolean
     dim as SECURITY_ATTRIBUTES sa
     dim as HANDLE hStdInRead, hStdInWrite
     dim as HANDLE hStdOutRead, hStdOutWrite
@@ -84,16 +84,16 @@ function gdb_init(byref session as GDBSession, byval executable as DWSTRING = ""
     sa.lpSecurityDescriptor = NULL
     
     ' Create pipes for stdin
-    if CreatePipe(@hStdInRead, @hStdInWrite, @sa, 0) = 0 then return false
-    if SetHandleInformation(hStdInWrite, HANDLE_FLAG_INHERIT, 0) = 0 then return false
+    if CreatePipe( @hStdInRead, @hStdInWrite, @sa, 0 ) = 0 then return false
+    if SetHandleInformation( hStdInWrite, HANDLE_FLAG_INHERIT, 0 ) = 0 then return false
     
     ' Create pipes for stdout
-    if CreatePipe(@hStdOutRead, @hStdOutWrite, @sa, 0) = 0 then return false
-    if SetHandleInformation(hStdOutRead, HANDLE_FLAG_INHERIT, 0) = 0 then return false
+    if CreatePipe( @hStdOutRead, @hStdOutWrite, @sa, 0 ) = 0 then return false
+    if SetHandleInformation( hStdOutRead, HANDLE_FLAG_INHERIT, 0 ) = 0 then return false
     
     ' Create pipes for stderr
-    if CreatePipe(@hStdErrRead, @hStdErrWrite, @sa, 0) = 0 then return false
-    if SetHandleInformation(hStdErrRead, HANDLE_FLAG_INHERIT, 0) = 0 then return false
+    if CreatePipe( @hStdErrRead, @hStdErrWrite, @sa, 0 ) = 0 then return false
+    if SetHandleInformation( hStdErrRead, HANDLE_FLAG_INHERIT, 0 ) = 0 then return false
     
     ' Set up startup info
     si.cb = sizeof(STARTUPINFO)
@@ -111,8 +111,8 @@ function gdb_init(byref session as GDBSession, byval executable as DWSTRING = ""
     end if
     
     ' Create the GDB process
-    ret = CreateProcess(NULL, cmdline, NULL, NULL, TRUE, _
-                        CREATE_NO_WINDOW, NULL, NULL, @si, @pi)
+    ret = CreateProcess( NULL, cmdline, NULL, NULL, TRUE, _
+                         CREATE_NO_WINDOW, NULL, NULL, @si, @pi )
     
     if ret = 0 then
         dim as DWORD err_code = GetLastError()
@@ -148,56 +148,56 @@ function gdb_init(byref session as GDBSession, byval executable as DWSTRING = ""
     CloseHandle(hStdErrWrite)
     
     ' Store session info
-    session.hProcess    = pi.hProcess
-    session.hThread     = pi.hThread
-    session.hStdInWrite = hStdInWrite
-    session.hStdOutRead = hStdOutRead
-    session.hStdErrRead = hStdErrRead
-    session.dwProcessId = pi.dwProcessId
-    session.initialized = true
+    gdb_session.hProcess    = pi.hProcess
+    gdb_session.hThread     = pi.hThread
+    gdb_session.hStdInWrite = hStdInWrite
+    gdb_session.hStdOutRead = hStdOutRead
+    gdb_session.hStdErrRead = hStdErrRead
+    gdb_session.dwProcessId = pi.dwProcessId
+    gdb_session.initialized = true
 
     return true
 end function
 
 
 ' Clear any pending output from pipe
-sub gdb_clear_pipe(byref session as GDBSession)
-    if session.initialized = false then return 
+sub gdb_clear_pipe()
+    if gdb_session.initialized = false then return 
 
     dim as string buffer = space(4096)
     dim as DWORD bytes_read, bytes_avail
     
     ' Read and discard any pending data
     do
-        if session.KillMessageThread = true then exit do
+        if gdb_session.KillMessageThread = true then exit do
         
-        if PeekNamedPipe(session.hStdOutRead, NULL, 0, NULL, @bytes_avail, NULL) = 0 then exit do
+        if PeekNamedPipe( gdb_session.hStdOutRead, NULL, 0, NULL, @bytes_avail, NULL ) = 0 then exit do
         if bytes_avail = 0 then exit do
         
         if bytes_avail > 4096 then bytes_avail = 4096
-        ReadFile(session.hStdOutRead, strptr(buffer), bytes_avail, @bytes_read, NULL)
+        ReadFile( gdb_session.hStdOutRead, strptr(buffer), bytes_avail, @bytes_read, NULL )
     loop while bytes_avail > 0
 end sub
 
 
 ' Send command to GDB (synchronous)
-function gdb_send(byref session as GDBSession, byref cmd as string) as boolean
-    if session.initialized = false then return false
+function gdb_send( byref cmd as string ) as boolean
+    if gdb_session.initialized = false then return false
     
     dim as string full_cmd = cmd + chr(13) + chr(10)
     dim as DWORD bytes_written
     dim as integer ret
     
-    ret = WriteFile(session.hStdInWrite, strptr(full_cmd), len(full_cmd), @bytes_written, NULL)
-    FlushFileBuffers(session.hStdInWrite)
+    ret = WriteFile( gdb_session.hStdInWrite, strptr(full_cmd), len(full_cmd), @bytes_written, NULL )
+    FlushFileBuffers( gdb_session.hStdInWrite )
 
     return iif(ret <> 0 andalso bytes_written > 0, true, false)
 end function
 
 
 ' Receive response from GDB (synchronous with timeout)
-function gdb_receive( byref session as GDBSession ) as boolean
-    if session.initialized = false then return false
+function gdb_receive() as boolean
+    if gdb_session.initialized = false then return false
     
     dim as string buffer = space(4096)
     dim as DWORD bytes_read, bytes_avail
@@ -208,15 +208,15 @@ function gdb_receive( byref session as GDBSession ) as boolean
     dim as string response = ""
     
     do
-        if session.KillMessageThread = true then return false
-        if session.initialized = false then return false
+        if gdb_session.KillMessageThread = true then return false
+        if gdb_session.initialized = false then return false
         
-        ret = PeekNamedPipe(session.hStdOutRead, NULL, 0, NULL, @bytes_avail, NULL)
+        ret = PeekNamedPipe( gdb_session.hStdOutRead, NULL, 0, NULL, @bytes_avail, NULL )
         
         if (ret <> 0) andalso (bytes_avail > 0) then
             if bytes_avail > 4096 then bytes_avail = 4096
             
-            ret = ReadFile(session.hStdOutRead, strptr(buffer), bytes_avail, @bytes_read, NULL)
+            ret = ReadFile( gdb_session.hStdOutRead, strptr(buffer), bytes_avail, @bytes_read, NULL )
             
             if (ret <> 0) andalso (bytes_read > 0) then
                 response = response & left(buffer, bytes_read)
@@ -233,12 +233,12 @@ function gdb_receive( byref session as GDBSession ) as boolean
        instr(response, "^running") > 0 orelse instr(response, "^error") > 0 orelse _
        instr(response, "*stopped") > 0 then
         ' Clear any old data first
-        gdb_clear_pipe(session)
+        gdb_clear_pipe()
 
         ' Create a new message record and add it to the message queue. The WM_TIMER will
         ' check the message queue for any pending messages.
         MutexLock( gdb_session.hThreadMutex )
-        gdb_enqueue_message( session, response )
+        gdb_enqueue_message( response )
         MutexUnLock( gdb_session.hThreadMutex )
     end if
         
@@ -247,63 +247,54 @@ end function
 
 
 sub gdb_threadListener( byval userdata as any ptr )
-    dim as GDBSession ptr session = cast(GDBsession ptr, userdata)
-    do until session->KillMessageThread = true
-        gdb_receive(*session ) 
+    do until gdb_session.KillMessageThread = true
+        gdb_receive() 
     loop    
 LM( "gdb_threadListener finished" )
 end sub
 
 
 ' Close GDB session
-sub gdb_close( byref session as GDBSession )
-    if session.initialized then
-        session.KillMessageThread = true
+sub gdb_close()
+    if gdb_session.initialized then
+        gdb_session.KillMessageThread = true
 
         ' Clear the message queue
-        clearQueue( session )
+        clearQueue()
     
         ' Try to quit gracefully
-        gdb_send(session, "quit")
+        gdb_send("quit")
         sleep 200
         
         ' Check if process is still running
         dim as DWORD exit_code
-        if GetExitCodeProcess(session.hProcess, @exit_code) <> 0 then
+        if GetExitCodeProcess(gdb_session.hProcess, @exit_code) <> 0 then
             if exit_code = STILL_ACTIVE then
                 ' Send quit again with confirmation disabled
-                gdb_send(session, "set confirm off")
+                gdb_send("set confirm off")
                 sleep 50
-                gdb_send(session, "quit")
+                gdb_send("quit")
                 sleep 200
                 
                 ' If still running, force terminate
-                if GetExitCodeProcess(session.hProcess, @exit_code) <> 0 then
+                if GetExitCodeProcess(gdb_session.hProcess, @exit_code) <> 0 then
                     if exit_code = STILL_ACTIVE then
-                        TerminateProcess(session.hProcess, 0)
+                        TerminateProcess(gdb_session.hProcess, 0)
                         sleep 100
                     end if
                 end if
             end if
         end if
 
-        CloseHandle(session.hStdInWrite)
-        CloseHandle(session.hStdOutRead)
-        CloseHandle(session.hStdErrRead)
-        CloseHandle(session.hThread)
-        CloseHandle(session.hProcess)
+        CloseHandle(gdb_session.hStdInWrite)
+        CloseHandle(gdb_session.hStdOutRead)
+        CloseHandle(gdb_session.hStdErrRead)
+        CloseHandle(gdb_session.hThread)
+        CloseHandle(gdb_session.hProcess)
 
-        session.hStdInWrite = 0
-        session.hStdOutRead = 0
-        session.hStdErrRead = 0
-        session.hThread     = 0
-        session.hProcess    = 0
-
-        session.current_file_name     = ""
-        session.current_function_name = ""
-        erase session.variable_array
+        gdb_session = type<GDBSession>()
         
-        session.initialized = false
+        gdb_session.initialized = false
     end if
 end sub
 

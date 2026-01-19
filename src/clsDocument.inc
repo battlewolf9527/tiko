@@ -1274,13 +1274,13 @@ function clsDocument.ToggleBreakPoint( byval nLine as long ) as long
             ' Breakpoint exists so delete it.
             ' Set action to delete the current line breakpoint. When this gdb calls
             ' response arrives we load the breakpoints array and then call gdb_deleteCurrentLineBreakpoint.
-            gcurrent_debug_action = IDM_DELETE_CURRENT_LINE_BREAKPOINT
-            gbreakpoint_line_to_delete = nLine
-            gdb_send(gdb_session, "-break-list")   
+            gdb_session.current_debug_action = IDM_DELETE_CURRENT_LINE_BREAKPOINT
+            gdb_session.breakpoint_line_to_delete = nLine
+            gdb_send("-break-list")   
         else
             ' Breakpoint does not exist so add it.
             bp_cmd = "break " & chr(34) & ucase(this.DiskFilename) & chr(34) & ":" & nLine
-            gdb_send( gdb_session, bp_cmd )
+            gdb_send(bp_cmd )
         end if
     end if
     

@@ -51,20 +51,20 @@ function gdb_findFunctionArguments( byref response as string, byref token as str
 end function
 
 
-function gdb_enableBreaksInFunction( byref session as GDBSession ) as long
-    if session.disabled_breakpoints = "" then return 0
+function gdb_enableBreaksInFunction() as long
+    if gdb_session.disabled_breakpoints = "" then return 0
     
     dim as string send_command = "-break-enable"
-    gdb_send( gdb_session, send_command & session.disabled_breakpoints )
+    gdb_send( send_command & gdb_session.disabled_breakpoints )
 
-    session.function_breakpoints = ""
-    session.disabled_breakpoints = ""
+    gdb_session.function_breakpoints = ""
+    gdb_session.disabled_breakpoints = ""
 
     return 0
 end function
 
 
-function gdb_loadBreakpointsArray( byref session as GDBSession, byref response as string ) as long
+function gdb_loadBreakpointsArray( byref response as string ) as long
     dim as string token
     dim as long p1 
     dim as long p2
@@ -73,7 +73,7 @@ function gdb_loadBreakpointsArray( byref session as GDBSession, byref response a
     if p1 = 0 then return 0
     p1 += 6
     
-    erase session.breakpoint_array
+    erase gdb_session.breakpoint_array
     
     do
         dim as long numberId
@@ -101,85 +101,84 @@ function gdb_loadBreakpointsArray( byref session as GDBSession, byref response a
         if p1 = 0 then exit do
         p1 += len(token)
         linenum = val( mid(response, p1) )
-LM( "parse bp: " & numberId & "  linenum: " & linenum )
         
         ' Add the newly found breakpoint to the array
-        dim as long ub = ubound(session.breakpoint_array) + 1
-        redim preserve session.breakpoint_array(ub)
-        session.breakpoint_array(ub).numberId = numberId
-        session.breakpoint_array(ub).func     = func
-        session.breakpoint_array(ub).linenum  = linenum
+        dim as long ub = ubound(gdb_session.breakpoint_array) + 1
+        redim preserve gdb_session.breakpoint_array(ub)
+        gdb_session.breakpoint_array(ub).numberId = numberId
+        gdb_session.breakpoint_array(ub).func     = func
+        gdb_session.breakpoint_array(ub).linenum  = linenum
     loop
     
     return 0
 end function
 
 
-function gdb_deleteCurrentLineBreakpoint( byref session as GDBSession ) as long
+function gdb_deleteCurrentLineBreakpoint() as long
     dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr
     if pDoc = 0 then return 0
     
     dim as any ptr pSci = pDoc->GetActiveScintillaPtr()
     dim fMark as long  ' 32 bit value
-    dim nCurLine as long = gbreakpoint_line_to_delete + 1  ' add 1 for GDB
+    dim nCurLine as long = gdb_session.breakpoint_line_to_delete + 1  ' add 1 for GDB
 
     ' Find the breakpoint in the array based on the filename, func, and linenum.
-    for i as long = lbound(session.breakpoint_array) to ubound(session.breakpoint_array)
-        if session.breakpoint_array(i).linenum = nCurLine then
-            if session.breakpoint_array(i).func = session.current_function_name then
-                dim as string bp_cmd = "-break-delete " & str(session.breakpoint_array(i).numberId)
-                gdb_send( session, bp_cmd )
+    for i as long = lbound(gdb_session.breakpoint_array) to ubound(gdb_session.breakpoint_array)
+        if gdb_session.breakpoint_array(i).linenum = nCurLine then
+            if gdb_session.breakpoint_array(i).func = gdb_session.current_function_name then
+                dim as string bp_cmd = "-break-delete " & str(gdb_session.breakpoint_array(i).numberId)
+                gdb_send( bp_cmd )
                 exit for
             end if        
         end if
     next
     
-    gcurrent_debug_action = 0
-    gbreakpoint_line_to_delete = 0
+    gdb_session.current_debug_action = 0
+    gdb_session.breakpoint_line_to_delete = 0
     
     return 0
 end function
 
     
-function gdb_disableBreaksInFunction( byref session as GDBSession ) as long
-    if session.disabled_breakpoints = "" then return 0
+function gdb_disableBreaksInFunction() as long
+    if gdb_session.disabled_breakpoints = "" then return 0
     ' Do a batch disable of the breakpoints
     dim as string send_command = "-break-disable"
     dim as string breakpoints
 
-    for i as long = lbound(session.breakpoint_array) to ubound(session.breakpoint_array)
-        select case gcurrent_debug_action
+    for i as long = lbound(gdb_session.breakpoint_array) to ubound(gdb_session.breakpoint_array)
+        select case gdb_session.current_debug_action
             case IDM_DEBUG_STEPOVER
                 ' Disable all breakpoints EXCEPT those in the current function
-                if session.function_breakpoints <> session.breakpoint_array(i).func then
-                    breakpoints = breakpoints & " " & str(session.breakpoint_array(i).numberId)
+                if gdb_session.function_breakpoints <> gdb_session.breakpoint_array(i).func then
+                    breakpoints = breakpoints & " " & str(gdb_session.breakpoint_array(i).numberId)
                 end if
             case IDM_DEBUG_STEPOUT    
                 ' Disable all breakpoints ONLY for those in the current function
-                if session.function_breakpoints = session.breakpoint_array(i).func then
-                    breakpoints = breakpoints & " " & str(session.breakpoint_array(i).numberId)
+                if gdb_session.function_breakpoints = gdb_session.breakpoint_array(i).func then
+                    breakpoints = breakpoints & " " & str(gdb_session.breakpoint_array(i).numberId)
                 end if
         end select
     next
-    session.disabled_breakpoints = breakpoints
+    gdb_session.disabled_breakpoints = breakpoints
     
-    gdb_send( session, send_command & breakpoints )
+    gdb_send( send_command & breakpoints )
         
-    select case gcurrent_debug_action
+    select case gdb_session.current_debug_action
         case IDM_DEBUG_STEPOVER
-            gdb_send(session, "-exec-next")
+            gdb_send("-exec-next")
         case IDM_DEBUG_STEPOUT    
-            gdb_send(session, "-exec-finish")
+            gdb_send("-exec-finish")
     end select
     ' the response calls: gdb_enableBreaksInFunction to re-enable
     ' the function's breakpoints after we stepover or stepout.
-    gcurrent_debug_action = 0
+    gdb_session.current_debug_action = 0
 
     return 0
 end function
 
 
-function gdb_getVariableDisplayName( byref session as GDBSession, byval varName as string ) as string
+function gdb_getVariableDisplayName( byval varName as string ) as string
     dim as string varDisplayString = AfxStrExtract( 1, varName, "$" )
     if varDisplayString = varName then return varDisplayString
     if len(varName) = 0 then return ""
@@ -192,7 +191,7 @@ function gdb_getVariableDisplayName( byref session as GDBSession, byval varName 
     dim as HWND hEdit = pDoc->hWndActiveScintilla
 
     ' Try to find the variable within the source code starting at the function line
-    startPos = SciExec( hEdit, SCI_POSITIONFROMLINE, session.current_function_linenum, 0)
+    startPos = SciExec( hEdit, SCI_POSITIONFROMLINE, gdb_session.current_function_linenum, 0)
     endPos = SciExec( hEdit, SCI_GETLENGTH, 0, 0)
 
     dim as string txtFind = varDisplayString
@@ -207,7 +206,7 @@ function gdb_getVariableDisplayName( byref session as GDBSession, byval varName 
 end function
 
 
-function gdb_getVariableDisplayValue( byref session as GDBSession, byval varValue as string ) as string
+function gdb_getVariableDisplayValue( byval varValue as string ) as string
     dim as string varDisplayString = varValue
 
     ' Clean the response string
@@ -243,7 +242,7 @@ function gdb_getVariableDisplayValue( byref session as GDBSession, byval varValu
 end function
 
 
-function gdb_parseVariablesResponse( byref session as GDBSession, byref response as string ) as integer
+function gdb_parseVariablesResponse( byref response as string ) as integer
     dim as integer i = 1
     dim as integer nItems = 0
     dim as integer p1 = 0
@@ -291,18 +290,18 @@ function gdb_parseVariablesResponse( byref session as GDBSession, byref response
             if left(keyValue, 4) = "TMP$" then bAddVariable = false
             if instr(valValue, "<optimized out>") then bAddVariable = false
 
-            if (bAddVariable = true) andalso (session.is_new_variables = true) then
-                redim preserve session.variable_array(nItems)
-                session.variable_array(nItems).VarName  = keyValue
-                session.variable_array(nItems).VarNameDisplay = gdb_getVariableDisplayName( session, keyValue )
-                session.variable_array(nItems).VarValue = gdb_getVariableDisplayValue( session, valValue )
+            if (bAddVariable = true) andalso (gdb_session.is_new_variables = true) then
+                redim preserve gdb_session.variable_array(nItems)
+                gdb_session.variable_array(nItems).VarName  = keyValue
+                gdb_session.variable_array(nItems).VarNameDisplay = gdb_getVariableDisplayName( keyValue )
+                gdb_session.variable_array(nItems).VarValue = gdb_getVariableDisplayValue( valValue )
                 nItems += 1
             else
-                if (bAddVariable = true) andalso (session.is_new_variables = false) then
+                if (bAddVariable = true) andalso (gdb_session.is_new_variables = false) then
                     ' The variable list already exists so simply find the variable name and update its value
-                    for i as long = lbound(session.variable_array) to ubound(session.variable_array)
-                        if session.variable_array(i).varname = keyValue then
-                            session.variable_array(i).varvalue = gdb_getVariableDisplayValue( session, valValue )
+                    for i as long = lbound(gdb_session.variable_array) to ubound(gdb_session.variable_array)
+                        if gdb_session.variable_array(i).varname = keyValue then
+                            gdb_session.variable_array(i).varvalue = gdb_getVariableDisplayValue( valValue )
                             exit for
                         end if
                     next
@@ -313,12 +312,12 @@ function gdb_parseVariablesResponse( byref session as GDBSession, byref response
     end if
     
 
-    if session.is_new_variables = false then
+    if gdb_session.is_new_variables = false then
         ' Simply update the value held in the ListView
-        for i as long = lbound(session.variable_array) to ubound(session.variable_array) - 1
+        for i as long = lbound(gdb_session.variable_array) to ubound(gdb_session.variable_array) - 1
             for j as long = 0 to frmListView_GetCount( hLV ) - 1
-                if frmListView_GetItemText(hLV, j, 1) = session.variable_array(i).VarName then
-                    frmListView_SetItemText(hLV, j, 3, session.variable_array(i).VarValue)
+                if frmListView_GetItemText(hLV, j, 1) = gdb_session.variable_array(i).VarName then
+                    frmListView_SetItemText(hLV, j, 3, gdb_session.variable_array(i).VarValue)
                     exit for
                 end if
             next
@@ -326,35 +325,35 @@ function gdb_parseVariablesResponse( byref session as GDBSession, byref response
     end if
     
    
-    if session.is_new_variables = true then
+    if gdb_session.is_new_variables = true then
         ' Add all of new array to the ListView
         dim as VariableType temp
 
         ' Simple bubble sort the variables
-        for i as long = lbound(session.variable_array) to ubound(session.variable_array) - 1
-            for j as long = i + 1 to ubound(session.variable_array)
-                if session.variable_array(i).VarName > session.variable_array(j).VarName then
-                    temp = session.variable_array(i)
-                    session.variable_array(i) = session.variable_array(j)
-                    session.variable_array(j) = temp
+        for i as long = lbound(gdb_session.variable_array) to ubound(gdb_session.variable_array) - 1
+            for j as long = i + 1 to ubound(gdb_session.variable_array)
+                if gdb_session.variable_array(i).VarName > gdb_session.variable_array(j).VarName then
+                    temp = gdb_session.variable_array(i)
+                    gdb_session.variable_array(i) = gdb_session.variable_array(j)
+                    gdb_session.variable_array(j) = temp
                 end if
             next 
         next 
 
         frmListView_DeleteAllItems( hLV )
 
-        for i as long = lbound(session.variable_array) to ubound(session.variable_array)
+        for i as long = lbound(gdb_session.variable_array) to ubound(gdb_session.variable_array)
             wszText = "" & chr(9) & _
-                        session.variable_array(i).VarName & chr(9) & _
-                        session.variable_array(i).VarNameDisplay & chr(9) & _
-                        session.variable_array(i).VarValue
+                        gdb_session.variable_array(i).VarName & chr(9) & _
+                        gdb_session.variable_array(i).VarNameDisplay & chr(9) & _
+                        gdb_session.variable_array(i).VarValue
             frmListView_AddString( hLV, wszText )
         next
     end if
 
 
     ' Now set the flag that the array has variable names
-    session.is_new_variables = false
+    gdb_session.is_new_variables = false
 
     ' Set the column widths to the size of the max text widths
     dim as long nTextWidth
@@ -362,14 +361,14 @@ function gdb_parseVariablesResponse( byref session as GDBSession, byref response
     dim as long nVarNameDisplayColWidth = nVarNameColWidth
     dim as long nVarValueColWidth = getTextWidth( hLV, L(438, "Value"), GUIFONT_9 )
     
-    for i as long = lbound(session.variable_array) to ubound(session.variable_array)
+    for i as long = lbound(gdb_session.variable_array) to ubound(gdb_session.variable_array)
         ' Get the unscaled width of the text so that we can set the ListView column
         ' widths after all lines have been evaluated.
-        nTextWidth = getTextWidth( hLV, session.variable_array(i).varname, GUIFONT_9 )
+        nTextWidth = getTextWidth( hLV, gdb_session.variable_array(i).varname, GUIFONT_9 )
         nVarNameColWidth = MAX( nVarNameColWidth, nTextWidth )
-        nTextWidth = getTextWidth( hLV, session.variable_array(i).VarNameDisplay, GUIFONT_9 )
+        nTextWidth = getTextWidth( hLV, gdb_session.variable_array(i).VarNameDisplay, GUIFONT_9 )
         nVarNameDisplayColWidth = MAX( nVarNameDisplayColWidth, nTextWidth )
-        nTextWidth = getTextWidth( hLV, session.variable_array(i).varvalue, GUIFONT_9 )
+        nTextWidth = getTextWidth( hLV, gdb_session.variable_array(i).varvalue, GUIFONT_9 )
         nVarValueColWidth = MAX( nVarValueColWidth, nTextWidth )
     next
     ' Set the column widths based on the variable name and values
@@ -389,7 +388,7 @@ function gdb_parseVariablesResponse( byref session as GDBSession, byref response
 end function
 
 
-sub gdb_processResponse( byref session as GDBSession, byval response as string ) 
+sub gdb_processResponse( byval response as string ) 
     dim as string file_name 
     dim as string function_name 
     dim as string function_args
@@ -402,24 +401,24 @@ LM( response )
     end if
 
     if instr( response, "^done,variables=") then 
-        gdb_parseVariablesResponse( session, response )
+        gdb_parseVariablesResponse( response )
         exit sub
     end if
     
     if instr( response, "^done,BreakpointTable=") then 
-        gdb_loadBreakpointsArray( session, response )
-        if gcurrent_debug_action = IDM_DELETE_CURRENT_LINE_BREAKPOINT then
-            gdb_deleteCurrentLineBreakpoint( session )
+        gdb_loadBreakpointsArray( response )
+        if gdb_session.current_debug_action = IDM_DELETE_CURRENT_LINE_BREAKPOINT then
+            gdb_deleteCurrentLineBreakpoint()
         else
-            session.function_breakpoints = session.current_function_name
-            gdb_disableBreaksInFunction( session )
+            gdb_session.function_breakpoints = gdb_session.current_function_name
+            gdb_disableBreaksInFunction()
         end if    
         exit sub
     end if
 
     if instr( response, "*stopped,reason=" & chr(34) & "function-finished" & chr(34)) orelse _   ' StepOut
        instr( response, "*stopped,reason=" & chr(34) & "end-stepping-range" & chr(34)) then      ' StepOver
-        gdb_enableBreaksInFunction( session )
+        gdb_enableBreaksInFunction()
         ' do not exit sub here because we want to check it again in the following If instr statements.
     end if
 
@@ -437,14 +436,14 @@ LM( response )
 
         ' If the current function name or filename has changed then reset the variable array.
         ' The new values for the array are set in gdb_parseVariablesResponse()
-        if (file_name <> session.current_file_name) orelse _
-            (function_name <> session.current_function_name) then
-            erase session.variable_array
-            session.is_new_variables = true
+        if (file_name <> gdb_session.current_file_name) orelse _
+            (function_name <> gdb_session.current_function_name) then
+            erase gdb_session.variable_array
+            gdb_session.is_new_variables = true
         end if    
-        session.current_file_name = file_name
-        session.current_function_name = function_name
-        session.current_function_linenum = line_number
+        gdb_session.current_file_name = file_name
+        gdb_session.current_function_name = function_name
+        gdb_session.current_function_linenum = line_number
         
 'LM( "STOP: BREAKPOINT OR STEPPING" )
 'LM( "  file_name:     " & file_name )
@@ -469,7 +468,7 @@ LM( response )
                 SciExec( pDoc->hWndActiveScintilla, SCI_MARKERDELETEALL, MARKER_DEBUGGER_CURLINE, 0 )
                 pDoc->ToggleMarker( line_number, MARKER_DEBUGGER_CURLINE )
                 ' Ask to get list of variables and values for current context
-                gdb_send( gdb_session, "-stack-list-variables --all-values" )
+                gdb_send(  "-stack-list-variables --all-values" )
             end if    
         end if
     end if
@@ -620,9 +619,11 @@ function frmDebug_WndProc( _
             
         case WM_DESTROY
             HWND_FRMDEBUG_OUTPUT = 0    
+            
             KillTimer( HWND_FRMDEBUG, gApp.DebugTimerID )
+            
             ' Kill the GDB process
-            gdb_close( gdb_session )
+            gdb_close()
 
             ' Save the current size of the debugger window so that we can re-use
             ' this position should th euser invoke the debugger again.
@@ -637,6 +638,10 @@ function frmDebug_WndProc( _
                 .bMaximized = iif( WinPla.showCmd = SW_MAXIMIZE, true, false )
                 .bInitialized = true
             end With
+            
+            ' Reset the global gdb_session variable
+            gdb_session = type<GDBSession>()
+            
             
         case WM_NCDESTROY
             dim pWindow as CWindow ptr = AfxCWindowPtr(hwnd)
@@ -662,11 +667,11 @@ function frmDebug_WndProc( _
         case WM_TIMER
             if wParam = gApp.DebugTimerID then
                 ' Check for any pending message
-                if gdb_isMessageQueueEmpty( gdb_session ) = false then
+                if gdb_isMessageQueueEmpty() = false then
                     MutexLock( gdb_session.hThreadMutex )
-                    dim as string message = gdb_dequeue_message( gdb_session )
+                    dim as string message = gdb_dequeue_message()
                     MutexUnLock( gdb_session.hThreadMutex )
-                    gdb_processResponse( gdb_session, message )    
+                    gdb_processResponse( message )    
                 end if
             end if
 
@@ -810,25 +815,25 @@ function frmDebug_WndProc( _
 
         case IDM_DEBUG_STARTDEBUGGING
 LM( "IDM_DEBUG_STARTDEBUGGING" )
-            gdb_send(gdb_session, "-exec-continue")
+            gdb_send("-exec-continue")
         
         case IDM_DEBUG_STOPDEBUGGING
 LM( "IDM_DEBUG_STOPDEBUGGING" )
-            gdb_send(gdb_session, "kill")
-            sleep 200
+            gdb_send("kill")
+            sleep 100
             PostMessage( HWND_FRMDEBUG, WM_CLOSE, 0, 0 )
         
         case IDM_DEBUG_STEPINTO
 LM( "IDM_DEBUG_STEPINTO" )
-            gdb_send(gdb_session, "-exec-step")
+            gdb_send("-exec-step")
         
         case IDM_DEBUG_STEPOVER
 LM( "IDM_DEBUG_STEPOVER" )
             ' Similar problem to STEPOUT, if breakpoints exist in subfunctions.
             ' Need to disable all breakpoints except those in the current function.
-            gcurrent_debug_action = IDM_DEBUG_STEPOVER
+            gdb_session.current_debug_action = IDM_DEBUG_STEPOVER
 LM( "gdb_send(gdb_session, -break-list)" )
-            gdb_send(gdb_session, "-break-list")   
+            gdb_send("-break-list")   
         
         case IDM_DEBUG_STEPOUT
 LM( "IDM_DEBUG_STEPOUT" )
@@ -840,9 +845,9 @@ LM( "IDM_DEBUG_STEPOUT" )
             ' - Temporarily disable those breakpoints.  -break-disable <bpnum>
             ' - Issue the -exec-finish
             ' - Re-enable the breakpoints.  -break-enable <bpnum>
-            gcurrent_debug_action = IDM_DEBUG_STEPOUT
+            gdb_session.current_debug_action = IDM_DEBUG_STEPOUT
 LM( "gdb_send(gdb_session, -break-list)" )
-            gdb_send(gdb_session, "-break-list")   
+            gdb_send("-break-list")   
             ' the response calls: gdb_disableBreaksInFunction
             ' the "-exec-finish" is sent from gdb_disableBreaksInFunction after the breakpoints are disabled.
 
@@ -853,8 +858,8 @@ LM( "IDM_DEBUG_RUNTOCURSOR" )
             if pDoc then
                 dim as string bp_line = str(pDoc->GetCurrentLineNumber() + 1)
                 dim as string bp_cmd = "tbreak " & chr(34) & pDoc->DiskFilename & chr(34) & ":" & bp_line
-                gdb_send( gdb_session, bp_cmd )
-                gdb_send(gdb_session, "-exec-continue")
+                gdb_send(bp_cmd )
+                gdb_send("-exec-continue")
             end if
             
     end select
@@ -912,13 +917,13 @@ function frmDebug_SetInitialBreakpoints( byref session as GDBSession ) as long
 'LM( "Set Temp Breakpoint on Main")
         bp_cmd = "tbreak main"
 '        bp_cmd = "-break-insert -t main"
-        gdb_send( gdb_session, bp_cmd )
+        gdb_send( bp_cmd )
         
     else    
 'LM( "Set Breakpoints:")
 'LM( bp_cmd & chr(13,10) )
         bp_cmd = rtrim(bp_cmd, chr(10))
-        gdb_send( gdb_session, bp_cmd )
+        gdb_send( bp_cmd )
     end if
 
     function = 0    
@@ -970,10 +975,10 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as string ) a
     
     ' The debug executable has been sucessfully created so start the debug thread
     ' add feed any breakpoints into it.
-    if gdb_init( gdb_session, executable ) then
+    if gdb_init( executable ) then
         frmDebug_SetInitialBreakpoints( gdb_session )
-        gdb_send(gdb_session, "set confirm off" )
-        gdb_send(gdb_session, "set language pascal" )
+        gdb_send("set confirm off" )
+        gdb_send("set language pascal" )
         
         gdb_session.hThreadMutex = MutexCreate()
         gdb_session.hThreadMessages = ThreadCreate( @gdb_threadListener, @gdb_session )
@@ -985,7 +990,7 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as string ) a
         exit function            
     end if
     
-    gdb_send(gdb_session, "-exec-run")
+    gdb_send("-exec-run")
     
     ShowWindow( HWND_FRMDEBUG, SW_SHOW )
     
