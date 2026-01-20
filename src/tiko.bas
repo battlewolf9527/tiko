@@ -53,6 +53,7 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 'TODO: Refactor AutoSave functionality. Until then, just disable it in the editor.
 #define ENABLE_AUTOSAVE false
 
+' Comment out the following define in order to disable logging.
 #define LOGGING_ENABLED
 #include once "logging.bas"
 
@@ -89,7 +90,6 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "modCodetips.inc"
 #include once "modMenuDefinitions.inc"
 #include once "modMRU.inc"
-#include once "modDebugGDB.bi"
 
 #include once "frmAbout.inc" 
 #include once "frmPopupMenu.inc"

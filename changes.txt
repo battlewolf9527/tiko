@@ -1,5 +1,5 @@
 Version 1.3.0
-- Added: Debugger (primitive because of GDB limitations).
+- Added: Debugger (very primitive because of GDB limitations and still a work in progress).
 - Added: New "spinner" animation in the status bar during compiling.
 - Added: New "Zoom Reset" menu option located under the "View" menu.
 - Added: Confirmation popup message for confirmation to clear all bookmarks.
