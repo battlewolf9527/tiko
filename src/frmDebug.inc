@@ -765,6 +765,12 @@ LM( "ERROR:" )
     if instr( response, "*stopped,reason=" & chr(34) & "exited-normally" & chr(34)) orelse _
        instr( response, "*stopped,reason=" & chr(34) & "exited" & chr(34)) orelse _
        instr( response, "*stopped,reason=" & chr(34) & "exited-signalled" & chr(34)) then
+        SetCompileStatusBarMessage( L(323,"Debug Target Exited Normally"), ghIconGood )   ' ghIconGood:green, ghIconBad: red
+        SendMessage( HWND_FRMDEBUG, IDM_DEBUG_STOPDEBUGGING, 0, 0 )
+    end if
+
+    if instr( response, "*stopped,reason=" & chr(34) & "signal-received" & chr(34) & ",signal-name=" & chr(34) & "SIGSEGV" & chr(34)) then
+        SetCompileStatusBarMessage( L(324,"Debug Target Terminated Unexpectantly"), ghIconBad )   ' ghIconGood:green, ghIconBad: red
         SendMessage( HWND_FRMDEBUG, IDM_DEBUG_STOPDEBUGGING, 0, 0 )
     end if
 

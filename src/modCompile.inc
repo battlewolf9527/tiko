@@ -292,6 +292,28 @@ function code_Compile( byval wID as long ) as boolean
     ' if this is a project then we need to compile all of the modules first
     ' in order to create the necessary *.o object files
     if gApp.IsProjectActive then
+        ' Determine if we are switching from Release builds to Debug builds. This means
+        ' that any existing obj's would be invalid and will be forced to rebuild.
+        ' Look for the "_debug_active.txt" filename.
+        dim as DWSTRING wszDebugFilename = gCompile.ObjFolder & "_debug_active.txt"
+        dim as boolean bForceRebuild = false
+        dim as boolean bDebugFileExists = AfxFileExists( wszDebugFilename )
+        if gCompile.CompileID = IDM_DEBUG_STARTDEBUGGING then
+            ' Debug build
+            bForceRebuild = iif( bDebugFileExists, false, true )
+            ' Create the debug active file for later checks
+            dim pStream as CTextStream   '(utf16)
+            if pStream.Create( wszDebugFilename, true, true ) = S_OK then 
+                pStream.WriteLine "-- DEBUG OBJECT FILES --"
+            end if
+            pStream.Close
+        else
+            ' Release builds
+            if bDebugFileExists then bForceRebuild = true
+            ' Remove the existing debug check filename
+            AfxDeleteFile( wszDebugFilename )
+        end if
+
         gCompile.CompileFlags = " " & gCompile.CompileFlags & " "
         dim as string g_flag = iif(instr(gCompile.CompileFlags, " -g "), " -g -nostrip ", "")
         dim as string e_flag = iif(instr(gCompile.CompileFlags, " -e "), " -e ", "")
@@ -329,7 +351,7 @@ function code_Compile( byval wID as long ) as boolean
                     pDocInclude = pDocInclude->pDocNext
                 loop
                 
-                if (bRebuildModule = true) orelse (gCompile.CompileID = IDM_REBUILDALL)  then
+                if (bRebuildModule = true) orelse (bForceRebuild = true) orelse (gCompile.CompileID = IDM_REBUILDALL)  then
                     nFileCount = nFileCount + 1
                     if (nFileCount mod 5) = 0 then AfxDoEvents
                     

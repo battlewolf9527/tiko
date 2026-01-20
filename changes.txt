@@ -15,7 +15,7 @@ Version 1.3.0
 - Fixed: If TODO list is active in Output window, it would not immediately show a newly entered 'TODO: (painting issue).
 - Fixed: Trying to Insert new Build Configuration when last item in the list is selected would simply delete that item.
 - Fixed: If Project was active and a file was added via right-click include open and subsequently closed, a later "Add Files to Project" for that file would fail.
-
+- Fixed: Broken warning message for pre-compile check if compile target (exe) is already running in memory.
 
 Version 1.2.6 (September 20, 2025)
 - Added: AfxNova. José Roca's latest and greatest Windows programming framework and library.

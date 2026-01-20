@@ -1641,36 +1641,35 @@ end function
 ' ========================================================================================
 ' Checks if the program that we are going to compile is already running
 ' ========================================================================================
-function IsProcessRunning( byval pwszExeFileName as wstring ptr ) as boolean
+function findprocessid( byval processname as wstring ptr ) as dword
+   dim pe32 as PROCESSENTRY32W
+    pe32.dwSize = sizeof(PROCESSENTRY32W)
 
-    dim hSnapShot as HANDLE
-    dim pe32w as PROCESSENTRY32W
+    dim hsnapshot as handle
+    hsnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0)
+    if hsnapshot = INVALID_HANDLE_VALUE then return 0
 
-    dim wszExeFileName as wstring * MAX_PATH = ucase(*pwszExeFileName)
-    dim wszExeProcessName as wstring * MAX_PATH
-
-    pe32w.dwSize = sizeof(pe32w)
-    hSnapShot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0)
-
-    if hSnapShot <> INVALID_HANDLE_VALUE then
-        if Process32First(hSnapShot, @pe32w) then
-            GetProcessImageName( @pe32w, @wszExeProcessName )
-            if ucase(wszExeProcessName) = wszExeFileName then
-                function = true
-            else
-                do while Process32next(hSnapShot, @pe32w) > 0
-                    GetProcessImageName( @pe32w, @wszExeProcessName )
-                    if ucase(wszExeProcessName) = wszExeFileName then
-                        function = true
-                        exit Do
-                    end if
-                loop
+    if Process32FirstW(hsnapshot, @pe32) <> 0 then
+        do
+            if lcase(wstr(*processname)) = lcase(wstr(pe32.szExeFile)) then
+                dim pid as dword = pe32.th32ProcessID
+                CloseHandle(hsnapshot)
+                return pid
             end if
-        end if
-        CloseHandle hSnapShot
+        loop while Process32NextW(hsnapshot, @pe32) <> 0
     end if
 
-    return false
+    CloseHandle(hsnapshot)
+    return 0
+end function
+
+function IsProcessRunning( byval pwszExeFileName as wstring ptr ) as boolean
+    dim wszExeFileName as wstring * MAX_PATH = AfxStrPathname("NAMEX", *pwszExeFileName)
+    dim as dword pid = findprocessid( wszExeFileName )
+    dim as HANDLE hprocess = OpenProcess(SYNCHRONIZE, FALSE, pid)
+    dim as boolean bExists = iif( hprocess = 0, false, true )
+    CloseHandle( hprocess )
+    return bExists
 end function
 
 
