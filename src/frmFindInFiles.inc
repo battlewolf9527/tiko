@@ -1022,8 +1022,10 @@ function frmFindInFiles_Show( byval hWndParent as HWND ) as LRESULT
     if gFindInFiles.bFirstTimeInvoked then
         if gApp.IsProjectActive then
             gFindInFiles.nSearchProject = BST_CHECKED
-            frmFindInFiles_SetControlStates
+        else
+            gFindInFiles.nSearchAllOpenDocs = BST_CHECKED
         end if
+        frmFindInFiles_SetControlStates
         gFindInFiles.bFirstTimeInvoked = false
     end if
 

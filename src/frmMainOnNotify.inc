@@ -464,8 +464,12 @@ function Scintilla_OnNotify( _
                 nLine      = SciExec(hEdit, SCI_LINEFROMPOSITION, pNSC->position, 0)
                 nFoldLevel = SciExec(hEdit, SCI_GETFOLDLEVEL, nLine, 0)
                 select case pNSC->margin 
-                    case 1   ' left margin (Toggle BreakPoint)
-                        pDoc->ToggleBreakPoint(nLine)
+                    case 1   ' left margin (Toggle BreakPoint or Bookmark)
+                        if gConfig.ClickToggleBreakpoint <> 0 then
+                            pDoc->ToggleBreakPoint(nLine)
+                        else
+                            pDoc->ToggleBookmark(nLine)
+                        end if        
                     case 2   ' fold margin
                         ' if is the head line...
                         if (nFoldLevel and SC_FOLDLEVELHEADERFLAG) <> 0 then

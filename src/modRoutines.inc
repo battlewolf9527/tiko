@@ -1665,6 +1665,7 @@ end function
 
 function IsProcessRunning( byval pwszExeFileName as wstring ptr ) as boolean
     dim wszExeFileName as wstring * MAX_PATH = AfxStrPathname("NAMEX", *pwszExeFileName)
+    if ucase(wszExeFileName) = "TIKO.EXE" then return false
     dim as dword pid = findprocessid( wszExeFileName )
     dim as HANDLE hprocess = OpenProcess(SYNCHRONIZE, FALSE, pid)
     dim as boolean bExists = iif( hprocess = 0, false, true )

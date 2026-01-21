@@ -733,7 +733,12 @@ LM( "ERROR:" )
         gdb_session.current_file_name = file_name
         gdb_session.current_function_name = function_name
         gdb_session.current_function_linenum = line_number
-        
+
+'gdb_send( "-var-create my_fbc_var * " & chr(34) & "$6FBCCTX" & chr(34) )
+'gdb_send( "-var-create my_fbc_var @ " & chr(34) & "$6FBCCTX" & chr(34) )
+'gdb_send( "-var-list-children --all-values my_fbc_var" )
+
+
 'LM( "STOP: BREAKPOINT OR STEPPING" )
 'LM( "  file_name:     " & file_name )
 'LM( "  function_name: " & function_name )

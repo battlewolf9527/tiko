@@ -312,6 +312,7 @@ function frmStatusBar_WndProc( _
             if i = COMPILE_STATUS_PANEL then
                 if (gApp.IsProjectLoading = false) andalso (gApp.IsFileLoading = false) then
                     if pWindow then
+                        if len(gSBPanels(i).wszText) = 0 then gApp.hIconPanel = 0
                         dim as COLORREF clr = ghStatusBar.BackColor
                         if gApp.hIconPanel = ghIconGood then clr = ghGeneral.iconsuccess
                         if gApp.hIconPanel = ghIconBad then clr = ghGeneral.iconfail

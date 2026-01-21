@@ -51,7 +51,7 @@ function SetCompileStatusBarMessage( _
         gApp.bShowSpinner = false
         gApp.SpinnerCurrentFrame = 0
         gApp.SpinnerTimerID = 0
-
+        gApp.hIconPanel = 0
     end if
 
     gApp.hIconPanel = hIconCompile

@@ -116,6 +116,7 @@ type clsConfig
         HighlightCurrentLine      as long = true
         IndentGuides              as long = false
         PositionMiddle            as long = false         ' position found text to middle of screen
+        ClickToggleBreakpoint     as long = false         ' left margin click toggles Breakpoint instead of Bookmark
         BraceHighlight            as long = false
         OccurrenceHighlight       as long = false
         TabIndentSpaces           as long = true

@@ -1151,7 +1151,7 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
         frmListView_AddColumn( hLV, 0, "", pWindow->ScaleX(20) )
         frmListView_AddColumn( hLV, 1, L(253, "Line"), pWindow->ScaleX(75) )
         frmListView_AddColumn( hLV, 2, L(254, "File"), pWindow->ScaleX(250) )
-        frmListView_AddColumn( hLV, 3, L(255, "Description"), pWindow->ScaleX(480) )
+        frmListView_AddColumn( hLV, 3, L(255, "Description"), pWindow->ScaleX(1480) )
         HWND_FRMOUTPUT_LVRESULTS = hLV
 
     ' Search Listview
@@ -1159,7 +1159,7 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
         frmListView_AddColumn( hLV, 0, "", pWindow->ScaleX(20) )
         frmListView_AddColumn( hLV, 1, L(253, "Line"), pWindow->ScaleX(75) )
         frmListView_AddColumn( hLV, 2, L(254, "File"), pWindow->ScaleX(250) )
-        frmListView_AddColumn( hLV, 3, L(255, "Description"), pWindow->ScaleX(480) )
+        frmListView_AddColumn( hLV, 3, L(255, "Description"), pWindow->ScaleX(1480) )
         HWND_FRMOUTPUT_LVSEARCH = hLV
 
     ' TODO listview
@@ -1167,7 +1167,7 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
         frmListView_AddColumn( hLV, 0, "", pWindow->ScaleX(20) )
         frmListView_AddColumn( hLV, 1, L(253, "Line"), pWindow->ScaleX(75) )
         frmListView_AddColumn( hLV, 2, L(254, "File"), pWindow->ScaleX(250) )
-        frmListView_AddColumn( hLV, 3, L(255, "Description"), pWindow->ScaleX(480) )
+        frmListView_AddColumn( hLV, 3, L(255, "Description"), pWindow->ScaleX(1480) )
         HWND_FRMOUTPUT_LVTODO = hLV
 
     dim pWindowPanel as CPanelWindow ptr = New CPanelWindow

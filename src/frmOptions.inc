@@ -48,16 +48,17 @@ function frmOptions_SaveEditorOptions() as long
 
     ' EDITOR OPTIONS   
     hwnd = HWND_FRMOPTIONSEDITOR
-    gConfig.SyntaxHighlighting   = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKSYNTAXHIGHLIGHTING) )
-    gConfig.LeftMargin           = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKSHOWLEFTMARGIN) )
-    gConfig.FoldMargin           = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKSHOWFOLDMARGIN) )
-    gConfig.ConfineCaret         = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKCONFINECARET) )
-    gConfig.LineNumbering        = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKLINENUMBERING) )
-    gConfig.HighlightCurrentLine = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKCURRENTLINE) )
-    gConfig.TabIndentSpaces      = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKTABTOSPACES) )
-    gConfig.IndentGuides         = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKINDENTGUIDES ) )
-    gConfig.RightEdge            = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKSHOWRIGHTEDGE) )
-    gConfig.PositionMiddle       = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKPOSITIONMIDDLE) )
+    gConfig.SyntaxHighlighting    = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKSYNTAXHIGHLIGHTING) )
+    gConfig.LeftMargin            = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKSHOWLEFTMARGIN) )
+    gConfig.FoldMargin            = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKSHOWFOLDMARGIN) )
+    gConfig.ConfineCaret          = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKCONFINECARET) )
+    gConfig.LineNumbering         = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKLINENUMBERING) )
+    gConfig.HighlightCurrentLine  = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKCURRENTLINE) )
+    gConfig.TabIndentSpaces       = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKTABTOSPACES) )
+    gConfig.IndentGuides          = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKINDENTGUIDES ) )
+    gConfig.RightEdge             = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKSHOWRIGHTEDGE) )
+    gConfig.PositionMiddle        = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKPOSITIONMIDDLE) )
+    gConfig.ClickToggleBreakpoint = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKTOGGLEBREAKPOINT) )
 
     gConfig.RightEdgePosition = AfxGetWindowText( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_TXTRIGHTEDGE) )
     gConfig.TabSize = AfxGetWindowText( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_TXTTABSIZE) )

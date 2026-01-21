@@ -377,6 +377,7 @@ function clsConfig.SaveConfigFile() as long
     pStream.WriteLine "LocalizationFile="      & this.LocalizationFile     
     pStream.WriteLine "TabSize="               & this.TabSize              
     pStream.WriteLine "PositionMiddle="        & this.PositionMiddle
+    pStream.WriteLine "ClickToggleBreakpoint=" & this.ClickToggleBreakpoint
     pStream.WriteLine "BraceHighlight="        & this.BraceHighlight
     pStream.WriteLine "OccurrenceHighlight="   & this.OccurrenceHighlight
     pStream.WriteLine "EditorFontname="        & this.EditorFontname       
@@ -789,6 +790,7 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
             case "IndentGuides":             this.IndentGuides          = nData
             case "TabIndentSpaces":          this.TabIndentSpaces       = nData
             case "PositionMiddle":           this.PositionMiddle        = nData
+            case "ClickToggleBreakpoint":    this.ClickToggleBreakpoint = nData
             case "BraceHighlight":           this.BraceHighlight        = nData
             case "OccurrenceHighlight":      this.OccurrenceHighlight   = nData
             case "LocalizationFile":         this.LocalizationFile      = ProcessFromCurdriveApp(wData)
