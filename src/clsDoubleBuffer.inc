@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -159,7 +159,7 @@ function clsDoubleBuffer.PaintRoundRect( _
 end function
 
 function clsDoubleBuffer.PaintText( _
-            byval wszText as CWSTR, _
+            byval wszText as DWSTRING, _
             byval rc as RECT ptr, _
             byval wsStyle as DWORD, _
             byval bHitTest as boolean = false _

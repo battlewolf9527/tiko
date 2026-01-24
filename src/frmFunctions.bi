@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -17,8 +17,8 @@
 #define IDC_FRMFUNCTIONS_LISTBOX   1000
 
 type FUNCTION_NODE_TYPE
-    wszFunctionName as CWSTR
-    wszPrototype    as CWSTR      ' the sub/function parameters
+    wszFunctionName as DWSTRING
+    wszPrototype    as DWSTRING      ' the sub/function parameters
     nLineNumber     as long
 end type
 

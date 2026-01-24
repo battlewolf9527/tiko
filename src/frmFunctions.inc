@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ end function
 ' ========================================================================================
 ' Get the Functions line number from the Listbox line
 ' ========================================================================================
-function getFunctionsLineNumber( byval wszCaption as CWSTR ) as long
+function getFunctionsLineNumber( byval wszCaption as DWSTRING ) as long
     ' do not use Parse for this because line may contain embedded % in description
     ' lineNum%functionName%prototype
     dim as long nLineNum 
@@ -51,10 +51,10 @@ end function
 ' ========================================================================================
 ' Get the Functions function name from the Listbox line
 ' ========================================================================================
-function getFunctionsFunctionName( byval wszCaption as CWSTR ) as CWSTR
+function getFunctionsFunctionName( byval wszCaption as DWSTRING ) as DWSTRING
     ' do not use Parse for this because line may contain embedded % in description
     ' lineNum%functionName%prototype
-    dim as CWSTR wszTemp
+    dim as DWSTRING wszTemp
     dim as long f1
     f1 = instr(wszCaption, "%")
     if f1 then wszTemp = mid(wszCaption, f1 + 1)
@@ -66,10 +66,10 @@ end function
 ' ========================================================================================
 ' Get the Functions prototype from the Listbox line
 ' ========================================================================================
-function getFunctionsPrototype( byval wszCaption as CWSTR ) as CWSTR
+function getFunctionsPrototype( byval wszCaption as DWSTRING ) as DWSTRING
     ' do not use Parse for this because line may contain embedded % in description
     ' lineNum%functionName%prototype
-    dim as CWSTR wszTemp
+    dim as DWSTRING wszTemp
     dim as long f1
     f1 = instr(wszCaption, "%")
     if f1 then wszTemp = mid(wszCaption, f1 + 1)
@@ -227,7 +227,7 @@ function frmFunctions_OnDrawItem( _
         b.SetForeColors(foreclr, foreclr)
         b.SetBackColors(backclr, backclr)
 
-        dim as CWSTR wszCaption = AfxGetListBoxText(lpdis->hwndItem, lpdis->ItemID)
+        dim as DWSTRING wszCaption = AfxGetListBoxText(lpdis->hwndItem, lpdis->ItemID)
         dim as clsDocument ptr pDoc = cast(clsDocument ptr, lpdis->itemData)
 
        ' if this is a "node" header
@@ -257,7 +257,7 @@ function frmFunctions_OnDrawItem( _
         if isNodeHeader then
             b.SetFont( SYMBOLFONT_10 )
             rcBitmap.right = rcBitmap.left + pWindow->ScaleX(20)
-            dim as CWSTR wszBitmap = iif(isIconDown, wszIconChevronDown, wszIconChevronRight) 
+            dim as DWSTRING wszBitmap = iif(isIconDown, wszIconChevronDown, wszIconChevronRight) 
             b.PaintText( wszBitmap, @rcBitmap, DT_CENTER )
 
             b.SetFont( GUIFONT_10 )
@@ -355,7 +355,7 @@ function frmFunctionsListBox_SubclassProc ( _
 
     static as long accumDelta
     
-    static as CWSTR wszPrevTooltip 
+    static as DWSTRING wszPrevTooltip 
     static as HWND hTooltip
     if (uMsg = WM_DESTROY) andalso (IsWindow(hToolTip)) then DestroyWindow(hToolTip)
         
@@ -416,14 +416,14 @@ function frmFunctionsListBox_SubclassProc ( _
             end if
                             
         case WM_MOUSEHOVER
-            dim as CWSTR wszTooltip 
+            dim as DWSTRING wszTooltip 
             dim as long idx = Listbox_ItemFromPoint( hWin, GET_X_LPARAM(_lParam), GET_Y_LPARAM(_lParam)) 
             ' The return value contains the index of the nearest item in the LOWORD. The HIWORD is zero 
             ' if the specified point is in the client area of the list box, or one if it is outside the 
             ' client area.
             if hiword(idx) <> 1 then
                 wszTooltip = ""
-                dim as CWSTR wszCaption = AfxGetListBoxText( hWin, idx )
+                dim as DWSTRING wszCaption = AfxGetListBoxText( hWin, idx )
                 if (left(wszCaption, 4) = "true") orelse (left(wszCaption, 5) = "false") then
                     dim as clsDocument ptr pDoc = cast(clsDocument ptr, ListBox_GetItemData( hWin, idx ))
                     if pDoc then wszTooltip = pDoc->DiskFilename
@@ -456,14 +456,14 @@ function frmFunctionsListBox_SubclassProc ( _
             ' client area.
             if hiword(idx) <> 1 then
                 dim as clsDocument ptr pDoc = cast(clsDocument ptr, ListBox_GetItemData( hWin, idx ))
-                dim as CWSTR wszCaption = AfxGetListBoxText( hWin, idx )
+                dim as DWSTRING wszCaption = AfxGetListBoxText( hWin, idx )
                 if (left(wszCaption, 4) = "true") orelse (left(wszCaption, 5) = "false") then
                     OpenSelectedDocument( pDoc->DiskFilename )
                 else
                     ' Attempt to show the function name
                     dim as long nLineNum = getFunctionsLinenumber( wszCaption )
-                    dim as CWSTR wszFunctionName = getFunctionsFunctionName( wszCaption )
-                    dim as CWSTR wszDiskFilename 
+                    dim as DWSTRING wszFunctionName = getFunctionsFunctionName( wszCaption )
+                    dim as DWSTRING wszDiskFilename 
                     if pDoc then wszDiskFilename = pDoc->DiskFilename
                     OpenSelectedDocument( wszDiskFilename, wszFunctionName, nLineNum )
                 end if
@@ -509,9 +509,8 @@ function frmFunctions_Show( byval hWndParent as HWND ) as LRESULT
         pWindow->AddControl("LISTBOX", , IDC_FRMFUNCTIONS_LISTBOX, "", 0, 0, 0, 0, _
         WS_CHILD or WS_CLIPSIBLINGS or WS_CLIPCHILDREN or WS_TABSTOP or _
         LBS_NOINTEGRALHEIGHT or LBS_OWNERDRAWFIXED or LBS_HASSTRINGS or LBS_NOTIFY, _
-        WS_EX_LEFT or WS_EX_RIGHTSCROLLBAR, , _
-        cast(SUBCLASSPROC, @frmFunctionsListBox_SubclassProc), _
-        IDC_FRMFUNCTIONS_LISTBOX, cast(DWORD_PTR, @pWindow))
+        WS_EX_LEFT or WS_EX_RIGHTSCROLLBAR)
+    pWindow->SetControlSubclass(HWND_FRMFUNCTIONS_LISTBOX, @frmFunctionsListBox_SubclassProc, IDC_FRMFUNCTIONS_LISTBOX, @pWindow)
 
     function = 0
     
@@ -523,7 +522,7 @@ end function
 ' ========================================================================================
 function QuickSortpDocs( pDocs() as clsDocument ptr, lo as long, hi as long ) as long
     dim as long i, j
-    dim as CWSTR pivot
+    dim as DWSTRING pivot
     
     if lo < hi then
         i = lo : j = hi
@@ -545,7 +544,7 @@ end function
 ' ========================================================================================
 function QuickSortFuncs( a() as FUNCTION_NODE_TYPE, lo as long, hi as long ) as long
     dim as long i, j
-    dim as CWSTR pivot
+    dim as DWSTRING pivot
     
     if lo < hi then
         i = lo : j = hi
@@ -583,7 +582,7 @@ function LoadFilesAndFunctions() as long
     dim wszText as wstring * MAX_PATH
 
     dim pData as DB2_DATA ptr
-    dim as CWSTR wszNodeName
+    dim as DWSTRING wszNodeName
     
     ' Filename node line format. The drawing routine will parse this string to determine
     ' what glyph to display as well as the filename only portion of the diskfilename.
@@ -619,7 +618,7 @@ function LoadFilesAndFunctions() as long
     
     for i as long = lbound(pDocs) to ubound(pDocs)
     
-        dim as CWSTR wszFilename = ucase(pDocs(i)->DiskFilename)
+        dim as DWSTRING wszFilename = ucase(pDocs(i)->DiskFilename)
         wszText = wstr(pDocs(i)->bFunctionsExpanded)
         idx = Listbox_AddString( hList, @wszText )
         ListBox_SetItemData( hList, idx, pDocs(i) )
@@ -701,7 +700,7 @@ function LoadFunctionsOnly() as long
     dim wszText as wstring * MAX_PATH
 
     dim pData as DB2_DATA ptr
-    dim as CWSTR wszNodeName
+    dim as DWSTRING wszNodeName
     dim as long ub, idx
     
     ' 231%FunctionName%prototype  ' function starts at line 231 of the file

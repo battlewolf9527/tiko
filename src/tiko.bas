@@ -1,11 +1,11 @@
 ' ========================================================================================
 ' tiko editor 
 ' Windows FreeBASIC Editor (Windows 64 bit)
-' Paul Squires (2016-2025)
+' Paul Squires (2016-2026)
 ' ========================================================================================
 
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -25,33 +25,37 @@
 #include once "vbcompat.bi"
 #include once "win\shobjidl.bi"
 #include once "win\TlHelp32.bi"
-#include once "Afx\CWindow.inc"
-#include once "Afx\AfxFile.inc"
-#include once "Afx\AfxRichEdit.inc"
-#include once "Afx\AfxGdiplus.inc"
-#include once "Afx\AfxCom.inc" 
-#include once "Afx\CImageCtx.inc"
+#include once "AfxNova\CWindow.inc"
+#include once "AfxNova\AfxFile.inc"
+#include once "AfxNova\AfxRichEdit.inc"
+#include once "AfxNova\AfxGdiplus.inc"
+#include once "AfxNova\AfxCom.inc" 
+#include once "AfxNova\CImageCtx.inc"
+#include once "AfxNova\AfxStr.inc"
 
-using Afx
+using AfxNova
 
 
 #define APPNAME             wstr("Tiko Editor")
 #define APPNAMESHORT        wstr("Tiko")
 #define APPCLASSNAME        wstr("tiko_editor_class")
-#define APPVERSION          wstr("1.2.6") 
+#define APPVERSION          wstr("1.3.0") 
 #define APPEXTENSION        wstr(".tiko") 
 #define APPBITS             wstr(" (64-bit)")
 #define RUNBATCHFILE        wstr("_tiko_runbatch.bat")
 #define QUICKRUNBAS         wstr("_tiko_quickrun.bas")
 #define QUICKRUNEXE         wstr("_tiko_quickrun.exe")
 
-#define APPCOPYRIGHT   wstr("Paul Squires, PlanetSquires Software, Copyright (C) 2016-2025") 
-dim shared as CWSTR gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.0"
+#define APPCOPYRIGHT   wstr("Paul Squires, PlanetSquires Software, Copyright (C) 2016-2026") 
+dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.0"
 
 
 'TODO: Refactor AutoSave functionality. Until then, just disable it in the editor.
 #define ENABLE_AUTOSAVE false
 
+' Comment out the following define in order to disable logging.
+'#define LOGGING_ENABLED
+#include once "logging.bas"
 
 #include once "modScintilla.bi"
 #include once "modDeclares.bi"         
@@ -129,6 +133,8 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "frmMainView.inc"
 #include once "frmMainProject.inc"
 #include once "frmMainCompile.inc"
+#include once "frmMainDebug.inc"
+#include once "frmDebug.inc"
 #include once "frmMain.inc"
 
 
@@ -142,6 +148,8 @@ function WinMain( _
             byval nCmdShow      as long _
             ) as long
 
+    LogInit( "_debug.txt" )
+    
     ' Load configuration files 
     gConfig.LoadConfigFile()
     gConfig.LoadKeywords()
@@ -150,7 +158,7 @@ function WinMain( _
     ' Attempt to load the english localization file. This is necessary because
     ' any non-english localization file will have missing entries filled by the
     ' english version.
-    dim as CWSTR wszLocalizationFile
+    dim as DWSTRING wszLocalizationFile
     wszLocalizationFile = AfxGetExePathName + wstr("settings\languages\english.lang")
     if LoadLocalizationFile(wszLocalizationFile, true) = false Then
         MessageBox( 0, _
@@ -176,7 +184,7 @@ function WinMain( _
     
     ' Load the Segoe Fluent Icons ttf file that is used for displaying the various
     ' icons used within the editor.
-    dim as CWSTR wszFontFile 
+    dim as DWSTRING wszFontFile 
     wszFontFile = AfxGetExePathName + "\bin\SegoeFluentIcons.ttf"
     if AddFontResourceEx(wszFontFile.vptr, FR_PRIVATE, NULL) = 0 then
         MessageBox( 0, _
@@ -241,6 +249,8 @@ function WinMain( _
     
     ' Uninitialize the COM library
     CoUninitialize
+
+    LogClose()
 
 end function
 

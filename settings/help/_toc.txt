@@ -25,6 +25,9 @@ FILENAME: keyboard.rtf
 TOPIC: - Common Shortcuts
 FILENAME: common_shortcuts.rtf
 
+TOPIC: Debugger
+FILENAME: debugger.rtf
+
 TOPIC: User Tools
 FILENAME: usertools.rtf
 

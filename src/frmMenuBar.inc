@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ function frmMenuBar_PositionWindows() as LRESULT
     dim id( 0 to ... ) as long = _
         { _
         IDC_MENUBAR_FILE, IDC_MENUBAR_EDIT, IDC_MENUBAR_SEARCH, IDC_MENUBAR_VIEW, _
-        IDC_MENUBAR_PROJECT, IDC_MENUBAR_COMPILE, IDC_MENUBAR_HELP _
+        IDC_MENUBAR_PROJECT, IDC_MENUBAR_COMPILE, IDC_MENUBAR_DEBUG, IDC_MENUBAR_HELP _
         }
 
     redim gMenuBar(ubound(id)) as MENUBAR_ITEM

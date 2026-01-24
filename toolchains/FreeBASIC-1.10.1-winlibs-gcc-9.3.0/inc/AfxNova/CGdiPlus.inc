@@ -29,7 +29,7 @@
 #include once "AfxNova/RGB_Colors.bi"
 #include once "AfxNova/ARGB_Colors.bi"
 #include once "AfxNova/AfxGdiPlus.inc"
-USING AfxNova
+'USING AfxNova
 
 ' ========================================================================================
 ' Macro for debug
@@ -199,7 +199,7 @@ Public:
    m_pEffect AS CGpEffect PTR
    m_auxDataSize AS INT_
    m_auxData AS ANY PTR
-   m_useAuxData AS BOOLEAN
+   m_useAuxData AS BOOL
 
 Public:
    DECLARE CONSTRUCTOR
@@ -207,7 +207,7 @@ Public:
    DECLARE FUNCTION GetEffectPtr () AS CGpEffect PTR
    DEClARE FUNCTION GetAuxDataSize () AS INT_
    DECLARE FUNCTION GetAuxData () AS ANY PTR
-   DECLARE FUNCTION UseAuxData () AS BOOLEAN
+   DECLARE SUB UseAuxData (BYVAL useAuxDataFlag AS BOOL)
    DECLARE FUNCTION GetParameterSize () AS UINT
 
 END TYPE
@@ -244,10 +244,8 @@ Public:
    DECLARE FUNCTION ClearOutputChannel (BYVAL nType AS ColorAdjustType = ColorAdjustTypeDefault) AS GpStatus
    DECLARE FUNCTION SetOutputChannelColorProfile (BYVAL pwszColorProfileFilename AS WSTRING PTR, BYVAL nType AS ColorAdjustType = ColorAdjustTypeDefault) AS GpStatus
    DECLARE FUNCTION ClearOutputChannelColorProfile (BYVAL nType AS ColorAdjustType = ColorAdjustTypeDefault) AS GpStatus
-   ' // map parameter declared as ANY PTR in the two functions below because in the FB headers
-   ' // it is declared as ColorMap PTR for 32 bit and ColorMap_ PTR for 64 bit
-   DECLARE FUNCTION SetRemapTable (BYVAL mapSize AS UINT, BYVAL map AS ANY PTR, BYVAL nType AS ColorAdjustType = ColorAdjustTypeDefault) AS GpStatus
-   DECLARE FUNCTION SetBrushRemapTable (BYVAL mapSize AS UINT, BYVAL map AS ANY PTR) AS GpStatus
+   DECLARE FUNCTION SetRemapTable (BYVAL mapSize AS UINT, BYVAL map AS GpColorMap PTR, BYVAL nType AS ColorAdjustType = ColorAdjustTypeDefault) AS GpStatus
+   DECLARE FUNCTION SetBrushRemapTable (BYVAL mapSize AS UINT, BYVAL map AS GpColorMap PTR) AS GpStatus
    DECLARE FUNCTION ClearRemapTable (BYVAL nType AS ColorAdjustType = ColorAdjustTypeDefault) AS GpStatus
    DECLARE FUNCTION ClearBrushRemapTable () AS GpStatus
    DECLARE FUNCTION SetWrapMode (BYVAL nWrap AS WrapMode, BYVAL colour AS ARGB = &HFF000000, BYVAL clamp AS BOOL = FALSE) AS GpStatus
@@ -282,13 +280,15 @@ Public:
    DECLARE FUNCTION SaveAdd (BYVAL pNewImage AS CGpImage PTR, BYVAL encoderParams AS EncoderParameters PTR) AS GpStatus
    DECLARE FUNCTION GetType () AS ImageType
    DECLARE FUNCTION GetPhysicalDimension (BYVAL psize AS GpSizeF PTR) AS GpStatus
-   DECLARE FUNCTION GetBounds (BYVAL srcRect AS RectF PTR, BYVAL srcUnit AS GpUnit PTR) AS GpStatus
+   DECLARE FUNCTION GetPhysicalDimension () AS GpSizeF
+   DECLARE FUNCTION GetBounds (BYVAL srcRect AS GpRectF PTR, BYVAL srcUnit AS GpUnit PTR) AS GpStatus
    DECLARE FUNCTION GetWidth () AS UINT
    DECLARE FUNCTION GetHeight () AS UINT
    DECLARE FUNCTION GetHorizontalResolution () AS SINGLE
    DECLARE FUNCTION GetVerticalResolution () AS SINGLE
    DECLARE FUNCTION GetFlags () AS UINT
    DECLARE FUNCTION GetRawFormat (BYVAL guidformat AS GUID PTR) AS GpStatus
+   DECLARE FUNCTION GetRawFormat () AS GUID
    DECLARE FUNCTION GetPixelFormat () AS PixelFormat
    DECLARE FUNCTION GetPaletteSize () AS INT_
    DECLARE FUNCTION GetPalette (BYVAL pal AS ColorPalette PTR, BYVAL nSize AS INT_) AS GpStatus
@@ -308,8 +308,6 @@ Public:
    DECLARE FUNCTION SetPropertyItem (BYVAL pitem AS PropertyItem PTR) AS GpStatus
    DECLARE FUNCTION Clone (BYVAL pImage AS CGpImage PTR) AS GpStatus
    DECLARE FUNCTION GetThumbnailImage (BYVAL thumbWidth AS UINT, BYVAL thumbHeight AS UINT, BYVAL pThumbnail AS CGpImage PTR, BYVAL pCallback AS ANY PTR = NULL, BYVAL callbackData AS ANY PTR = NULL) AS GpStatus
-
-' // The following functions don't compile with the FB 32-bit import library
 '#if (GDIPVER >= &h0110)
    DECLARE FUNCTION FindFirstItem (BYVAL pitem AS ImageItemData PTR) AS GpStatus
    DECLARE FUNCTION FindNextItem (BYVAL pitem AS ImageItemData PTR) AS GpStatus
@@ -330,40 +328,45 @@ Public:
    DECLARE CONSTRUCTOR (BYVAL pwszFileName AS WSTRING PTR, BYVAL useEmbeddedColorManagement AS BOOLEAN = FALSE)
    DECLARE CONSTRUCTOR (BYVAL pStream AS IStream PTR, BYVAL useEmbeddedColorManagement AS BOOLEAN = FALSE)
    DECLARE CONSTRUCTOR (BYVAL nWidth AS INT_, BYVAL nHeight AS INT_, BYVAL stride AS INT_, BYVAL pxFormat AS PixelFormat, BYVAL scan0 AS UBYTE PTR)
-   DECLARE CONSTRUCTOR (BYVAL nWidth AS INT_, BYVAL nHeight AS INT_, BYVAL pxFormat AS PixelFormat)
+   DECLARE CONSTRUCTOR (BYVAL nWidth AS INT_, BYVAL nHeight AS INT_, BYVAL pxFormat AS PixelFormat = PixelFormat32bppPARGB)
    DECLARE CONSTRUCTOR (BYVAL nWidth AS INT_, BYVAL nHeight AS INT_, BYVAL pTarget AS CGpGraphics_ PTR)
+   DECLARE CONSTRUCTOR (BYVAL gdiBitmapInfo AS BITMAPINFO PTR, BYVAL gdiBitmapData AS ANY PTR)
+   DECLARE CONSTRUCTOR (BYVAL hbm AS HBITMAP, BYVAL hPal AS HPALETTE = NULL)
+   DECLARE CONSTRUCTOR (BYVAL hicon AS HICON)
+   DECLARE CONSTRUCTOR (BYVAL hInstance AS HINSTANCE, BYREF wszbitmapName AS WSTRING)
 #ifdef IDirectDrawSurface7
    DECLARE CONSTRUCTOR (BYVAL surface AS IDirectDrawSurface7 PTR)
 #endif
-   DECLARE CONSTRUCTOR (BYVAL gdiBitmapInfo AS BITMAPINFO PTR, BYVAL gdiBitmapData AS ANY PTR)
-   DECLARE CONSTRUCTOR (BYVAL hbm AS HBITMAP, BYVAL hPal AS HPALETTE)
-   DECLARE CONSTRUCTOR (BYVAL hicon AS HICON)
-   DECLARE CONSTRUCTOR (BYVAL hInstance AS HINSTANCE, BYVAL pwszbitmapName AS WSTRING PTR)
    DECLARE FUNCTION GetHBITMAP (BYVAL colorBackground AS ARGB, BYVAL hbmReturn AS HBITMAP PTR) AS GpStatus
+   DECLARE FUNCTION GetHBITMAP (BYVAL colorBackground AS ARGB) AS HBITMAP
    DECLARE FUNCTION GetHICON (BYVAL hiconReturn AS HICON PTR) AS GpStatus
+   DECLARE FUNCTION GetHICON () AS HICON
    DECLARE FUNCTION Clone (BYVAL pCloneBitmap AS CGpBitmap PTR) AS GpStatus
    DECLARE FUNCTION Clone (BYVAL x AS SINGLE, BYVAL y AS SINGLE, BYVAL nWidth AS SINGLE, BYVAL nHeight AS SINGLE, BYVAL pxFormat AS PixelFormat, BYVAL pCloneBitmap AS CGpBitmap PTR) AS GpStatus
-   DECLARE FUNCTION Clone (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_, BYVAL pxFormat AS PixelFormat, BYVAL pCloneBitmap AS CGpBitmap PTR) AS GpStatus
+   DECLARE FUNCTION Clone (BYVAL x AS SINGLE, BYVAL y AS SINGLE, BYVAL nWidth AS SINGLE, BYVAL nHeight AS SINGLE, BYVAL pxFormat AS PixelFormat) AS CGpBitmap
+'   DECLARE FUNCTION Clone (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_, BYVAL pxFormat AS PixelFormat, BYVAL pCloneBitmap AS CGpBitmap PTR) AS GpStatus
    DECLARE FUNCTION Clone (BYVAL rcf AS GpRectF PTR, BYVAL pxFormat AS PixelFormat, BYVAL pCloneBitmap AS CGpBitmap PTR) AS GpStatus
    DECLARE FUNCTION Clone (BYVAL rc AS GpRect PTR, BYVAL pxFormat AS PixelFormat, BYVAL pCloneBitmap AS CGpBitmap PTR) AS GpStatus
    DECLARE FUNCTION LockBits (BYVAL rc AS GpRect PTR, BYVAL flags AS UINT, BYVAL pxFormat AS PixelFormat, BYVAL lockedBitmapData AS BitmapData PTR) AS GpStatus
+   DECLARE FUNCTION LockBits (BYVAL rc AS GpRect PTR, BYVAL flags AS UINT, BYVAL pxFormat AS PixelFormat) AS BitmapData
    DECLARE FUNCTION UnlockBits (BYVAL lockedBitmapData AS BitmapData PTR) AS GpStatus
    DECLARE FUNCTION GetPixel (BYVAL x AS LONG, BYVAL y AS LONG, BYVAL colour AS ARGB PTR) AS GpStatus
+   DECLARE FUNCTION GetPixel (BYVAL x AS LONG, BYVAL y AS LONG) AS ARGB
    DECLARE FUNCTION SetPixel (BYVAL x AS LONG, BYVAL y AS LONG, BYVAL colour AS ARGB) AS GpStatus
    DECLARE FUNCTION SetResolution (BYVAL xdpi AS SINGLE, BYVAL ydpi AS SINGLE) AS GpStatus
-
-   ' // The following functions don't compile with the FB 32-bit import library
+   DECLARE FUNCTION SetResolutionForDpi () AS GpStatus
    DECLARE FUNCTION ConvertFormat (BYVAL pxFormat AS PixelFormat, BYVAL nDitherType AS DitherType, BYVAL nPaletteType AS PaletteType, BYVAL colourPalette AS ColorPalette PTR, BYVAL alphaThresholdPercent AS SINGLE) AS GpStatus
    DECLARE FUNCTION InitializePalette (BYVAL colourPalette AS ColorPalette PTR, BYVAL nPaletteType AS PaletteType, BYVAL optimalColors AS INT_, BYVAL useTransparentColor AS BOOL, BYVAL pBitmap AS CGpBitmap PTR) AS GpStatus
    DECLARE FUNCTION GetHistogram (BYVAL nFormat AS HistogramFormat, BYVAL NumberOfEntries AS UINT, BYVAL channel0 AS UINT PTR, BYVAL channel1 AS UINT PTR, BYVAL channel2 AS UINT PTR, BYVAL channel3 AS UINT PTR) AS GpStatus
    DECLARE FUNCTION GetHistogramSize (BYVAL nFormat AS HistogramFormat, BYVAL NumberOfEntries AS UINT PTR) AS GpStatus
-
+   DECLARE FUNCTION GetHistogramSize (BYVAL nFormat AS HistogramFormat) AS UINT
+   DECLARE FUNCTION MakeTransparent (BYVAL transparentColor AS ARGB) AS GpStatus
+   DECLARE FUNCTION MakeTransparent () AS GpStatus
+   
    ' // Effects
-   DECLARE FUNCTION ApplyEffect (BYVAL pBitmap AS CGpBitmap PTR, BYVAL pEffect AS CGpEffect PTR, BYVAL roi AS RECT PTR, _
+   DECLARE FUNCTION ApplyEffect (BYVAL pEffect AS CGpEffect PTR, BYVAL roi AS RECT PTR, _
       BYVAL useAuxData AS BOOLEAN, BYVAL auxData AS ANY PTR PTR, BYVAL auxDataSize AS INT_ PTR) AS GpStatus
-'   DECLARE FUNCTION CreateApplyEffect (BYVAL inputBitmaps AS CGpBitmap PTR PTR, BYVAL pEffect AS CGpEffect PTR, _
-'      BYVAL roi AS RECT PTR, BYVAL outputRect AS RECT PTR, BYVAL outputBitmap AS GpBitmap PTR PTR, BYVAL useAuxData AS BOOL, _
-'      BYVAL auxData AS ANY PTR PTR, BYVAL auxDataSize AS INT_) AS GpStatus
+   DECLARE FUNCTION ApplyEffect (BYVAL pEffect AS CGpEffect PTR, BYVAL roi AS RECT PTR = NULL) AS GpStatus
 
 END TYPE
 ' ########################################################################################
@@ -457,7 +460,7 @@ TYPE CGpTextureBrush EXTENDS CGpBrush
    DECLARE CONSTRUCTOR (BYVAL pImage AS CGpImage PTR, BYVAL nWrapMode AS wrapMode, BYVAL dstRect AS GpRect PTR)
    DECLARE CONSTRUCTOR (BYVAL pImage AS CGpImage PTR, BYVAL nWrapMode AS wrapMode, BYVAL dstRect AS GpRectF PTR)
    DECLARE CONSTRUCTOR (BYVAL pImage AS CGpImage PTR, BYVAL nWrapMode AS wrapMode, BYVAL dstX AS SINGLE, BYVAL dstY AS SINGLE, BYVAL dstWidth AS SINGLE, BYVAL dstHeight AS SINGLE)
-   DECLARE CONSTRUCTOR (BYVAL pImage AS CGpImage ptR, BYVAL nWrapMode AS wrapMode, BYVAL dstX AS INT_, BYVAL dstY AS INT_, BYVAL dstWidth AS INT_, BYVAL dstHeight AS INT_)
+'   DECLARE CONSTRUCTOR (BYVAL pImage AS CGpImage ptR, BYVAL nWrapMode AS wrapMode, BYVAL dstX AS INT_, BYVAL dstY AS INT_, BYVAL dstWidth AS INT_, BYVAL dstHeight AS INT_)
    DECLARE FUNCTION SetTransform (BYVAL pMatrix AS CGpMatrix PTR) AS GpStatus
    DECLARE FUNCTION GetTransform (BYVAL pMatrix AS CGpMatrix PTR) AS GpStatus
    DECLARE FUNCTION ResetTransform () AS GpStatus
@@ -571,8 +574,8 @@ Public:
 Public:
    DECLARE CONSTRUCTOR
    DECLARE CONSTRUCTOR (BYVAL pPen AS CGpPen PTR)
-   DECLARE CONSTRUCTOR (BYVAL colour AS ARGB, BYVAL nWidth AS SINGLE = 1.0)
-   DECLARE CONSTRUCTOR (BYVAL pBrush AS CGpBrush PTR, BYVAL nWidth AS SINGLE = 1.0)
+   DECLARE CONSTRUCTOR (BYVAL colour AS ARGB, BYVAL nWidth AS SINGLE = 1.0, BYVAL unit AS GpUnit = UnitWorld)
+   DECLARE CONSTRUCTOR (BYVAL pBrush AS CGpBrush PTR, BYVAL nWidth AS SINGLE = 1.0, BYVAL unit AS GpUnit = UnitWorld)
    DECLARE DESTRUCTOR
    DECLARE FUNCTION Clone (BYVAL pPen AS CGpPen PTR) AS GpStatus
    DECLARE FUNCTION SetWidth (BYVAL nWidth AS SINGLE) AS GpStatus
@@ -614,7 +617,7 @@ Public:
    DECLARE FUNCTION GetDashPatternCount () AS INT_
    DECLARE FUNCTION GetDashPattern (BYVAL dashArray AS SINGLE PTR, BYVAL nCount AS INT_) AS GpStatus
    DECLARE FUNCTION SetCompoundArray (BYVAL compoundArray AS SINGLE PTR, BYVAL nCount AS INT_) AS GpStatus
-   DECLARE FUNCTION GetCompoundArrayCount () AS GpStatus
+   DECLARE FUNCTION GetCompoundArrayCount () AS INT_
    DECLARE FUNCTION GetCompoundArray (BYVAL compoundArray AS SINGLE PTR, BYVAL nCount AS INT_) AS GpStatus
 
 END TYPE
@@ -678,7 +681,7 @@ Public:
    DECLARE CONSTRUCTOR (BYVAL rcf AS GpRectF PTR)
    DECLARE CONSTRUCTOR (BYVAL rc AS GpRect PTR)
    DECLARE CONSTRUCTOR (BYVAL x AS SINGLE, BYVAL y AS SINGLE, BYVAL nWidth AS SINGLE, BYVAL nHeight AS SINGLE)
-   DECLARE CONSTRUCTOR (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_)
+'   DECLARE CONSTRUCTOR (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_)
    DECLARE CONSTRUCTOR (BYVAL pPath AS CGpGraphicsPath_ PTR)
    DECLARE CONSTRUCTOR (BYVAL regionData AS BYTE PTR, BYVAL nSize AS LONG)
    DECLARE CONSTRUCTOR (BYVAL hRgn AS HRGN)
@@ -707,7 +710,7 @@ Public:
    DECLARE FUNCTION Complement (BYVAL pPath AS CGpGraphicsPath_ PTR) AS GpStatus
    DECLARE FUNCTION Complement (BYVAL pRegion AS CGpRegion pTR) AS GpStatus
    DECLARE FUNCTION Translate (BYVAL dx AS SINGLE, BYVAL dy AS SINGLE) AS GpStatus
-   DECLARE FUNCTION Translate (BYVAL dx AS INT_, BYVAL dy AS INT_) AS GpStatus
+'   DECLARE FUNCTION Translate (BYVAL dx AS INT_, BYVAL dy AS INT_) AS GpStatus
    DECLARE FUNCTION Transform (BYVAL pMatrix AS CGpMatrix PTR) AS GpStatus
    DECLARE FUNCTION GetBounds (BYVAL rc AS GpRectF PTR, BYVAL pGraphics AS CGpGraphics_ PTR) AS GpStatus
    DECLARE FUNCTION GetBounds (BYVAL rc AS GpRect PTR, BYVAL pGraphics AS CGpGraphics_ pTR) AS GpStatus
@@ -720,11 +723,11 @@ Public:
    DECLARE FUNCTION IsVisible (BYVAL pt AS GpPointF PTR, BYVAL pGraphics AS CGpGraphics_ PTR) AS GpStatus
    DECLARE FUNCTION IsVisible (BYVAL pt AS GpPoint PTR, BYVAL pGraphics AS CGpGraphics_ PTR) AS GpStatus
    DECLARE FUNCTION IsVisible (BYVAL x AS SINGLE, BYVAL y AS SINGLE, BYVAL pGraphics AS CGpGraphics_ PTR) AS GpStatus
-   DECLARE FUNCTION IsVisible (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL gpGraphics AS CGpGraphics_ PTR) AS GpStatus
+'   DECLARE FUNCTION IsVisible (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL gpGraphics AS CGpGraphics_ PTR) AS GpStatus
    DECLARE FUNCTION IsVisible (BYVAL rc AS GpRectF PTR, BYVAL pGraphics AS CGpGraphics_ PTR) AS GpStatus
    DECLARE FUNCTION IsVisible (BYVAL rc AS GpRect PTR, BYVAL pGraphics AS CGpGraphics_ PTR) AS GpStatus
    DECLARE FUNCTION IsVisible (BYVAL x AS SINGLE, BYVAL y AS SINGLE, BYVAL nWidth AS SINGLE, BYVAL nHeight AS SINGLE, BYVAL pGraphics AS CGpGraphics_ PTR) AS GpStatus
-   DECLARE FUNCTION IsVisible (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_, BYVAL pGraphics AS CGpGraphics_ PTR) AS GpStatus
+'   DECLARE FUNCTION IsVisible (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_, BYVAL pGraphics AS CGpGraphics_ PTR) AS GpStatus
    DECLARE FUNCTION GetRegionScansCount (BYVAL pMatrix AS CGpMatrix PTR) AS UINT
    DECLARE FUNCTION GetRegionScans (BYVAL pMatrix AS CGpMatrix PTR, BYVAL rects AS GpRectF PTR, BYVAL nCount AS INT_ PTR) AS GpStatus
 
@@ -861,7 +864,7 @@ Public:
    DECLARE FUNCTION GetDigitSubstitutionMethod () AS StringDigitSubstitute
    DECLARE FUNCTION SetTrimming (BYVAL trimming AS StringTrimming) AS GpStatus
    DECLARE FUNCTION GetTrimming () AS StringTrimming
-   DECLARE FUNCTION SetMeasurableCharacterRanges (BYVAL rangeCount AS INT_, BYVAL ranges AS CharacterRange PTR) AS GpStatus
+   DECLARE FUNCTION SetMeasurableCharacterRanges (BYVAL rangeCount AS INT_, BYVAL ranges AS GpCharacterRange PTR) AS GpStatus
    DECLARE FUNCTION GetMeasurableCharacterRangeCount () AS INT_
 
 END TYPE
@@ -910,6 +913,7 @@ Public:
    DECLARE FUNCTION MultiplyTransform (BYVAL pMatrix AS CGpMatrix PTR, BYVAL order AS MatrixOrder = MatrixOrderPrepend) AS GpStatus
    DECLARE FUNCTION TranslateTransform (BYVAL dx AS SINGLE, BYVAL dy AS SINGLE, BYVAL order AS MatrixOrder = MatrixOrderPrepend) AS GpStatus
    DECLARE FUNCTION ScaleTransform (BYVAL sx AS SINGLE, BYVAL sy AS SINGLE, BYVAL order AS MatrixOrder = MatrixOrderPrepend) AS GpStatus
+   DECLARE FUNCTION ScaleTransformForDpi (BYVAL order AS MatrixOrder = MatrixOrderPrepend) AS GpStatus
    DECLARE FUNCTION RotateTransform (BYVAL angle AS SINGLE, BYVAL order AS MatrixOrder = MatrixOrderPrepend) AS GpStatus
    DECLARE FUNCTION GetTransform (BYVAL pMatrix AS CGpMatrix PTR) AS GpStatus
    DECLARE FUNCTION SetPageUnit (BYVAL unit AS GpUnit) AS GpStatus
@@ -922,33 +926,33 @@ Public:
    DECLARE FUNCTION TransformPoints (BYVAL destSpace AS CoordinateSpace, BYVAL srcSpace AS CoordinateSpace, BYVAL pts AS GpPoint PTR, BYVAL nCount AS LONG) AS GpStatus
    DECLARE FUNCTION GetNearestColor (BYVAL colour AS ARGB PTR) AS GpStatus
    DECLARE FUNCTION DrawLine (BYVAL pPen AS CGpPen PTR, BYVAL x1 AS SINGLE, BYVAL y1 AS SINGLE, BYVAL x2 AS SINGLE, BYVAL y2 AS SINGLE) AS GpStatus
-   DECLARE FUNCTION DrawLine (BYVAL pPen AS CGpPen PTR, BYVAL x1 AS INT_, BYVAL y1 AS INT_, BYVAL x2 AS INT_, BYVAL y2 AS INT_) AS GpStatus
+'   DECLARE FUNCTION DrawLine (BYVAL pPen AS CGpPen PTR, BYVAL x1 AS INT_, BYVAL y1 AS INT_, BYVAL x2 AS INT_, BYVAL y2 AS INT_) AS GpStatus
    DECLARE FUNCTION DrawLine (BYVAL pPen AS CGpPen PTR, BYVAL pt1 AS GpPointF PTR, BYVAL pt2 AS GpPointF PTR) AS GpStatus
    DECLARE FUNCTION DrawLine (BYVAL pPen AS CGpPen PTR, BYVAL pt1 AS GpPoint PTR, BYVAL pt2 AS GpPoint PTR) AS GpStatus
    DECLARE FUNCTION DrawLines (BYVAL pPen AS CGpPen PTR, BYVAL pts AS GpPointF PTR, BYVAL nCount AS LONG) AS GpStatus
    DECLARE FUNCTION DrawLines (BYVAL pPen AS CGpPen PTR, BYVAL pts AS GpPoint PTR, BYVAL nCount AS LONG) AS GpStatus
    DECLARE FUNCTION DrawArc (BYVAL pPen AS CGpPen PTR, BYVAL x AS SINGLE, BYVAL y AS SINGLE, BYVAL nWidth AS SINGLE, BYVAL nHeight AS SINGLE, BYVAL startAngle AS SINGLE, BYVAL sweepAngle AS SINGLE) AS GpStatus
-   DECLARE FUNCTION DrawArc (BYVAL pPen AS CGpPen PTR, BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_, BYVAL startAngle AS SINGLE, BYVAL sweepAngle AS SINGLE) AS GpStatus
+'   DECLARE FUNCTION DrawArc (BYVAL pPen AS CGpPen PTR, BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_, BYVAL startAngle AS SINGLE, BYVAL sweepAngle AS SINGLE) AS GpStatus
    DECLARE FUNCTION DrawArc (BYVAL pPen AS CGpPen PTR, BYVAL rc AS GpRectF PTR, BYVAL startAngle AS SINGLE, BYVAL sweepAngle AS SINGLE) AS GpStatus
    DECLARE FUNCTION DrawArc (BYVAL pPen AS CGpPen PTR, BYVAL rc AS GpRect PTR, BYVAL startAngle AS SINGLE, BYVAL sweepAngle AS SINGLE) AS GpStatus
    DECLARE FUNCTION DrawBezier (BYVAL pPen AS CGpPen PTR, BYVAL x1 AS SINGLE, BYVAL y1 AS SINGLE, BYVAL x2 AS SINGLE, BYVAL y2 AS SINGLE, BYVAL x3 AS SINGLE, BYVAL y3 AS SINGLE, BYVAL x4 AS SINGLE, BYVAL y4 AS SINGLE) AS GpStatus
-   DECLARE FUNCTION DrawBezier (BYVAL pPen AS CGpPen PTR, BYVAL x1 AS INT_, BYVAL y1 AS INT_, BYVAL x2 AS INT_, BYVAL y2 AS INT_, BYVAL x3 AS INT_, BYVAL y3 AS INT_, BYVAL x4 AS INT_, BYVAL y4 AS INT_) AS GpStatus
+'   DECLARE FUNCTION DrawBezier (BYVAL pPen AS CGpPen PTR, BYVAL x1 AS INT_, BYVAL y1 AS INT_, BYVAL x2 AS INT_, BYVAL y2 AS INT_, BYVAL x3 AS INT_, BYVAL y3 AS INT_, BYVAL x4 AS INT_, BYVAL y4 AS INT_) AS GpStatus
    DECLARE FUNCTION DrawBezier (BYVAL pPen AS CGpPen PTR, BYVAL pt1 AS GpPointF PTR, BYVAL pt2 AS GpPointF PTR, BYVAL pt3 AS GpPointF PTR, BYVAL pt4 AS GpPointF PTR) AS GpStatus
    DECLARE FUNCTION DrawBezier (BYVAL pPen AS CGpPen PTR, BYVAL pt1 AS GpPoint PTR, BYVAL pt2 AS GpPoint PTR, BYVAL pt3 AS GpPoint PTR, BYVAL pt4 AS GpPoint PTR) AS GpStatus
    DECLARE FUNCTION DrawBeziers (BYVAL pPen AS CGpPen PTR, BYVAL pts AS GpPointF PTR, BYVAL nCount AS INT_) AS GpStatus
    DECLARE FUNCTION DrawBeziers (BYVAL pPen AS CGpPen PTR, BYVAL pts AS GpPoint PTR, BYVAL nCount AS INT_) AS GpStatus
    DECLARE FUNCTION DrawRectangle (BYVAL pPen AS CGpPen PTR, BYVAL x AS SINGLE, BYVAL y AS SINGLE, BYVAL nWidth AS SINGLE, BYVAL nHeight AS SINGLE) AS GpStatus
-   DECLARE FUNCTION DrawRectangle (BYVAL pPen AS CGpPen PTR, BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_) AS GpStatus
+'   DECLARE FUNCTION DrawRectangle (BYVAL pPen AS CGpPen PTR, BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_) AS GpStatus
    DECLARE FUNCTION DrawRectangle (BYVAL pPen AS CGpPen PTR, BYVAL rc AS GpRectF PTR) AS GpStatus
    DECLARE FUNCTION DrawRectangle (BYVAL pPen AS CGpPen PTR, BYVAL rc AS GpRect PTR) AS GpStatus
    DECLARE FUNCTION DrawRectangles (BYVAL pPen AS CGpPen PTR, BYVAL rects AS GpRectF PTR, BYVAL nCount AS INT_) AS GpStatus
    DECLARE FUNCTION DrawRectangles (BYVAL pPen AS CGpPen PTR, BYVAL rects AS GpRect PTR, BYVAL nCount AS INT_) AS GpStatus
    DECLARE FUNCTION DrawEllipse (BYVAL pPen AS CGpPen PTR, BYVAL x AS SINGLE, BYVAL y AS SINGLE, BYVAL nWidth AS SINGLE, BYVAL nHeight AS SINGLE) AS GpStatus
-   DECLARE FUNCTION DrawEllipse (BYVAL pPen AS CGpPen PTR, BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_) AS GpStatus
+'   DECLARE FUNCTION DrawEllipse (BYVAL pPen AS CGpPen PTR, BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_) AS GpStatus
    DECLARE FUNCTION DrawEllipse (BYVAL pPen AS CGpPen PTR, BYVAL rc AS GpRectF PTR) AS GpStatus
    DECLARE FUNCTION DrawEllipse (BYVAL pPen AS CGpPen PTR, BYVAL rc AS GpRect PTR) AS GpStatus
    DECLARE FUNCTION DrawPie (BYVAL pPen AS CGpPen PTR, BYVAL x AS SINGLE, BYVAL y AS SINGLE, BYVAL nWidth AS SINGLE, BYVAL nHeight AS SINGLE, BYVAL startAngle AS SINGLE, BYVAL sweepAngle AS SINGLE) AS GpStatus
-   DECLARE FUNCTION DrawPie (BYVAL pPen AS CGpPen PTR, BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_, BYVAL startAngle AS SINGLE, BYVAL sweepAngle AS SINGLE) AS GpStatus
+'   DECLARE FUNCTION DrawPie (BYVAL pPen AS CGpPen PTR, BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_, BYVAL startAngle AS SINGLE, BYVAL sweepAngle AS SINGLE) AS GpStatus
    DECLARE FUNCTION DrawPie (BYVAL pPen AS CGpPen PTR, BYVAL rc AS GpRectF PTR, BYVAL startAngle AS SINGLE, BYVAL sweepAngle AS SINGLE) AS GpStatus
    DECLARE FUNCTION DrawPie (BYVAL pPen AS CGpPen PTR, BYVAL rc AS GpRect PTR, BYVAL startAngle AS SINGLE, BYVAL sweepAngle AS SINGLE) AS GpStatus
    DECLARE FUNCTION DrawPolygon (BYVAL pPen AS CGpPen PTR, BYVAL pts AS GpPointF PTR, BYVAL nCount AS LONG) AS GpStatus
@@ -968,7 +972,7 @@ Public:
    DECLARE FUNCTION FillRectangle (BYVAL pBrush AS CGpBrush PTR, BYVAL rc AS GpRectF PTR) AS GpStatus
    DECLARE FUNCTION FillRectangle (BYVAL pBrush AS CGpBrush PTR, BYVAL rc AS GpRect PTR) AS GpStatus
    DECLARE FUNCTION FillRectangle (BYVAL pBrush AS CGpBrush PTR, BYVAL x AS SINGLE, BYVAL y AS SINGLE, BYVAL nWidth AS SINGLE, BYVAL nHeight AS SINGLE) AS GpStatus
-   DECLARE FUNCTION FillRectangle (BYVAL pBrush AS CGpBrush PTR, BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_) AS GpStatus
+'   DECLARE FUNCTION FillRectangle (BYVAL pBrush AS CGpBrush PTR, BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_) AS GpStatus
    DECLARE FUNCTION FillRectangles (BYVAL pBrush AS CGpBrush PTR, BYVAL rects AS GpRectF PTR, BYVAL nCount AS INT_) AS GpStatus
    DECLARE FUNCTION FillRectangles (BYVAL pBrush AS CGpBrush PTR, BYVAL rects AS GpRect PTR, BYVAL nCount AS INT_) AS GpStatus
    DECLARE FUNCTION FillPolygon (BYVAL pBrush AS CGpBrush PTR, BYVAL pts AS GpPointF PTR, BYVAL nCount AS INT_) AS GpStatus
@@ -976,11 +980,11 @@ Public:
    DECLARE FUNCTION FillPolygon (BYVAL pBrush AS CGpBrush PTR, BYVAL pts AS GpPointF PTR, BYVAL nCount AS INT_, BYVAL nFillMode AS FillMode) AS GpStatus
    DECLARE FUNCTION FillPolygon (BYVAL pBrush AS CGpBrush PTR, BYVAL pts AS GpPoint PTR, BYVAL nCount AS INT_, BYVAL nFillMode AS FillMode) AS GpStatus
    DECLARE FUNCTION FillEllipse (BYVAL pBrush AS CGpBrush PTR, BYVAL x AS SINGLE, BYVAL y AS SINGLE, BYVAL nWidth AS SINGLE, BYVAL nHeight AS SINGLE) AS GpStatus
-   DECLARE FUNCTION FillEllipse (BYVAL pBrush AS CGpBrush PTR, BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_) AS GpStatus
+'   DECLARE FUNCTION FillEllipse (BYVAL pBrush AS CGpBrush PTR, BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_) AS GpStatus
    DECLARE FUNCTION FillEllipse (BYVAL pBrush AS CGpBrush PTR, BYVAL rc AS GpRectF PTR) AS GpStatus
    DECLARE FUNCTION FillEllipse (BYVAL pBrush AS CGpBrush PTR, BYVAL rc AS GpRect PTR) AS GpStatus
    DECLARE FUNCTION FillPie (BYVAL pBrush AS CGpBrush PTR, BYVAL x AS SINGLE, BYVAL y AS SINGLE, BYVAL nWidth AS SINGLE, BYVAL nHeight AS SINGLE, BYVAL startAngle AS SINGLE, BYVAL sweepAngle AS SINGLE) AS GpStatus
-   DECLARE FUNCTION FillPie (BYVAL pBrush AS CGpBrush PTR, BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_, BYVAL startAngle AS SINGLE, BYVAL sweepAngle AS SINGLE) AS GpStatus
+'   DECLARE FUNCTION FillPie (BYVAL pBrush AS CGpBrush PTR, BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_, BYVAL startAngle AS SINGLE, BYVAL sweepAngle AS SINGLE) AS GpStatus
    DECLARE FUNCTION FillPie (BYVAL pBrush AS CGpBrush PTR, BYVAL rc AS GpRectF PTR, BYVAL startAngle AS SINGLE, BYVAL sweepAngle AS SINGLE) AS GpStatus
    DECLARE FUNCTION FillPie (BYVAL pBrush AS CGpBrush PTR, BYVAL rc AS GpRect PTR, BYVAL startAngle AS SINGLE, BYVAL sweepAngle AS SINGLE) AS GpStatus
    DECLARE FUNCTION FillPath (BYVAL pBrush AS CGpBrush PTR, BYVAL pPath AS CGpGraphicsPath_ PTR) AS GpStatus
@@ -997,17 +1001,19 @@ Public:
    DECLARE FUNCTION DrawString (BYVAL pwszString AS WSTRING PTR, BYVAL length AS INT_, BYVAL pFont AS CGpFont PTR, BYVAL x AS SINGLE, BYVAL y AS SINGLE, BYVAL pBrush AS CGpBrush PTR) AS GpStatus
    DECLARE FUNCTION DrawString (BYVAL pwszString AS WSTRING PTR, BYVAL length AS INT_, BYVAL pFont AS CGpFont PTR, BYVAL origin AS GpPointF PTR, BYVAL pStringFormat AS CGpStringFormat PTR, BYVAL pBrush AS CGpBrush PTR) AS GpStatus
    DECLARE FUNCTION DrawString (BYVAL pwszString AS WSTRING PTR, BYVAL length AS INT_, BYVAL pFont AS CGpFont PTR, BYVAL x AS SINGLE, BYVAL y AS SINGLE, BYVAL pStringFormat AS CGpStringFormat PTR, BYVAL pBrush AS CGpBrush PTR) AS GpStatus
-   DECLARE FUNCTION MeasureString (BYVAL pwszString AS WSTRING PTR, BYVAL length AS INT_, BYVAL pFont AS CGpFont PTR, BYVAL layoutRect AS GpRectF PTR, BYVAL pStringFormat AS CGpStringFormat PTR, BYVAL boundingBox AS GpRectF PTR, BYREF codepointsFitted AS INT_ = 0, BYREF linesFilled AS INT_ = 0) AS GpStatus
-   DECLARE FUNCTION MeasureString (BYVAL pwszString AS WSTRING PTR, BYVAL length AS INT_, BYVAL pFont AS CGpFont PTR, BYVAL layoutRectSize AS GpSizeF PTR, BYVAL pStringFormat AS CGpStringFormat PTR, BYVAL size AS GpSizeF PTR, BYREF codepointsFitted AS INT_ = 0, BYREF linesFilled AS INT_ = 0) AS GpStatus
+   DECLARE FUNCTION MeasureString (BYVAL pwszString AS WSTRING PTR, BYVAL length AS INT_, BYVAL pFont AS CGpFont PTR, BYVAL layoutRect AS GpRectF PTR, BYVAL pStringFormat AS CGpStringFormat PTR, BYVAL boundingBox AS GpRectF PTR, BYREF codepointsFitted AS INT_, BYREF linesFilled AS INT_) AS GpStatus
+   DECLARE FUNCTION MeasureString (BYVAL pwszString AS WSTRING PTR, BYVAL length AS INT_, BYVAL pFont AS CGpFont PTR, BYVAL layoutRectSize AS GpSizeF PTR, BYVAL pStringFormat AS CGpStringFormat PTR, BYVAL size AS GpSizeF PTR, BYREF codepointsFitted AS INT_, BYREF linesFilled AS INT_) AS GpStatus
    DECLARE FUNCTION MeasureString (BYVAL pwszString AS WSTRING PTR, BYVAL length AS INT_, BYVAL pFont AS CGpFont PTR, BYVAL origin AS GpPointF PTR, BYVAL pStringFormat AS CGpStringFormat PTR, BYVAL boundingBox AS GpRectF PTR) AS GpStatus
    DECLARE FUNCTION MeasureString (BYVAL pwszString AS WSTRING PTR, BYVAL length AS INT_, BYVAL pFont AS CGpFont PTR, BYVAL layoutRect AS GpRectF PTR, BYVAL pStringFormat AS CGpStringFormat PTR, BYVAL boundingBox AS GpRectF PTR) AS GpStatus
    DECLARE FUNCTION MeasureString (BYVAL pwszString AS WSTRING PTR, BYVAL length AS INT_, BYVAL pFont AS CGpFont PTR, BYVAL layoutRect AS GpRectF PTR, BYVAL boundingBox AS GpRectF PTR) AS GpStatus
    DECLARE FUNCTION MeasureString (BYVAL pwszString AS WSTRING PTR, BYVAL length AS INT_, BYVAL pFont AS CGpFont PTR, BYVAL origin AS GpPointF PTR, BYVAL boundingBox AS GpRectF PTR) AS GpStatus
    DECLARE FUNCTION MeasureCharacterRanges (BYVAL pwszString AS WSTRING PTR, BYVAL length AS INT_, BYVAL pFont AS CGpFont PTR, _
       BYVAL layoutRect AS GpRectF PTR, BYVAL pStringFormat AS CGpStringFormat PTR, BYVAL regionCount AS INT_, BYVAL regions AS CGpRegion PTR) AS GpStatus
-   DECLARE FUNCTION DrawDriverString (BYVAL rgText AS UINT16 PTR, BYVAL length AS LONG, BYVAL pFont AS CGpFont PTR, BYVAL pBrush AS CGpBrush PTR, BYVAL positions AS ANY PTR, BYVAL flags AS LONG, BYVAL pMatrix AS CGpMatrix PTR) AS GpStatus
+   DECLARE FUNCTION DrawDriverString (BYVAL rgText AS UINT16 PTR, BYVAL length AS LONG, BYVAL pFont AS CGpFont PTR, BYVAL pBrush AS CGpBrush PTR, BYVAL positions AS ANY PTR, BYVAL flags AS LONG, BYVAL pMatrix AS CGpMatrix PTR = NULL) AS GpStatus
    DECLARE FUNCTION MeasureDriverString (BYVAL pText AS UINT16 PTR, BYVAL length AS LONG, BYVAL pFont AS CGpFont PTR, _
       BYVAL positions AS ANY PTR, BYVAL flags AS LONG, BYVAL pMatrix AS CGpMatrix PTR, BYVAL boundingBox AS GpRectF PTR) AS GpStatus
+   DECLARE FUNCTION MeasureDriverString (BYVAL pText AS UINT16 PTR, BYVAL length AS LONG, BYVAL pFont AS CGpFont PTR, _
+      BYVAL positions AS ANY PTR, BYVAL flags AS LONG, BYVAL pMatrix AS CGpMatrix PTR = NULL) AS GpRectF
    DECLARE FUNCTION DrawCachedBitmap (BYVAL gpCachedBitmap AS CGpCachedBitmap PTR, BYVAL x AS LONG, BYVAL y AS LONG) AS GpStatus
    DECLARE FUNCTION DrawImage (BYVAL pImage AS CGpImage PTR, BYVAL pt AS GpPointF PTR) AS GpStatus
    DECLARE FUNCTION DrawImage (BYVAL pImage AS CGpImage PTR, BYVAL x AS SINGLE, BYVAL y AS SINGLE) AS GpStatus
@@ -1020,7 +1026,11 @@ Public:
    DECLARE FUNCTION DrawImage (BYVAL pImage AS CGpImage PTR, BYVAL destPoints AS GpPointF PTR, BYVAL nCount AS INT_) AS GpStatus
    DECLARE FUNCTION DrawImage (BYVAL pImage AS CGpImage PTR, BYVAL destPoints AS GpPoint PTR, BYVAL nCount AS INT_) AS GpStatus
    DECLARE FUNCTION DrawImage (BYVAL pImage AS CGpImage PTR, BYVAL x AS SINGLE, BYVAL y AS SINGLE, BYVAL srcx AS SINGLE, BYVAL srcy AS SINGLE, BYVAL srcwidth AS SINGLE, BYVAL srcheight AS SINGLE, BYVAL srcUnit AS gpUnit) AS GpStatus
-   DECLARE FUNCTION DrawImage (BYVAL pImage AS CGpImage PTR, BYVAL x AS INT_, BYVAL y AS INT_, BYVAL srcx AS INT_, BYVAL srcy AS INT_, BYVAL srcwidth AS INT_, BYVAL srcheight AS INT_, BYVAL srcUnit AS gpUnit) AS GpStatus
+'   DECLARE FUNCTION DrawImage (BYVAL pImage AS CGpImage PTR, BYVAL x AS INT_, BYVAL y AS INT_, BYVAL srcx AS INT_, BYVAL srcy AS INT_, BYVAL srcwidth AS INT_, BYVAL srcheight AS INT_, BYVAL srcUnit AS gpUnit) AS GpStatus
+   DECLARE FUNCTION DrawImage (BYVAL pImage AS CGpImage PTR, BYVAL x AS SINGLE, BYVAL y AS SINGLE, _
+      BYVAL srcrect AS GpRectF PTR, BYVAL srcUnit AS GpUnit) AS GpStatus
+   DECLARE FUNCTION DrawImage (BYVAL pImage AS CGpImage PTR, BYVAL x AS INT_, BYVAL y AS INT_, _
+      BYVAL srcrect AS GpRect PTR, BYVAL srcUnit AS GpUnit) AS GpStatus
    DECLARE FUNCTION DrawImage (BYVAL pImage AS CGpImage PTR, BYVAL destRect AS GpRectF PTR, _
       BYVAL srcx AS SINGLE, BYVAL srcy AS SINGLE, BYVAL srcwidth AS SINGLE, BYVAL srcheight AS SINGLE, BYVAL srcUnit AS GpUnit, _
       BYVAL pImageAttributes AS CGpImageAttributes PTR = NULL, BYVAL pcallback AS DrawImageAbort = NULL, BYVAL pcallbackData AS ANY PTR = NULL) AS GpStatus
@@ -1033,24 +1043,24 @@ Public:
    DECLARE FUNCTION DrawImage (BYVAL pImage AS CGpImage PTR, BYVAL destPoints AS GpPoint PTR, BYVAL nCount AS INT_, _
       BYVAL srcx AS INT_, BYVAL srcy AS INT_, BYVAL srcwidth AS INT_, BYVAL srcheight AS INT_, BYVAL srcUnit AS GpUnit, _
       BYVAL pImageAttributes AS CGpImageAttributes PTR = NULL, BYVAL pcallback AS DrawImageAbort = NULL, BYVAL pcallbackData AS ANY PTR = NULL) AS GpStatus
-   DECLARE FUNCTION DrawImage (BYVAL pImage AS CGpImage PTR, BYVAL destx AS SINGLE, _
-      BYVAL desty AS SINGLE, BYVAL destWidth AS SINGLE, BYVAL destHeight AS SINGLE, _
+   DECLARE FUNCTION DrawImage (BYVAL pImage AS CGpImage PTR, BYVAL destx AS SINGLE, BYVAL desty AS SINGLE, BYVAL destWidth AS SINGLE, BYVAL destHeight AS SINGLE, _
       BYVAL srcx AS SINGLE, BYVAL srcy AS SINGLE, BYVAL srcwidth AS SINGLE, BYVAL srcheight AS SINGLE, BYVAL srcUnit AS GpUnit, _
       BYVAL pImageAttributes AS CGpImageAttributes PTR = NULL, BYVAL pcallback AS DrawImageAbort = NULL, BYVAL pcallbackData AS ANY PTR = NULL) AS GpStatus
-   DECLARE FUNCTION DrawImage (BYVAL pImage AS CGpImage PTR, BYVAL destx AS INT_, BYVAL desty AS INT_, BYVAL destWidth AS INT_, BYVAL destHeight AS INT_, _
-      BYVAL srcx AS INT_, BYVAL srcy AS INT_, BYVAL srcwidth AS INT_, BYVAL srcheight AS INT_, BYVAL srcUnit AS GpUnit, _
-      BYVAL pImageAttributes AS CGpImageAttributes PTR = NULL, BYVAL pcallback AS DrawImageAbort = NULL, BYVAL pcallbackData AS ANY PTR = NULL) AS GpStatus
+'   DECLARE FUNCTION DrawImage (BYVAL pImage AS CGpImage PTR, BYVAL destx AS INT_, BYVAL desty AS INT_, BYVAL destWidth AS INT_, BYVAL destHeight AS INT_, _
+'      BYVAL srcx AS INT_, BYVAL srcy AS INT_, BYVAL srcwidth AS INT_, BYVAL srcheight AS INT_, BYVAL srcUnit AS GpUnit, _
+'      BYVAL pImageAttributes AS CGpImageAttributes PTR = NULL, BYVAL pcallback AS DrawImageAbort = NULL, BYVAL pcallbackData AS ANY PTR = NULL) AS GpStatus
    DECLARE FUNCTION DrawImage (BYVAL pImage AS CGpImage PTR, BYVAL destRect AS GpRectF PTR, _
       BYVAL sourceRect AS GpRectF PTR, BYVAL srcUnit AS GpUnit, BYVAL pImageAttributes AS CGpImageAttributes PTR = NULL) AS GpStatus
    DECLARE FUNCTION DrawImage (BYVAL pImage AS CGpImage PTR, BYVAL destRect AS GpRect PTR, _
       BYVAL sourceRect AS GpRect PTR, BYVAL srcUnit AS GpUnit, BYVAL pImageAttributes AS CGpImageAttributes PTR = NULL) AS GpStatus
    DECLARE FUNCTION DrawImage (BYVAL pImage AS CGpImage PTR, BYVAL destx AS SINGLE, BYVAL desty AS SINGLE, BYVAL destWidth AS SINGLE, BYVAL destHeight AS SINGLE, _
       BYVAL srcx AS SINGLE, BYVAL srcy AS SINGLE, BYVAL srcWidth AS SINGLE, BYVAL srcHeight AS SINGLE, BYVAL srcUnit AS GpUnit, BYVAL pImageAttributes AS CGpImageAttributes PTR = NULL) AS GpStatus
-   DECLARE FUNCTION DrawImage (BYVAL pImage AS CGpImage PTR, BYVAL destx AS INT_, BYVAL desty AS INT_, BYVAL destWidth AS INT_, BYVAL destHeight AS INT_, _
-      BYVAL srcx AS INT_, BYVAL srcy AS INT_, BYVAL srcWidth AS INT_, BYVAL srcHeight AS INT_, BYVAL srcUnit AS GpUnit, BYVAL pImageAttributes AS CGpImageAttributes PTR = NULL) AS GpStatus
-   ' // Begin Metafiles ----------------------------------
+'   DECLARE FUNCTION DrawImage (BYVAL pImage AS CGpImage PTR, BYVAL destx AS INT_, BYVAL desty AS INT_, BYVAL destWidth AS INT_, BYVAL destHeight AS INT_, _
+'      BYVAL srcx AS INT_, BYVAL srcy AS INT_, BYVAL srcWidth AS INT_, BYVAL srcHeight AS INT_, BYVAL srcUnit AS GpUnit, BYVAL pImageAttributes AS CGpImageAttributes PTR = NULL) AS GpStatus
+   ' // Effects ------------------------------------------
    DECLARE FUNCTION DrawImageFX (BYVAL pImage AS CGpImage PTR, BYVAL sourceRect AS GpRectF PTR, BYVAL pMatrix AS CGpMatrix PTR, _
       BYVAL pEffect AS CGpEffect PTR, BYVAL pImageAttributes AS CGpImageAttributes PTR, BYVAL srcUnit AS GpUnit) AS GpStatus
+   ' // Begin Metafiles ----------------------------------
    DECLARE FUNCTION EnumerateMetafileDestPoint (BYVAL pMetafile AS CGpMetafile PTR, BYVAL destPoint AS GpPointF PTR, _
       BYVAL pCallback AS EnumerateMetafileProc = NULL, BYVAL pCallbackData AS ANY PTR = NULL, BYVAL pImageAttributes AS CGpImageAttributes PTR = NULL) AS GpStatus
    DECLARE FUNCTION EnumerateMetafileDestRect (BYVAL pMetafile AS CGpMetafile PTR, BYVAL destRect AS GpRectF PTR, BYVAL pCallback AS EnumerateMetafileProc, _
@@ -1079,11 +1089,11 @@ Public:
    DECLARE FUNCTION IntersectClip (BYVAL rc AS GpRect PTR) AS GpStatus
    DECLARE FUNCTION IntersectClip (BYVAL pRegion AS CGpRegion PTR) AS GpStatus
    DECLARE FUNCTION IntersectClip (BYVAL x AS SINGLE, BYVAL y AS SINGLE, BYVAL nWidth AS SINGLE, BYVAL nHeight AS SINGLE) AS GpStatus
-   DECLARE FUNCTION IntersectClip (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_) AS GpStatus
+'   DECLARE FUNCTION IntersectClip (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_) AS GpStatus
    DECLARE FUNCTION ExcludeClip (BYVAL rcf AS GpRectF PTR) AS GpStatus
    DECLARE FUNCTION ExcludeClip (BYVAL rc AS GpRect PTR) AS GpStatus
    DECLARE FUNCTION ExcludeClip (BYVAL x AS SINGLE, BYVAL y AS SINGLE, BYVAL nWidth AS SINGLE, BYVAL nHeight AS SINGLE) AS GpStatus
-   DECLARE FUNCTION ExcludeClip (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_) AS GpStatus
+'   DECLARE FUNCTION ExcludeClip (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_) AS GpStatus
    DECLARE FUNCTION ExcludeClip (BYVAL pRegion AS CGpRegion PTR) AS GpStatus
    DECLARE FUNCTION ResetClip () AS GpStatus
    DECLARE FUNCTION TranslateClip (BYVAL dx AS SINGLE, BYVAL dy AS SINGLE) AS GpStatus
@@ -1097,11 +1107,11 @@ Public:
    DECLARE FUNCTION IsVisible (BYVAL pt AS GpPointF PTR) AS BOOLEAN
    DECLARE FUNCTION IsVisible (BYVAL pt AS GpPoint PTR) AS BOOLEAN
    DECLARE FUNCTION IsVisible (BYVAL x AS SINGLE, BYVAL y AS SINGLE) AS BOOLEAN
-   DECLARE FUNCTION IsVisible (BYVAL x AS INT_, BYVAL y AS INT_) AS BOOLEAN
+'   DECLARE FUNCTION IsVisible (BYVAL x AS INT_, BYVAL y AS INT_) AS BOOLEAN
    DECLARE FUNCTION IsVisible (BYVAL rcf AS GpRectF PTR) AS BOOLEAN
    DECLARE FUNCTION IsVisible (BYVAL rc AS GpRect PTR) AS BOOLEAN
    DECLARE FUNCTION IsVisible (BYVAL x AS SINGLE, BYVAL y AS SINGLE, BYVAL nWidth AS SINGLE, BYVAL nHeight AS SINGLE) AS BOOLEAN
-   DECLARE FUNCTION IsVisible (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_) AS BOOLEAN
+'   DECLARE FUNCTION IsVisible (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_) AS BOOLEAN
    DECLARE FUNCTION Save () AS GraphicsState
    DECLARE FUNCTION Restore (BYVAL gstate AS GraphicsState) AS GpStatus
    DECLARE FUNCTION BeginContainer () AS GraphicsContainer
@@ -1140,18 +1150,19 @@ Public:
    DECLARE FUNCTION ClearMarkers () AS GpStatus
    DECLARE FUNCTION Reverse () AS GpStatus
    DECLARE FUNCTION GetLastPoint (BYVAL lastPoint AS GpPointF PTR) AS GpStatus
+   DECLARE FUNCTION GetLastPoint () AS GpPointF
    DECLARE FUNCTION AddLine (BYVAL x1 AS SINGLE, BYVAL y1 AS SINGLE, BYVAL x2 AS SINGLE, BYVAL y2 AS SINGLE) AS GpStatus
-   DECLARE FUNCTION AddLine (BYVAL x1 AS INT_, BYVAL y1 AS INT_, BYVAL x2 AS INT_, BYVAL y2 AS INT_) AS GpStatus
+'   DECLARE FUNCTION AddLine (BYVAL x1 AS INT_, BYVAL y1 AS INT_, BYVAL x2 AS INT_, BYVAL y2 AS INT_) AS GpStatus
    DECLARE FUNCTION AddLine (BYVAL pt1 AS GpPointF PTR, BYVAL pt2 AS GpPointF PTR) AS GpStatus
    DECLARE FUNCTION AddLine (BYVAL pt1 AS GpPoint PTR, BYVAL pt2 AS GpPoint PTR) AS GpStatus
    DECLARE FUNCTION AddLines (BYVAL pts AS GpPointF PTR, BYVAL nCount AS INT_) AS GpStatus
    DECLARE FUNCTION AddLines (BYVAL pts AS GpPoint PTR, BYVAL nCount AS INT_) AS GpStatus
    DECLARE FUNCTION AddArc (BYVAL x AS SINGLE, BYVAL y AS SINGLE, BYVAL width_ AS SINGLE, BYVAL height_ AS SINGLE, BYVAL startAngle AS SINGLE, BYVAL sweepAngle AS SINGLE) AS GpStatus
+'   DECLARE FUNCTION AddArc (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL width_ AS INT_, BYVAL height_ AS INT_, BYVAL startAngle AS SINGLE, BYVAL sweepAngle AS SINGLE) AS GpStatus
    DECLARE FUNCTION AddArc (BYVAL rcf AS GpRectF PTR, BYVAL startAngle AS SINGLE, BYVAL sweepAngle AS SINGLE) AS GpStatus
-   DECLARE FUNCTION AddArc (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL width_ AS INT_, BYVAL height_ AS INT_, BYVAL startAngle AS SINGLE, BYVAL sweepAngle AS SINGLE) AS GpStatus
    DECLARE FUNCTION AddArc (BYVAL rc AS GpRect PTR, BYVAL startAngle AS SINGLE, BYVAL sweepAngle AS SINGLE) AS GpStatus
    DECLARE FUNCTION AddBezier (BYVAL x1 AS SINGLE, BYVAL y1 AS SINGLE, BYVAL x2 AS SINGLE, BYVAL y2 AS SINGLE, BYVAL x3 AS SINGLE, BYVAL y3 AS SINGLE, BYVAL x4 AS SINGLE, BYVAL y4 AS SINGLE) AS GpStatus
-   DECLARE FUNCTION AddBezier (BYVAL x1 AS INT_, BYVAL y1 AS INT_, BYVAL x2 AS INT_, BYVAL y2 AS INT_, BYVAL x3 AS INT_, BYVAL y3 AS INT_, BYVAL x4 AS INT_, BYVAL y4 AS INT_) AS GpStatus
+'   DECLARE FUNCTION AddBezier (BYVAL x1 AS INT_, BYVAL y1 AS INT_, BYVAL x2 AS INT_, BYVAL y2 AS INT_, BYVAL x3 AS INT_, BYVAL y3 AS INT_, BYVAL x4 AS INT_, BYVAL y4 AS INT_) AS GpStatus
    DECLARE FUNCTION AddBezier (BYVAL pt1 AS GpPointF PTR, BYVAL pt2 AS GpPointF PTR, BYVAL pt3 AS GpPointF PTR, BYVAL pt4 AS GpPointF PTR) AS GpStatus
    DECLARE FUNCTION AddBezier (BYVAL pt1 AS GpPoint PTR, BYVAL pt2 AS GpPoint PTR, BYVAL pt3 AS GpPoint PTR, BYVAL pt4 AS GpPoint PTR) AS GpStatus
    DECLARE FUNCTION AddBeziers (BYVAL pts AS GpPointF PTR, BYVAL nCount AS INT_) AS GpStatus
@@ -1167,17 +1178,17 @@ Public:
    DECLARE FUNCTION AddClosedCurve (BYVAL pts AS GpPoint PTR, BYVAL nCount AS INT_) AS GpStatus
    DECLARE FUNCTION AddClosedCurve (BYVAL pts AS GpPoint PTR, BYVAL nCount AS INT_, BYVAL tension AS SINGLE) AS GpStatus
    DECLARE FUNCTION AddRectangle (BYVAL x AS SINGLE, BYVAL y AS SINGLE, BYVAL nWidth AS SINGLE, BYVAL nHeight AS SINGLE) AS GpStatus
-   DECLARE FUNCTION AddRectangle (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_) AS GpStatus
+'   DECLARE FUNCTION AddRectangle (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_) AS GpStatus
    DECLARE FUNCTION AddRectangle (BYVAL rcr AS GpRectF PTR) AS GpStatus
    DECLARE FUNCTION AddRectangle (BYVAL rcr AS GpRect PTR) AS GpStatus
    DECLARE FUNCTION AddRectangles (BYVAL rects AS GpRectF PTR, BYVAL nCount AS INT_) AS GpStatus
    DECLARE FUNCTION AddRectangles (BYVAL rects AS GpRect PTR, BYVAL nCount AS INT_) AS GpStatus
    DECLARE FUNCTION AddEllipse (BYVAL x AS SINGLE, BYVAL y AS SINGLE, BYVAL nWidth AS SINGLE, BYVAL nHeight AS SINGLE) AS GpStatus
-   DECLARE FUNCTION AddEllipse (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_) AS GpStatus
+'   DECLARE FUNCTION AddEllipse (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_) AS GpStatus
    DECLARE FUNCTION AddEllipse (BYVAL rcf AS GpRectF PTR) AS GpStatus
    DECLARE FUNCTION AddEllipse (BYVAL rc AS GpRect PTR) AS GpStatus
    DECLARE FUNCTION AddPie (BYVAL x AS SINGLE, BYVAL y AS SINGLE, BYVAL nWidth AS SINGLE, BYVAL nHeight AS SINGLE, BYVAL startAngle AS SINGLE, BYVAL sweepAngle AS SINGLE) AS GpStatus
-   DECLARE FUNCTION AddPie (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_, BYVAL startAngle AS SINGLE, BYVAL sweepAngle AS SINGLE) AS GpStatus
+'   DECLARE FUNCTION AddPie (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_, BYVAL startAngle AS SINGLE, BYVAL sweepAngle AS SINGLE) AS GpStatus
    DECLARE FUNCTION AddPie (BYVAL rcf AS GpRectF PTR, BYVAL startAngle AS SINGLE, BYVAL sweepAngle AS SINGLE) AS GpStatus
    DECLARE FUNCTION AddPie (BYVAL rcf AS GpRect PTR, BYVAL startAngle AS SINGLE, BYVAL sweepAngle AS SINGLE) AS GpStatus
    DECLARE FUNCTION AddPolygon (BYVAL pts AS GpPointF PTR, BYVAL nCount AS INT_) AS GpStatus
@@ -1198,11 +1209,11 @@ Public:
    DECLARE FUNCTION GetPathTypes (BYVAL types AS BYTE PTR, BYVAL nCount AS INT_) AS GpStatus
    DECLARE FUNCTION GetPathPoints (BYREF pts AS GpPointF PTR, BYVAL nCount AS INT_) AS GpStatus
    DECLARE FUNCTION IsVisible (BYVAL x AS SINGLE, BYVAL y AS SINGLE, BYVAL pGraphics AS CGpGraphics_ PTR = NULL) AS BOOLEAN
-   DECLARE FUNCTION IsVisible (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL pGraphics AS CGpGraphics_ PTR = NULL) AS BOOLEAN
+'   DECLARE FUNCTION IsVisible (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL pGraphics AS CGpGraphics_ PTR = NULL) AS BOOLEAN
    DECLARE FUNCTION IsVisible (BYVAL pt AS GpPointF PTR, BYVAL pGraphics AS CGpGraphics_ PTR = NULL) AS BOOLEAN
    DECLARE FUNCTION IsVisible (BYVAL pt AS GpPoint PTR, BYVAL pGraphics AS CGpGraphics_ PTR = NULL) AS BOOLEAN
    DECLARE FUNCTION IsOutlineVisible (BYVAL x AS SINGLE, BYVAL y AS SINGLE, BYVAL pPen AS CGpPen PTR, BYVAL pGraphics AS CGpGraphics_ PTR = NULL) AS BOOLEAN
-   DECLARE FUNCTION IsOutlineVisible (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL pPen AS CGpPen PTR, BYVAL pGraphics AS CGpGraphics_ PTR = NULL) AS BOOLEAN
+'   DECLARE FUNCTION IsOutlineVisible (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL pPen AS CGpPen PTR, BYVAL pGraphics AS CGpGraphics_ PTR = NULL) AS BOOLEAN
    DECLARE FUNCTION IsOutlineVisible (BYVAL pt AS GpPointF PTR, BYVAL pPen AS CGpPen PTR, BYVAL pGraphics AS CGpGraphics_ PTR = NULL) AS BOOLEAN
    DECLARE FUNCTION IsOutlineVisible (BYVAL pt AS GpPoint PTR, BYVAL pPen AS CGpPen PTR, BYVAL pGraphics AS CGpGraphics_ PTR = NULL) AS BOOLEAN
 
@@ -1215,7 +1226,7 @@ END TYPE
 TYPE CGpGraphicsPathIterator EXTENDS CGpBase
 
 Public:
-   m_pPathIretator AS GpPathIterator PTR
+   m_pPathIterator AS GpPathIterator PTR
 
 Public:
    DECLARE CONSTRUCTOR (BYVAL pPath AS CGpGraphicsPath PTR)
@@ -1231,6 +1242,7 @@ Public:
    DECLARE SUB Rewind
    DECLARE FUNCTION Enumerate (BYVAL pts AS GpPointF PTR, BYVAL types AS BYTE PTR, BYVAL nCount AS INT_) AS INT_
    DECLARE FUNCTION CopyData (BYVAL pts AS GpPointF PTR, BYVAL types AS BYTE PTR, BYVAL startIndex AS INT_, BYVAL endIndex AS INT_) AS INT_
+   DECLARE FUNCTION IsValid () AS BOOLEAN
 
 END TYPE
 ' ########################################################################################

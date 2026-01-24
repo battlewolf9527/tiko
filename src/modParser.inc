@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -517,7 +517,7 @@ function ctxParser.IsStandardDataType( byref sVarType as string ) as boolean
     ' Determine if the variable is one of the predefined standard data types
     static as string sList
     sList = " boolean byte double integer long longint short single" & _
-            " string ubyte uinteger ushort wstring zstring cwstr dwstring "
+            " string ubyte uinteger ushort wstring zstring DWSTRING dwstring "
     if instr(sList, " " & lcase(sVarType) & " " ) then return true
     return false  
 end function

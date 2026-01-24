@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -265,7 +265,7 @@ end function
     
 ''
 ''
-function UpdateMRUSessionList( byval wszFilename as CWSTR ) as long
+function UpdateMRUSessionList( byval wszFilename as DWSTRING ) as long
 
     dim idxExistsAt as long = -1   ' index of where filename already exists 
     dim i           as long
@@ -316,7 +316,7 @@ end function
     
 ''
 ''
-function UpdateMRUProjectList( byval wszFilename as CWSTR ) as long
+function UpdateMRUProjectList( byval wszFilename as DWSTRING ) as long
 
     dim idxExistsAt as long = -1   ' index of where filename already exists 
     dim i           as long

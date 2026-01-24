@@ -44,7 +44,7 @@ TYPE CIFileDialogControlEvents EXTENDS OBJECT
    DECLARE VIRTUAL FUNCTION OnControlActivating (BYVAL pfdc AS IFileDialogCustomize PTR, BYVAL dwIDCtl AS DWORD) AS HRESULT
 
    DECLARE CONSTRUCTOR
-   DECLARE DESTRUCTOR
+   DECLARE VIRTUAL DESTRUCTOR
 
    ' Reference count for COM
    refCount AS ULONG = 0
@@ -142,7 +142,8 @@ END FUNCTION
 ' =====================================================================================
 
 ' =====================================================================================
-' Enables an application to respond to sharing violations that arise from Open or Save operations.
+' Called when an Open button drop-down list customized through EnableOpenDropDown or a
+' Tools menu is about to display its contents.
 ' =====================================================================================
 FUNCTION CIFileDialogControlEvents.OnControlActivating (BYVAL pfdc AS IFileDialogCustomize PTR, BYVAL dwIDCtl AS DWORD) AS HRESULT
    RETURN S_OK
@@ -167,7 +168,7 @@ TYPE CIFileDialogEvents EXTENDS OBJECT
    DECLARE VIRTUAL FUNCTION OnOverwrite (BYVAL pfd AS IFileDialog PTR, BYVAL psi AS IShellItem PTR, BYVAL pResponse AS FDE_OVERWRITE_RESPONSE PTR) AS HRESULT
 
    DECLARE CONSTRUCTOR
-   DECLARE DESTRUCTOR
+   DECLARE VIRTUAL DESTRUCTOR
 
    ' Reference count for COM
    refCount AS ULONG = 0
@@ -249,7 +250,7 @@ END FUNCTION
 
 ' =====================================================================================
 ' Called just before the dialog is about to return with a result.
-' When this method is called, the IFileDialog::GetResult and GetResults methods can be called.
+' When this method is called, the IFileDialog:GetResult and GetResults methods can be called.
 ' =====================================================================================
 FUNCTION CIFileDialogEvents.OnFileOk (BYVAL pfd AS IFileDialog PTR) AS HRESULT
    RETURN S_OK

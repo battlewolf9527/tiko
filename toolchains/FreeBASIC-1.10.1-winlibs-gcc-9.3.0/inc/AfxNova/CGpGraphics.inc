@@ -308,6 +308,19 @@ PRIVATE FUNCTION CGpGraphics.ScaleTransform (BYVAL sx AS SINGLE, BYVAL sy AS SIN
    RETURN SetStatus(GdipScaleWorldTransform(m_pGraphics, sx, sy, order))
 END FUNCTION
 ' ========================================================================================
+' ========================================================================================
+' * Updates this Graphic object's current transformation matrix with the product of itself
+' and a scaling matrix. Uses the DPI settings to set the horizontal and vertical scaling
+' factors in the scaling matrix.
+' ========================================================================================
+' ========================================================================================
+PRIVATE FUNCTION CGpGraphics.ScaleTransformForDpi (BYVAL order AS MatrixOrder = MatrixOrderPrepend) AS GpStatus
+   ' // Get the DPI scaling ratios
+   DIM sx AS SINGLE = this.GetDpiX / 96
+   DIM sy AS SINGLE = this.GetDpiY / 96
+   RETURN SetStatus(GdipScaleWorldTransform(m_pGraphics, sx, sy, order))
+END FUNCTION
+' ========================================================================================
 
 ' ========================================================================================
 ' Resets the transformation matrix of this Graphic o0bject to the identity matrix. This
@@ -425,9 +438,9 @@ END FUNCTION
 ' ========================================================================================
 ' * Draws a line that connects two points.
 ' ========================================================================================
-PRIVATE FUNCTION CGpGraphics.DrawLine (BYVAL pPen AS CGpPen PTR, BYVAL x1 AS INT_, BYVAL y1 AS INT_, BYVAL x2 AS INT_, BYVAL y2 AS INT_) AS GpStatus
-   RETURN SetStatus(GdipDrawLineI(m_pGraphics, pPen->m_pPen, x1, y1, x2, y2))
-END FUNCTION
+'PRIVATE FUNCTION CGpGraphics.DrawLine (BYVAL pPen AS CGpPen PTR, BYVAL x1 AS INT_, BYVAL y1 AS INT_, BYVAL x2 AS INT_, BYVAL y2 AS INT_) AS GpStatus
+'   RETURN SetStatus(GdipDrawLineI(m_pGraphics, pPen->m_pPen, x1, y1, x2, y2))
+'END FUNCTION
 ' ========================================================================================
 ' ========================================================================================
 PRIVATE FUNCTION CGpGraphics.DrawLine (BYVAL pPen AS CGpPen PTR, BYVAL pt1 AS GpPointF PTR, BYVAL pt2 AS GpPointF PTR) AS GpStatus
@@ -461,9 +474,9 @@ PRIVATE FUNCTION CGpGraphics.DrawArc (BYVAL pPen AS CGpPen PTR, BYVAL x AS SINGL
 END FUNCTION
 ' ========================================================================================
 ' ========================================================================================
-PRIVATE FUNCTION CGpGraphics.DrawArc (BYVAL pPen AS CGpPen PTR, BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_, BYVAL startAngle AS SINGLE, BYVAL sweepAngle AS SINGLE) AS GpStatus
-   RETURN SetStatus(GdipDrawArcI(m_pGraphics, pPen->m_pPen, x, y, nWidth, nHeight, startAngle, sweepAngle))
-END FUNCTION
+'PRIVATE FUNCTION CGpGraphics.DrawArc (BYVAL pPen AS CGpPen PTR, BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_, BYVAL startAngle AS SINGLE, BYVAL sweepAngle AS SINGLE) AS GpStatus
+'   RETURN SetStatus(GdipDrawArcI(m_pGraphics, pPen->m_pPen, x, y, nWidth, nHeight, startAngle, sweepAngle))
+'END FUNCTION
 ' ========================================================================================
 ' ========================================================================================
 PRIVATE FUNCTION CGpGraphics.DrawArc (BYVAL pPen AS CGpPen PTR, BYVAL rc AS GpRectF PTR, BYVAL startAngle AS SINGLE, BYVAL sweepAngle AS SINGLE) AS GpStatus
@@ -486,11 +499,11 @@ PRIVATE FUNCTION CGpGraphics.DrawBezier (BYVAL pPen AS CGpPen PTR, BYVAL x1 AS S
 END FUNCTION
 ' ========================================================================================
 ' ========================================================================================
-PRIVATE FUNCTION CGpGraphics.DrawBezier (BYVAL pPen AS CGpPen PTR, BYVAL x1 AS INT_, BYVAL y1 AS INT_, _
-   BYVAL x2 AS INT_, BYVAL y2 AS INT_, BYVAL x3 AS INT_, BYVAL y3 AS INT_, _
-   BYVAL x4 AS INT_, BYVAL y4 AS INT_) AS GpStatus
-   RETURN SetStatus(GdipDrawBezierI(m_pGraphics, pPen->m_pPen, x1, y1, x2, y2, x3, y3, x4, y4))
-END FUNCTION
+'PRIVATE FUNCTION CGpGraphics.DrawBezier (BYVAL pPen AS CGpPen PTR, BYVAL x1 AS INT_, BYVAL y1 AS INT_, _
+'   BYVAL x2 AS INT_, BYVAL y2 AS INT_, BYVAL x3 AS INT_, BYVAL y3 AS INT_, _
+'   BYVAL x4 AS INT_, BYVAL y4 AS INT_) AS GpStatus
+'   RETURN SetStatus(GdipDrawBezierI(m_pGraphics, pPen->m_pPen, x1, y1, x2, y2, x3, y3, x4, y4))
+'END FUNCTION
 ' ========================================================================================
 ' ========================================================================================
 PRIVATE FUNCTION CGpGraphics.DrawBezier (BYVAL pPen AS CGpPen PTR, BYVAL pt1 AS GpPointF PTR, BYVAL pt2 AS GpPointF PTR, BYVAL pt3 AS GpPointF PTR, BYVAL pt4 AS GpPointF PTR) AS GpStatus
@@ -524,9 +537,9 @@ PRIVATE FUNCTION CGpGraphics.DrawRectangle (BYVAL pPen AS CGpPen PTR, BYVAL x AS
 END FUNCTION
 ' ========================================================================================
 ' ========================================================================================
-PRIVATE FUNCTION CGpGraphics.DrawRectangle (BYVAL pPen AS CGpPen PTR, BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_) AS GpStatus
-   RETURN SetStatus(GdipDrawRectangleI(m_pGraphics, pPen->m_pPen, x, y, nWidth, nHeight))
-END FUNCTION
+'PRIVATE FUNCTION CGpGraphics.DrawRectangle (BYVAL pPen AS CGpPen PTR, BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_) AS GpStatus
+'   RETURN SetStatus(GdipDrawRectangleI(m_pGraphics, pPen->m_pPen, x, y, nWidth, nHeight))
+'END FUNCTION
 ' ========================================================================================
 ' ========================================================================================
 PRIVATE FUNCTION CGpGraphics.DrawRectangle (BYVAL pPen AS CGpPen PTR, BYVAL rc AS GpRectF PTR) AS GpStatus
@@ -560,9 +573,9 @@ PRIVATE FUNCTION CGpGraphics.DrawEllipse (BYVAL pPen AS CGpPen PTR, BYVAL x AS S
 END FUNCTION
 ' ========================================================================================
 ' ========================================================================================
-PRIVATE FUNCTION CGpGraphics.DrawEllipse (BYVAL pPen AS CGpPen PTR, BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_) AS GpStatus
-   RETURN SetStatus(GdipDrawEllipseI(m_pGraphics, pPen->m_pPen, x, y, nWidth, nHeight))
-END FUNCTION
+'PRIVATE FUNCTION CGpGraphics.DrawEllipse (BYVAL pPen AS CGpPen PTR, BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_) AS GpStatus
+'   RETURN SetStatus(GdipDrawEllipseI(m_pGraphics, pPen->m_pPen, x, y, nWidth, nHeight))
+'END FUNCTION
 ' ========================================================================================
 ' ========================================================================================
 PRIVATE FUNCTION CGpGraphics.DrawEllipse (BYVAL pPen AS CGpPen PTR, BYVAL rc AS GpRectF PTR) AS GpStatus
@@ -583,9 +596,9 @@ PRIVATE FUNCTION CGpGraphics.DrawPie (BYVAL pPen AS CGpPen PTR, BYVAL x AS SINGL
 END FUNCTION
 ' ========================================================================================
 ' ========================================================================================
-PRIVATE FUNCTION CGpGraphics.DrawPie (BYVAL pPen AS CGpPen PTR, BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_, BYVAL startAngle AS SINGLE, BYVAL sweepAngle AS SINGLE) AS GpStatus
-   RETURN SetStatus(GdipDrawPieI(m_pGraphics, pPen->m_pPen, x, y, nWidth, nHeight, startAngle, sweepAngle))
-END FUNCTION
+'PRIVATE FUNCTION CGpGraphics.DrawPie (BYVAL pPen AS CGpPen PTR, BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_, BYVAL startAngle AS SINGLE, BYVAL sweepAngle AS SINGLE) AS GpStatus
+'   RETURN SetStatus(GdipDrawPieI(m_pGraphics, pPen->m_pPen, x, y, nWidth, nHeight, startAngle, sweepAngle))
+'END FUNCTION
 ' ========================================================================================
 ' ========================================================================================
 PRIVATE FUNCTION CGpGraphics.DrawPie (BYVAL pPen AS CGpPen PTR, BYVAL rc AS GpRectF PTR, BYVAL startAngle AS SINGLE, BYVAL sweepAngle AS SINGLE) AS GpStatus
@@ -701,9 +714,9 @@ PRIVATE FUNCTION CGpGraphics.FillRectangle (BYVAL pBrush AS CGpBrush PTR, BYVAL 
 END FUNCTION
 ' ========================================================================================
 ' ========================================================================================
-PRIVATE FUNCTION CGpGraphics.FillRectangle (BYVAL pBrush AS CGpBrush PTR, BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_) AS GpStatus
-   RETURN SetStatus(GdipFillRectangleI(m_pGraphics, pBrush->m_pBrush, x, y, nWidth, nHeight))
-END FUNCTION
+'PRIVATE FUNCTION CGpGraphics.FillRectangle (BYVAL pBrush AS CGpBrush PTR, BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_) AS GpStatus
+'   RETURN SetStatus(GdipFillRectangleI(m_pGraphics, pBrush->m_pBrush, x, y, nWidth, nHeight))
+'END FUNCTION
 ' ========================================================================================
 
 ' ========================================================================================
@@ -750,9 +763,9 @@ PRIVATE FUNCTION CGpGraphics.FillEllipse (BYVAL pBrush AS CGpBrush PTR, BYVAL x 
 END FUNCTION
 ' ========================================================================================
 ' ========================================================================================
-PRIVATE FUNCTION CGpGraphics.FillEllipse (BYVAL pBrush AS CGpBrush PTR, BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_) AS GpStatus
-   RETURN Setstatus(GdipFillEllipseI(m_pGraphics, pBrush->m_pBrush, x, y, nWidth, nHeight))
-END FUNCTION
+'PRIVATE FUNCTION CGpGraphics.FillEllipse (BYVAL pBrush AS CGpBrush PTR, BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_) AS GpStatus
+'   RETURN Setstatus(GdipFillEllipseI(m_pGraphics, pBrush->m_pBrush, x, y, nWidth, nHeight))
+'END FUNCTION
 ' ========================================================================================
 ' ========================================================================================
 PRIVATE FUNCTION CGpGraphics.FillEllipse (BYVAL pBrush AS CGpBrush PTR, BYVAL rc AS GpRectF PTR) AS GpStatus
@@ -773,9 +786,9 @@ PRIVATE FUNCTION CGpGraphics.FillPie (BYVAL pBrush AS CGpBrush PTR, BYVAL x AS S
 END FUNCTION
 ' ========================================================================================
 ' ========================================================================================
-PRIVATE FUNCTION CGpGraphics.FillPie (BYVAL pBrush AS CGpBrush PTR, BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_, BYVAL startAngle AS SINGLE, BYVAL sweepAngle AS SINGLE) AS GpStatus
-   RETURN SetStatus(GdipFillPieI(m_pGraphics, pBrush->m_pBrush, x, y, nWidth, nHeight, startAngle, sweepAngle))
-END FUNCTION
+'PRIVATE FUNCTION CGpGraphics.FillPie (BYVAL pBrush AS CGpBrush PTR, BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_, BYVAL startAngle AS SINGLE, BYVAL sweepAngle AS SINGLE) AS GpStatus
+'   RETURN SetStatus(GdipFillPieI(m_pGraphics, pBrush->m_pBrush, x, y, nWidth, nHeight, startAngle, sweepAngle))
+'END FUNCTION
 ' ========================================================================================
 ' ========================================================================================
 PRIVATE FUNCTION CGpGraphics.FillPie (BYVAL pBrush AS CGpBrush PTR, BYVAL rc AS GpRectF PTR, BYVAL startAngle AS SINGLE, BYVAL sweepAngle AS SINGLE) AS GpStatus
@@ -904,7 +917,7 @@ END FUNCTION
 ' ========================================================================================
 PRIVATE FUNCTION CGpGraphics.MeasureString (BYVAL pwszString AS WSTRING PTR, BYVAL length AS INT_, BYVAL pFont AS CGpFont PTR, _
    BYVAL layoutRect AS GpRectF PTR, BYVAL pStringFormat AS CGpStringFormat PTR, BYVAL boundingBox AS GpRectF PTR, _
-   BYREF codepointsFitted AS INT_ = 0, BYREF linesFilled AS INT_ = 0) AS GpStatus
+   BYREF codepointsFitted AS INT_, BYREF linesFilled AS INT_) AS GpStatus
    RETURN SetStatus(GdipMeasureString(m_pGraphics, pwszString, length, _
       pFont->m_pFont, layoutRect, pStringFormat->m_pStringFormat, _
       boundingBox, @codepointsFitted, @linesFilled))
@@ -913,7 +926,7 @@ END FUNCTION
 ' ========================================================================================
 PRIVATE FUNCTION CGpGraphics.MeasureString (BYVAL pwszString AS WSTRING PTR, BYVAL length AS INT_, BYVAL pFont AS CGpFont PTR, _
    BYVAL layoutRectSize AS GpSizeF PTR, BYVAL pStringFormat AS CGpStringFormat PTR, BYVAL size AS GpSizeF PTR, _
-   BYREF codepointsFitted AS INT_ = 0, BYREF linesFilled AS INT_ = 0) AS GpStatus
+   BYREF codepointsFitted AS INT_, BYREF linesFilled AS INT_) AS GpStatus
    DIM layoutRect AS GpRectF = TYPE<GpRectF>(0, 0, layoutRectSize->Width, layoutRectSize->Height)
    DIM boundingBox AS GpRectF
    m_Status = GdipMeasureString(m_pGraphics, pwszString, length, _
@@ -982,8 +995,8 @@ END FUNCTION
 ' in one file and as PointF_ PTR in another. It should be GpPointF.
 ' ========================================================================================
 PRIVATE FUNCTION CGpGraphics.DrawDriverString (BYVAL pText AS UINT16 PTR, BYVAL length AS INT_, BYVAL pFont AS CGpFont PTR, _
-   BYVAL pBrush AS CGpBrush PTR, BYVAL positions AS ANY PTR, BYVAL flags AS INT_, BYVAL pMatrix AS CGpMatrix PTR) AS GpStatus
-   RETURN SetStatus(GdipDrawDriverString(m_pGraphics, pText, length, pFont->m_pFont, pBrush->m_pBrush, positions, flags, pMatrix->m_pMatrix))
+   BYVAL pBrush AS CGpBrush PTR, BYVAL positions AS ANY PTR, BYVAL flags AS INT_, BYVAL pMatrix AS CGpMatrix PTR = NULL) AS GpStatus
+   RETURN SetStatus(GdipDrawDriverString(m_pGraphics, pText, length, pFont->m_pFont, pBrush->m_pBrush, positions, flags, IIF(pMatrix, pMatrix->m_pMatrix, NULL)))
 END FUNCTION
 ' ========================================================================================
 
@@ -993,7 +1006,16 @@ END FUNCTION
 PRIVATE FUNCTION CGpGraphics.MeasureDriverString (BYVAL pText AS UINT16 PTR, BYVAL length AS LONG, BYVAL pFont AS CGpFont PTR, _
    BYVAL positions AS ANY PTR, BYVAL flags AS LONG, BYVAL pMatrix AS CGpMatrix PTR, BYVAL boundingBox AS GpRectF PTR) AS GpStatus
    RETURN SetStatus(GdipMeasureDriverString(m_pGraphics, pText, length, pFont->m_pFont, _
-              positions, flags, pMatrix->m_pMatrix, boundingBox))
+              positions, flags, IIF(pMatrix, pMatrix->m_pMatrix, NULL), boundingBox))
+END FUNCTION
+' ========================================================================================
+' ========================================================================================
+PRIVATE FUNCTION CGpGraphics.MeasureDriverString (BYVAL pText AS UINT16 PTR, BYVAL length AS LONG, BYVAL pFont AS CGpFont PTR, _
+   BYVAL positions AS ANY PTR, BYVAL flags AS LONG, BYVAL pMatrix AS CGpMatrix PTR = NULL) AS GpRectF
+   DIM boundingBox AS GpRectF
+   SetStatus(GdipMeasureDriverString(m_pGraphics, pText, length, pFont->m_pFont, _
+             positions, flags, IIF(pMatrix, pMatrix->m_pMatrix, NULL), @boundingBox))
+   RETURN boundingBox
 END FUNCTION
 ' ========================================================================================
 
@@ -1062,14 +1084,26 @@ END FUNCTION
 ' ========================================================================================
 ' ========================================================================================
 PRIVATE FUNCTION CGpGraphics.DrawImage (BYVAL pImage AS CGpImage PTR, BYVAL x AS SINGLE, BYVAL y AS SINGLE, _
-   BYVAL srcx AS SINGLE, BYVAL srcy AS SINGLE, BYVAL srcwidth AS SINGLE, BYVAL srcheight AS SINGLE, BYVAL srcUnit AS gpUnit) AS GpStatus
+   BYVAL srcx AS SINGLE, BYVAL srcy AS SINGLE, BYVAL srcwidth AS SINGLE, BYVAL srcheight AS SINGLE, BYVAL srcUnit AS GpUnit) AS GpStatus
    RETURN SetStatus(GdipDrawImagePointRect(m_pGraphics, pImage->m_pImage, x, y, srcx, srcy, srcwidth, srcheight, srcUnit))
 END FUNCTION
 ' ========================================================================================
 ' ========================================================================================
+'PRIVATE FUNCTION CGpGraphics.DrawImage (BYVAL pImage AS CGpImage PTR, BYVAL x AS INT_, BYVAL y AS INT_, _
+'   BYVAL srcx AS INT_, BYVAL srcy AS INT_, BYVAL srcwidth AS INT_, BYVAL srcheight AS INT_, BYVAL srcUnit AS gpUnit) AS GpStatus
+'   RETURN SetStatus(GdipDrawImagePointRectI(m_pGraphics, pImage->m_pImage, x, y, srcx, srcy, srcwidth, srcheight, srcUnit))
+'END FUNCTION
+' ========================================================================================
+' ========================================================================================
+PRIVATE FUNCTION CGpGraphics.DrawImage (BYVAL pImage AS CGpImage PTR, BYVAL x AS SINGLE, BYVAL y AS SINGLE, _
+   BYVAL srcrect AS GpRectF PTR, BYVAL srcUnit AS GpUnit) AS GpStatus
+   RETURN SetStatus(GdipDrawImagePointRect(m_pGraphics, pImage->m_pImage, x, y, srcrect->x, srcrect->y, srcrect->Width, srcrect->Height, srcUnit))
+END FUNCTION
+' ========================================================================================
+' ========================================================================================
 PRIVATE FUNCTION CGpGraphics.DrawImage (BYVAL pImage AS CGpImage PTR, BYVAL x AS INT_, BYVAL y AS INT_, _
-   BYVAL srcx AS INT_, BYVAL srcy AS INT_, BYVAL srcwidth AS INT_, BYVAL srcheight AS INT_, BYVAL srcUnit AS gpUnit) AS GpStatus
-   RETURN SetStatus(GdipDrawImagePointRectI(m_pGraphics, pImage->m_pImage, x, y, srcx, srcy, srcwidth, srcheight, srcUnit))
+   BYVAL srcrect AS GpRect PTR, BYVAL srcUnit AS GpUnit) AS GpStatus
+   RETURN SetStatus(GdipDrawImagePointRectI(m_pGraphics, pImage->m_pImage, x, y, srcrect->x, srcrect->y, srcrect->width, srcrect->height, srcUnit))
 END FUNCTION
 ' ========================================================================================
 ' ========================================================================================
@@ -1101,14 +1135,14 @@ PRIVATE FUNCTION CGpGraphics.DrawImage (BYVAL pImage AS CGpImage PTR, BYVAL dest
 END FUNCTION
 ' ========================================================================================
 ' ========================================================================================
-PRIVATE FUNCTION CGpGraphics.DrawImage (BYVAL pImage AS CGpImage PTR, BYVAL destx AS INT_, _
-   BYVAL desty AS INT_, BYVAL destWidth AS INT_, BYVAL destHeight AS INT_, _
-   BYVAL srcx AS INT_, BYVAL srcy AS INT_, BYVAL srcwidth AS INT_, BYVAL srcheight AS INT_, BYVAL srcUnit AS GpUnit, _
-   BYVAL pImageAttributes AS CGpImageAttributes PTR = NULL, BYVAL pcallback AS DrawImageAbort = NULL, BYVAL pcallbackData AS ANY PTR = NULL) AS GpStatus
-   RETURN SetStatus(GdipDrawImageRectRectI(m_pGraphics, pImage->m_pImage, destx, desty, _
-   destWidth, destHeight, srcx, srcy, srcwidth, srcheight, srcUnit, _
-   IIF(pImageAttributes, pImageAttributes->m_pImgAttr, NULL), pCallback, pcallbackData))
-END FUNCTION
+'PRIVATE FUNCTION CGpGraphics.DrawImage (BYVAL pImage AS CGpImage PTR, BYVAL destx AS INT_, _
+'   BYVAL desty AS INT_, BYVAL destWidth AS INT_, BYVAL destHeight AS INT_, _
+'   BYVAL srcx AS INT_, BYVAL srcy AS INT_, BYVAL srcwidth AS INT_, BYVAL srcheight AS INT_, BYVAL srcUnit AS GpUnit, _
+'   BYVAL pImageAttributes AS CGpImageAttributes PTR = NULL, BYVAL pcallback AS DrawImageAbort = NULL, BYVAL pcallbackData AS ANY PTR = NULL) AS GpStatus
+'   RETURN SetStatus(GdipDrawImageRectRectI(m_pGraphics, pImage->m_pImage, destx, desty, _
+'   destWidth, destHeight, srcx, srcy, srcwidth, srcheight, srcUnit, _
+'   IIF(pImageAttributes, pImageAttributes->m_pImgAttr, NULL), pCallback, pcallbackData))
+'END FUNCTION
 ' ========================================================================================
 ' ========================================================================================
 PRIVATE FUNCTION CGpGraphics.DrawImage (BYVAL pImage AS CGpImage PTR, BYVAL destPoints AS GpPointF PTR, BYVAL nCount AS INT_, _
@@ -1152,16 +1186,15 @@ PRIVATE FUNCTION CGpGraphics.DrawImage (BYVAL pImage AS CGpImage PTR, BYVAL dest
 END FUNCTION
 ' ========================================================================================
 ' ========================================================================================
-PRIVATE FUNCTION CGpGraphics.DrawImage (BYVAL pImage AS CGpImage PTR, BYVAL destx AS INT_, BYVAL desty AS INT_, BYVAL destWidth AS INT_, BYVAL destHeight AS INT_, _
-   BYVAL srcx AS INT_, BYVAL srcy AS INT_, BYVAL srcWidth AS INT_, BYVAL srcHeight AS INT_, BYVAL srcUnit AS GpUnit, BYVAL pImageAttributes AS CGpImageAttributes PTR = NULL) AS GpStatus
-   RETURN SetStatus(GdipDrawImageRectRectI(m_pGraphics, pImage->m_pImage, _
-          destx, desty, destWidth, destHeight, srcx, srcy, srcWidth, srcHeight, _
-          srcUnit, IIF(pImageAttributes, pImageAttributes->m_pImgAttr, NULL), NULL, NULL))
-END FUNCTION
+'PRIVATE FUNCTION CGpGraphics.DrawImage (BYVAL pImage AS CGpImage PTR, BYVAL destx AS INT_, BYVAL desty AS INT_, BYVAL destWidth AS INT_, BYVAL destHeight AS INT_, _
+'   BYVAL srcx AS INT_, BYVAL srcy AS INT_, BYVAL srcWidth AS INT_, BYVAL srcHeight AS INT_, BYVAL srcUnit AS GpUnit, BYVAL pImageAttributes AS CGpImageAttributes PTR = NULL) AS GpStatus
+'   RETURN SetStatus(GdipDrawImageRectRectI(m_pGraphics, pImage->m_pImage, _
+'          destx, desty, destWidth, destHeight, srcx, srcy, srcWidth, srcHeight, _
+'          srcUnit, IIF(pImageAttributes, pImageAttributes->m_pImgAttr, NULL), NULL, NULL))
+'END FUNCTION
 ' ========================================================================================
 
 '#IF (GDIPVER >= &H0110)
-
 ' ========================================================================================
 PRIVATE FUNCTION CGpGraphics.DrawImageFX (BYVAL pImage AS CGpImage PTR, BYVAL sourceRect AS GpRectF PTR, BYVAL pMatrix AS CGpMatrix PTR, _
 BYVAL pEffect AS CGpEffect PTR, BYVAL pImageAttributes AS CGpImageAttributes PTR, BYVAL srcUnit AS GpUnit) AS GpStatus
@@ -1169,7 +1202,6 @@ BYVAL pEffect AS CGpEffect PTR, BYVAL pImageAttributes AS CGpImageAttributes PTR
           IIF(pEffect, pEffect->m_pEFfect, NULL), IIF(pImageAttributes, pImageAttributes->m_pImgAttr, NULL), srcUnit))
 END FUNCTION
 ' ========================================================================================
-
 '#ENDIF   ' //(GDIPVER >= 0x0110)
 
 ' ========================================================================================
@@ -1299,9 +1331,9 @@ PRIVATE FUNCTION CGpGraphics.IntersectClip (BYVAL x AS SINGLE, BYVAL y AS SINGLE
 END FUNCTION
 ' ========================================================================================
 ' ========================================================================================
-PRIVATE FUNCTION CGpGraphics.IntersectClip (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_) AS GpStatus
-   RETURN SetStatus(GdipSetClipRectI(m_pGraphics, x, y, nWidth, nHeight, CombineModeIntersect))
-END FUNCTION
+'PRIVATE FUNCTION CGpGraphics.IntersectClip (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_) AS GpStatus
+'   RETURN SetStatus(GdipSetClipRectI(m_pGraphics, x, y, nWidth, nHeight, CombineModeIntersect))
+'END FUNCTION
 ' ========================================================================================
 
 ' ========================================================================================
@@ -1331,9 +1363,9 @@ PRIVATE FUNCTION CGpGraphics.ExcludeClip (BYVAL x AS SINGLE, BYVAL y AS SINGLE, 
 END FUNCTION
 ' ========================================================================================
 ' ========================================================================================
-PRIVATE FUNCTION CGpGraphics.ExcludeClip (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_) AS GpStatus
-   RETURN SetStatus(GdipSetClipRectI(m_pGraphics, x, y, nWidth, nHeight, CombineModeExclude))
-END FUNCTION
+'PRIVATE FUNCTION CGpGraphics.ExcludeClip (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_) AS GpStatus
+'   RETURN SetStatus(GdipSetClipRectI(m_pGraphics, x, y, nWidth, nHeight, CombineModeExclude))
+'END FUNCTION
 ' ========================================================================================
 
 ' ========================================================================================
@@ -1447,11 +1479,11 @@ PRIVATE FUNCTION CGpGraphics.IsVisible (BYVAL x AS SINGLE, BYVAL y AS SINGLE) AS
 END FUNCTION
 ' ========================================================================================
 ' ========================================================================================
-PRIVATE FUNCTION CGpGraphics.IsVisible (BYVAL x AS INT_, BYVAL y AS INT_) AS BOOLEAN
-   DIM booln AS BOOL
-   m_Status = GdipIsVisiblePoint(m_pGraphics, x, y, @booln)
-   RETURN booln
-END FUNCTION
+'PRIVATE FUNCTION CGpGraphics.IsVisible (BYVAL x AS INT_, BYVAL y AS INT_) AS BOOLEAN
+'   DIM booln AS BOOL
+'   m_Status = GdipIsVisiblePoint(m_pGraphics, x, y, @booln)
+'   RETURN booln
+'END FUNCTION
 ' ========================================================================================
 ' ========================================================================================
 PRIVATE FUNCTION CGpGraphics.IsVisible (BYVAL rcf AS GpRectF PTR) AS BOOLEAN
@@ -1475,11 +1507,11 @@ PRIVATE FUNCTION CGpGraphics.IsVisible (BYVAL x AS SINGLE, BYVAL y AS SINGLE, BY
 END FUNCTION
 ' ========================================================================================
 ' ========================================================================================
-PRIVATE FUNCTION CGpGraphics.IsVisible (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_) AS BOOLEAN
-   DIM booln AS BOOL
-   m_Status = GdipIsVisibleRectI(m_pGraphics, x, y, nWidth, nHeight, @booln)
-   RETURN booln
-END FUNCTION
+'PRIVATE FUNCTION CGpGraphics.IsVisible (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_) AS BOOLEAN
+'   DIM booln AS BOOL
+'   m_Status = GdipIsVisibleRectI(m_pGraphics, x, y, nWidth, nHeight, @booln)
+'   RETURN booln
+'END FUNCTION
 ' ========================================================================================
 
 ' ========================================================================================

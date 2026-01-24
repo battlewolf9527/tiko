@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -19,16 +19,18 @@
 #define IDC_FRMLISTVIEW_LISTBOX              1001
 #define IDC_FRMLISTVIEW_VSCROLL              1002
 
+
 type LISTVIEW_COLUMN_TYPE
-    wszText as CWSTR            ' row 0 is the header data
-    nWidth as long
+    wszText as DWSTRING             ' column header destription
+    nWidth as long                  ' column width
 end type
 
 type LISTVIEW_DATA_TYPE
     hVScroll as HWND            ' manually allocated needs to be delete
     hHeader as HWND             ' normal child control
     hListBox as HWND            ' normal child control
-    ColData(any) as LISTVIEW_COLUMN_TYPE
+    colData(any) as LISTVIEW_COLUMN_TYPE
+    rowData(any) as DWSTRING    ' chr(9) deliminated string for columns in the row
     ForeColor as COLORREF
     ForeColorHot as COLORREF
     BackColor as COLORREF

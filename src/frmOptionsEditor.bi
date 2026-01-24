@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@
 #Define IDC_FRMOPTIONSEDITOR_TXTRIGHTEDGE           1013
 #Define IDC_FRMOPTIONSEDITOR_LBLRIGHTEDGE           1014
 #Define IDC_FRMOPTIONSEDITOR_CHKPOSITIONMIDDLE      1015
+#Define IDC_FRMOPTIONSEDITOR_CHKTOGGLEBREAKPOINT    1016
 
 declare function frmOptionsEditor_Show( byval hWndParent as HWND ) as LRESULT
 

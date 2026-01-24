@@ -1,5 +1,5 @@
 ''    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-''    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+''    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 ''
 ''    This program is free software: you can redistribute it and/or modify
 ''    it under the terms of the GNU General Public License as published by
@@ -28,9 +28,35 @@ function SetCompileStatusBarMessage( _
             byref wszText as wstring, _
             byval hIconCompile as long _
             ) as LRESULT
+    dim as boolean bIsSpinner = iif( left(wszText, 1) = "#", true, false )
+            
     gApp.wszPanelText = wszText
+    
+    if bIsSpinner then
+        ' Current message includes the Spinner so if a spinner is not
+        ' already active then start the timer now.
+        if gApp.bShowSpinner = false then
+            gApp.SpinnerTimerID = 101
+            SetTimer(HWND_FRMMAIN, gApp.SpinnerTimerID, 80, null)   ' 80 ms
+        end if
+        gApp.bShowSpinner = true
+        gApp.wszPanelText = mid(wszText, 2)
+        
+    else
+        ' Current message does not include the Spinner so if a spinner is
+        ' already active then stop the timer now.
+        if gApp.bShowSpinner = true then
+            KillTimer( HWND_FRMMAIN, gApp.SpinnerTimerID )
+        end if
+        gApp.bShowSpinner = false
+        gApp.SpinnerCurrentFrame = 0
+        gApp.SpinnerTimerID = 0
+        gApp.hIconPanel = 0
+    end if
+
     gApp.hIconPanel = hIconCompile
     frmMain_SetStatusbar
+
     function = 0
 end function
 
@@ -60,8 +86,8 @@ end function
 ''
 ''
 function RedirConsoleToFile( _
-            byref wszExe as wstring, _
-            byref wszCmdLine as wstring, _
+            byval wszExe as DWSTRING, _
+            byval wszCmdLine as DWSTRING, _
             byref sConsoleText as string _
             ) as long
 
@@ -157,16 +183,28 @@ function RedirConsoleToFile( _
 end function
 
 
+sub compile_thread( byval userdata as any ptr )
+    dim as CompileThreadParams ptr ctp = cast(CompileThreadParams ptr, userdata)
+    
+    dim as string sConsoleText = ctp->sConsoleText
+    
+    RedirConsoleToFile( ctp->wszExe, ctp->wszCmdLine, sConsoleText )
+            
+    ctp->sConsoleText = sConsoleText
+    gCompile.bCompileThreadComplete = true
+end sub
+
+
 ''
 ''
 function RunEXE( _
             byval pDocMain as clsDocument ptr, _
-            byref wszFileExe as CWSTR, _
-            byref wszParam as CWSTR _
+            byref wszFileExe as DWSTRING, _
+            byref wszParam as DWSTRING _
             ) as long
                             
-    dim as CWSTR wszPath = AfxStrPathname("PATH", wszFileExe)
-    dim as CWSTR wszBatchFile = RUNBATCHFILE
+    dim as DWSTRING wszPath = AfxStrPathname("PATH", wszFileExe)
+    dim as DWSTRING wszBatchFile = RUNBATCHFILE
     
     ' if option is specified to launch command window prior to running the
     ' compiled program then we do so by executing a shell to a batch file.
@@ -253,7 +291,7 @@ function SetLogFileTextbox() as long
     ' - FBC version, exe name, file size, compile time
     ' - raw log file output
     ' - compile command line used
-    dim as CWSTR wszText
+    dim as DWSTRING wszText
     
     if len(gCompile.wszOutputMsg) then 
         gCompile.wszOutputMsg = gCompile.wszOutputMsg + vbcrlf
@@ -274,7 +312,7 @@ end function
 ''
 ''
 function ParseLogForError( _
-            byref wsLogSt as CWSTR, _
+            byref wsLogSt as DWSTRING, _
             byval bAllowSuccessMessage as boolean, _
             byval wID as long, _
             byval fCompile64 as boolean, _
@@ -290,7 +328,7 @@ function ParseLogForError( _
     dim as long NumWarnings, NumErrors, NumDirectives, IsError, IsWarning
     dim as long nFirstErrorLine = -1
     dim as HWND hLV
-    dim as CWSTR wDQ, wst1, wst2, wst3, wst, wst_ucase, wszOutputMsg, wszText        
+    dim as DWSTRING wDQ, wst1, wst2, wst3, wst, wst_ucase, wszOutputMsg, wszText        
     dim as boolean fGoodCompile
 
     wDQ = wchr(34) ' unicode double quotes
@@ -465,7 +503,7 @@ function ParseLogForError( _
     ' the Output window (log file).
     if fGoodCompile = false then NumErrors = NumErrors + 1
 
-    dim as CWSTR wszIconCompileMsg
+    dim as DWSTRING wszIconCompileMsg
 
     ' if the EXE output file was never created then throw an error
     if fCompilingObjFiles = false then
@@ -491,7 +529,6 @@ function ParseLogForError( _
         if NumErrors > 0 then MessageBeep(MB_ICONWARNING)
         
         ' Position the Compiler Log to the first error/warning
-        frmListView_DeleteBlankFirstLine( HWND_FRMOUTPUT_LVRESULTS )
         frmListView_SelectItem( hLV, 0 )
         
         ' if fGoodCompile is false then something unusual occurred so better show the log file by default
@@ -525,7 +562,7 @@ function ParseLogForError( _
                         L(192, "Warnings") & " " & NumWarnings & _
                         "  [ " & AfxStrPathname("NAMEX", gCompile.OutputFilename) & "  " & _
                         rtrim(AfxStrFormatKBSize(nFileSize)) & " (" & _
-                        nFileSize & " " & L(199,"bytes") & ") ]"
+                        wstr(nFileSize) & " " & L(199,"bytes") & ") ]"
         SetCompileStatusBarMessage( wszIconCompileMsg, ghIconGood )
         
         if gConfig.DisableCompileBeep = false then MessageBeep(MB_OK)

@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -79,6 +79,7 @@ declare function OnCommand_ProjectSetFileType( byval id as long, byval pDoc as c
 declare function OnCommand_ProjectRemove( byval id as long, byval pDoc as clsDocument ptr ) as LRESULT
 
 declare function OnCommand_CompileCommon( byval id as long ) as LRESULT
+declare function OnCommand_DebugCommon( byval id as long ) as LRESULT
 
 declare function frmMain_OnCommand( byval hwnd as HWND, _
                                     byval id as Long, _

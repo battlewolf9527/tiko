@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -14,15 +14,15 @@
 #pragma once
 
 type PANEL_MENU_TYPE
-    wszCaption      as CWSTR
-    wszTooltip      as CWSTR
-    id              as integer
+    wszCaption      as DWSTRING
+    wszTooltip      as DWSTRING
+    id              as long
     rc              as RECT   
     isPrevHot       as boolean
 end type
 
 ' Values for each panel menu button are set in frmPanelMenu_PositionWindows
-dim shared gPanelMenu(0 to 5) as PANEL_MENU_TYPE
+dim shared gPanelMenu(0 to 6) as PANEL_MENU_TYPE
 
 
 declare function frmPanelMenu_PositionWindows() as LRESULT

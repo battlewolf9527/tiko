@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -19,7 +19,8 @@
 #define IDC_MENUBAR_VIEW      1003
 #define IDC_MENUBAR_PROJECT   1004
 #define IDC_MENUBAR_COMPILE   1005
-#define IDC_MENUBAR_HELP      1006
+#define IDC_MENUBAR_DEBUG     1006  
+#define IDC_MENUBAR_HELP      1007
 
 ''  Menu message identifiers
 enum
@@ -37,6 +38,7 @@ enum
     MSG_USER_LOAD_FUNCTIONSFILES
     MSG_USER_SHOW_KEYBOARDEDIT
     MSG_USER_RICHEDIT_SELECTALL
+    MSG_USER_LISTVIEW_LBUTTONDBLCLK
     
     '' FILE
     IDM_FILE_START
@@ -90,7 +92,8 @@ enum
     IDM_VIEW_START
     IDM_VIEW, IDM_VIEWSIDEPANEL, IDM_VIEWEXPLORER, IDM_VIEWOUTPUT, IDM_FUNCTIONLIST
     IDM_BOOKMARKSLIST, IDM_SPLITLEFTRIGHT, IDM_SPLITTOPBOTTOM
-    IDM_ZOOMIN, IDM_ZOOMOUT, IDM_FOLDTOGGLE, IDM_FOLDBELOW, IDM_FOLDALL, IDM_UNFOLDALL
+    IDM_ZOOMIN, IDM_ZOOMOUT, IDM_ZOOMRESET
+    IDM_FOLDTOGGLE, IDM_FOLDBELOW, IDM_FOLDALL, IDM_UNFOLDALL
     IDM_VIEWTODO, IDM_VIEWNOTES, IDM_RESTOREMAIN, IDM_EXPLORERPOSITION
     IDM_VIEW_END
     
@@ -105,6 +108,19 @@ enum
     IDM_COMPILE_START
     IDM_BUILDEXECUTE, IDM_COMPILE, IDM_REBUILDALL, IDM_RUNEXE, IDM_QUICKRUN, IDM_COMMANDLINE
     IDM_COMPILE_END
+    
+    '' DEBUG
+    IDM_DEBUG_START
+    IDM_DEBUG_STARTDEBUGGING
+    IDM_DEBUG_STOPDEBUGGING
+    IDM_DEBUG_STEPINTO
+    IDM_DEBUG_STEPOVER
+    IDM_DEBUG_STEPOUT
+    IDM_DEBUG_RUNTOCURSOR
+    IDM_DEBUG_TOGGLEBREAKPOINT
+    IDM_DEBUG_DELETEALLBREAKPOINTS
+    IDM_DEBUG_END
+    
     
     '' HELP
     IDM_HELP_START
@@ -160,6 +176,7 @@ dim shared as HWND HWND_FRMOPTIONSKEYWORDS, HWND_FRMOPTIONSKEYWORDSWINAPI
 dim shared as HWND HWND_FRMFINDREPLACE, HWND_FRMFINDINFILES, HWND_FRMFINDREPLACE_SHADOW
 dim shared as HWND HWND_FRMBUILDCONFIG, HWND_FRMUSERTOOLS, HWND_FRMABOUT
 dim shared as HWND HWND_FRMKEYBOARD, HWND_FRMKEYBOARD_LISTVIEW, HWND_FRMKEYBOARDEDIT
+dim shared as HWND HWND_FRMDEBUG, HWND_FRMDEBUG_OUTPUT
 
 dim shared as HWND HWND_FRMMAIN_TOPTABS, HWND_FRMMAIN_TOPTABS_SHADOW
 dim shared as HWND HWND_FRMEXPLORER, HWND_FRMEXPLORER_LISTBOX
@@ -200,15 +217,15 @@ type FINDREPLACE_TYPE
     bFirstTimeInvoked   as boolean = true
     hCueBannerFont      as HFONT
     foundCount          as long 
-    txtFind             as CWSTR
-    txtReplace          as CWSTR
-    txtFindCombo(10)    as CWSTR
-    txtReplaceCombo(10) as CWSTR
-    txtFilesCombo(10)   as CWSTR
-    txtFolderCombo(10)  as CWSTR
-    txtLastFind         as CWSTR
-    txtFiles            as CWSTR         ' *.*, *.bas, etc (FindInFolder)
-    txtFolder           as CWSTR         ' start search from this folder (FindInFolder)
+    txtFind             as DWSTRING
+    txtReplace          as DWSTRING
+    txtFindCombo(10)    as DWSTRING
+    txtReplaceCombo(10) as DWSTRING
+    txtFilesCombo(10)   as DWSTRING
+    txtFolderCombo(10)  as DWSTRING
+    txtLastFind         as DWSTRING
+    txtFiles            as DWSTRING         ' *.*, *.bas, etc (FindInFolder)
+    txtFolder           as DWSTRING         ' start search from this folder (FindInFolder)
     nSearchSubFolders   as long          ' search sub folders as well (FindInFolder)
     nWholeWord          as long          ' find/replace whole word search
     nMatchCase          as long          ' match case when searching
@@ -217,7 +234,7 @@ type FINDREPLACE_TYPE
     nSearchCurrentDoc   as long
     nSearchAllOpenDocs  as long
     nSearchProject      as long
-    wszResults          as CWSTR
+    wszResults          as DWSTRING
     bExpanded           as boolean
     rcExpand            as RECT
     rcMatchCase         as RECT
@@ -236,7 +253,7 @@ dim shared gFindInFiles as FINDREPLACE_TYPE
 
 
 TYPE MENUBAR_ITEM
-    wszText as CWSTR
+    wszText as DWSTRING
     rcItem  as RECT
     id      as long
 end type
@@ -248,7 +265,7 @@ dim shared as long gMenuLastCurSel = -1
 dim shared as boolean gPrevent_WM_NCACTIVATE = false
 
 ' array that holds the names of all fonts on the target system
-dim shared gFontNames( any ) as CWSTR
+dim shared gFontNames( any ) as DWSTRING
 
 
 const MENUITEM_HEIGHT = 24
@@ -274,7 +291,6 @@ enum SPLIT_MODE
     SplitTopBottom  = 2
 end enum
 
-
 type TOPMENU_TYPE
     nParentID   as long
     nID         as long
@@ -290,10 +306,24 @@ dim shared as wstring * 10 _
     wszIconDocument, wszIconUpArrow, wszIconDownArrow, wszIconSelection, wszIconCheckmark, _
     wszIconClose, wszIconDirty, wszIconCompileResult, wszIconMatchCase, wszIconWholeWord, _
     wszIconPreserveCase, wszIconReplace, wszIconReplaceAll, wszIconMoreActions, wszIconAddFileButton, _
-    wszIconExplorer, wszIconFunctions, wszIconBookmarks, wszIconCompile, wszIconBuildExecute, _
+    wszIconExplorer, wszIconFunctions, wszIconBookmarks, _
+    wszIconCompile, wszIconBuildExecute, wszIconDebug, _
     wszIconSplitEditor, wszIconSplitLeftRight, wszIconSplitTopBottom, wszIconThemes, _
-    wszIconSettings, wszIconCheckBoxEmpty, wszIconCheckBoxMarked
+    wszIconSettings, wszIconCheckBoxEmpty, wszIconCheckBoxMarked, _
+    wszIconContinue, wszIconStop, wszIconStepNext, wszIconStepOver, wszIconStepOut, wszIconRunToCursor          
 
+
+' Braille spinner patterns - large clockwise rotation
+dim shared spinner(0 to 7) as wstring * 2 => { _
+    wstr(!"\u28F4"), _ ' ⠾
+    wstr(!"\u28F2"), _ ' ⠽
+    wstr(!"\u28B6"), _ ' ⠻
+    wstr(!"\u2837"), _ ' ⠷
+    wstr(!"\u282F"), _ ' ⠯
+    wstr(!"\u281F"), _ ' ⠟
+    wstr(!"\u28D4"), _ ' ⠮
+    wstr(!"\u28F0")  _ ' ⠼
+}
 ' Symbol characters display in top menus, frmExplorer, and tab control
 
 '"Segoe Fluent Icons"
@@ -328,4 +358,15 @@ dim shared as wstring * 10 _
     wszIconThemes            = !"\uE771"   
     wszIconCheckBoxEmpty     = !"\uE739"
     wszIconCheckBoxMarked    = !"\uE73A"
-
+    ' Debugger Icons
+    wszIconDebug             = !"\uE62A"     ' form with magnifier
+    wszIconContinue          = !"\uF5B0"     ' play solid
+    wszIconStop              = !"\uEE95"     ' stop solid
+    wszIconStepNext          = !"\uF0AF"     ' right arrow
+    wszIconStepOver          = !"\uEE35"     ' reply mirrored
+    wszIconStepOut           = wszIconUpArrow
+    wszIconRunToCursor       = !"\uE623"     ' next solid
+    
+    
+    
+    

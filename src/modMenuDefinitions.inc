@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -17,8 +17,8 @@
 ' ========================================================================================
 ' Get the menu accelerator text (if one exists) for this menu item
 ' ========================================================================================
-function getMenuAccelText( byval idMenu as long ) As CWSTR
-    dim as CWSTR wszAccel
+function getMenuAccelText( byval idMenu as long ) As DWSTRING
+    dim as DWSTRING wszAccel
     ' Search the gKeys array for a match
     for i as long = lbound(gKeys) to ubound(gKeys)
         if gKeys(i).idAction = idMenu then
@@ -41,8 +41,8 @@ end function
 ' ========================================================================================
 ' Get the menu text based on the incoming control id
 ' ========================================================================================
-Function getMenuText( byval idMenu as long ) As CWSTR
-    dim as CWSTR wszText
+Function getMenuText( byval idMenu as long ) As DWSTRING
+    dim as DWSTRING wszText
     select case idMenu
         case 0: return "-"    ' this is a separator line
         case IDC_MENUBAR_FILE: wszText = L(2,"&File")
@@ -51,6 +51,7 @@ Function getMenuText( byval idMenu as long ) As CWSTR
         case IDC_MENUBAR_VIEW: wszText = L(54,"View")
         case IDC_MENUBAR_PROJECT: wszText = L(63,"Project")
         case IDC_MENUBAR_COMPILE: wszText = L(64,"Compile")
+        case IDC_MENUBAR_DEBUG: wszText = L(309,"Debug")
         case IDC_MENUBAR_HELP: wszText = L(73,"Help")
         case IDM_FILENEW: wszText = L(3,"New")
         case IDM_FILEOPEN: wszText = L(4,"Open") & "..." 
@@ -78,8 +79,8 @@ Function getMenuText( byval idMenu as long ) As CWSTR
         case IDM_USERTOOLS: return L(289,"User Tools")
         case IDM_USERTOOLSDIALOG: wszText = L(289,"User Tools") & "..."
         case IDM_USERTOOLSBASE to IDM_USERTOOLSBASE + ubound(gConfig.Tools)
-            dim as CWSTR wszText = gConfig.Tools(idMenu - IDM_USERTOOLSBASE).wszDescription
-            dim as CWSTR wszShortcut = createToolsMenuShortcut(idMenu - IDM_USERTOOLSBASE)
+            dim as DWSTRING wszText = gConfig.Tools(idMenu - IDM_USERTOOLSBASE).wszDescription
+            dim as DWSTRING wszShortcut = createToolsMenuShortcut(idMenu - IDM_USERTOOLSBASE)
             if len(wszShortcut) then wszText = wszText & chr(9) & wszShortcut
             return wszText
         case IDM_USERTOOLSLIST: return L(11,"(Empty)")
@@ -131,6 +132,7 @@ Function getMenuText( byval idMenu as long ) As CWSTR
         case IDM_SPLITTOPBOTTOM: wszText = L(70,"Toggle Split Editor Top/Bottom")
         case IDM_ZOOMIN: wszText = L(59,"Zoom In")
         case IDM_ZOOMOUT: wszText = L(60,"Zoom Out")
+        case IDM_ZOOMRESET: wszText = L(72,"Zoom Reset")
         case IDM_FOLDTOGGLE: wszText = L(55,"Toggle Current Fold Point")
         case IDM_FOLDBELOW: wszText = L(56,"Toggle Current And All Below")
         case IDM_FOLDALL: wszText = L(57,"Fold All")
@@ -158,6 +160,20 @@ Function getMenuText( byval idMenu as long ) As CWSTR
         case IDM_QUICKRUN: wszText = L(285,"Quick Run")
         case IDM_RUNEXE: wszText = L(67,"Run Executable")
         case IDM_COMMANDLINE: wszText = L(68,"Command Line") & "..."
+
+        case IDM_DEBUG_STARTDEBUGGING
+            if gApp.IsDebuggerActive then
+                wszText = L(317,"Continue Debugging")
+            else    
+                wszText = L(310,"Start Debugging")
+            end if
+        case IDM_DEBUG_STOPDEBUGGING: wszText = L(318,"Stop Debugging")
+        case IDM_DEBUG_STEPINTO: wszText = L(311,"Step Into")
+        case IDM_DEBUG_STEPOVER: wszText = L(312,"Step Over")
+        case IDM_DEBUG_STEPOUT: wszText = L(319,"Step Out")
+        case IDM_DEBUG_RUNTOCURSOR: wszText = L(320,"Run to Cursor")
+        case IDM_DEBUG_TOGGLEBREAKPOINT: wszText = L(313,"Toggle Breakpoint")
+        case IDM_DEBUG_DELETEALLBREAKPOINTS: wszText = L(314,"Delete All Breakpoints")
 
         case IDM_HELP_FB: wszText = "FreeBASIC " & L(73,"Help")
         case IDM_HELP_TIKO: wszText = APPNAME & " " & L(73,"Help")
@@ -317,10 +333,9 @@ function buildTopMenuDefinitions() as long
     setTopMenuItem( IDC_MENUBAR_VIEW, IDM_FUNCTIONLIST, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_VIEW, IDM_BOOKMARKSLIST, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_VIEW, 0, 0, false, true )
-    setTopMenuItem( IDC_MENUBAR_VIEW, IDM_EXPLORERPOSITION, 0, false, false )
-    setTopMenuItem( IDC_MENUBAR_VIEW, 0, 0, false, true )
     setTopMenuItem( IDC_MENUBAR_VIEW, IDM_ZOOMIN, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_VIEW, IDM_ZOOMOUT, 0, false, false )
+    setTopMenuItem( IDC_MENUBAR_VIEW, IDM_ZOOMRESET, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_VIEW, 0, 0, false, true )
     setTopMenuItem( IDC_MENUBAR_VIEW, IDM_SPLITLEFTRIGHT, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_VIEW, IDM_SPLITTOPBOTTOM, 0, false, false )
@@ -330,6 +345,7 @@ function buildTopMenuDefinitions() as long
     setTopMenuItem( IDC_MENUBAR_VIEW, IDM_FOLDALL, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_VIEW, IDM_UNFOLDALL, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_VIEW, 0, 0, false, true )
+    setTopMenuItem( IDC_MENUBAR_VIEW, IDM_EXPLORERPOSITION, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_VIEW, IDM_RESTOREMAIN, 0, false, false )
 
     setTopMenuItem( IDC_MENUBAR_PROJECT, IDM_PROJECTNEW, 0, false, false )
@@ -356,6 +372,17 @@ function buildTopMenuDefinitions() as long
     setTopMenuItem( IDC_MENUBAR_COMPILE, IDM_RUNEXE, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_COMPILE, 0, 0, false, true )
     setTopMenuItem( IDC_MENUBAR_COMPILE, IDM_COMMANDLINE, 0, false, false )
+
+    setTopMenuItem( IDC_MENUBAR_DEBUG, IDM_DEBUG_STARTDEBUGGING, 0, false, false )
+    setTopMenuItem( IDC_MENUBAR_DEBUG, IDM_DEBUG_STOPDEBUGGING, 0, false, false )
+    setTopMenuItem( IDC_MENUBAR_DEBUG, 0, 0, false, true )
+    setTopMenuItem( IDC_MENUBAR_DEBUG, IDM_DEBUG_STEPINTO, 0, false, false )
+    setTopMenuItem( IDC_MENUBAR_DEBUG, IDM_DEBUG_STEPOVER, 0, false, false )
+    setTopMenuItem( IDC_MENUBAR_DEBUG, IDM_DEBUG_STEPOUT, 0, false, false )
+    setTopMenuItem( IDC_MENUBAR_DEBUG, IDM_DEBUG_RUNTOCURSOR, 0, false, false )
+    setTopMenuItem( IDC_MENUBAR_DEBUG, 0, 0, false, true )
+    setTopMenuItem( IDC_MENUBAR_DEBUG, IDM_DEBUG_TOGGLEBREAKPOINT, 0, false, false )
+    setTopMenuItem( IDC_MENUBAR_DEBUG, IDM_DEBUG_DELETEALLBREAKPOINTS, 0, false, false )
 
     setTopMenuItem( IDC_MENUBAR_HELP, IDM_HELP_FB, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_HELP, IDM_HELP_TIKO, 0, false, false )

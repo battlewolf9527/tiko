@@ -1,7 +1,7 @@
 ' ########################################################################################
 ' Platform: Microsoft Windows
 ' Filename: AfxPath.inc
-' Purpose:  Windows path procedures
+' Purpose:  Windows path and url procedures
 ' Compiler: FreeBASIC 32 & 64 bit
 ' Copyright (c) 2025 José Roca
 '
@@ -37,7 +37,48 @@ const INTERNET_MAX_SCHEME_LENGTH = 32
 #define INTERNET_MAX_URL_LENGTH ((INTERNET_MAX_SCHEME_LENGTH + sizeof("://")) + INTERNET_MAX_PATH_LENGTH)
 #endif
 
-NAMESPACE AfxNova
+#ifndef PATHCCH_OPTIONS
+ENUM PATHCCH_OPTIONS
+   PATHCCH_NONE = &h0
+'    // This option allows applications to gain access to long paths. It has two
+'    // different behaviors. For process configured to enable long paths it will allow
+'    // the returned path to be longer than the max path limit that is normally imposed.
+'    // For process that are not this option will convert long paths into the extended
+'    // length DOS device form (with \\?\ prefix) when the path is longer than the limit.
+'    // This form is not length limited by the Win32 file system API on all versions of Windows.
+'    // This second behavior is the same behavior for OSes that don't have the long path feature.
+'    // This can not be specified with PATHCCH_ENSURE_IS_EXTENDED_LENGTH_PATH.
+   PATHCCH_ALLOW_LONG_PATHS = &h01
+'    // Can only be used when PATHCCH_ALLOW_LONG_PATHS is specified. This
+'    // Forces the API to treat the caller as long path enabled, independent of the
+'    // process's long name enabled state. Cannot be used with PATHCCH_FORCE_DISABLE_LONG_NAME_PROCESS.
+   PATHCCH_FORCE_ENABLE_LONG_NAME_PROCESS = &h02
+'    // Can only be used when PATHCCH_ALLOW_LONG_PATHS is specified. This
+'    // Forces the API to treat the caller as long path disabled, independent of the
+'    // process's long name enabled state. Cannot be used with PATHCCH_FORCE_ENABLE_LONG_NAME_PROCESS.
+   PATHCCH_FORCE_DISABLE_LONG_NAME_PROCESS = &h04
+'    // Disable the normalization of path segments that includes removing trailing dots and spaces.
+'    // This enables access to paths that win32 path normalization will block.
+   PATHCCH_DO_NOT_NORMALIZE_SEGMENTS = &h08
+'    // Convert the input path into the extended length DOS device path form (with the \\?\ prefix)
+'    // if not already in that form. This enables access to paths that are otherwise not addressable
+'    // due to Win32 normalization rules (that can strip trailing dots and spaces) and path
+'    // length limitations. This option implies the same behavior of PATHCCH_DO_NOT_NORMALIZE_SEGMENTS.
+'    // This can not be specified with PATHCCH_ALLOW_LONG_PATHS.
+   PATHCCH_ENSURE_IS_EXTENDED_LENGTH_PATH = &h10
+'    // When combining or normalizing a path ensure there is a trailing backslash.
+   PATHCCH_ENSURE_TRAILING_SLASH = &h020
+'    // Convert forward slashes to back slashes and collapse multiple slashes.
+'    // This is needed to to support sub-path or identity comparisons.
+   PATHCCH_CANONICALIZE_SLASHES = &h040
+END ENUM
+#endif
+
+#ifndef PATHCCH_MAX_CCH
+   ' // max # of characters we support using the "\\?\" syntax
+   ' // (0x7FFF + 1 for NULL terminator)
+   #define PATHCCH_MAX_CCH &h8000
+#endif
 
 ' ========================================================================================
 ' Adds a backslash to the end of a string to create the correct syntax for a path.
@@ -702,7 +743,7 @@ END FUNCTION
 ' appropriate prefix.
 ' ========================================================================================
 PRIVATE FUNCTION AfxUrlApplyScheme (BYREF wszUrl AS WSTRING, BYVAL dwFlags AS DWORD) AS DWSTRING
-   DIM _wszOut AS WSTRING * INTERNET_MAX_URL_LENGTH
+   DIM _wszOut AS WSTRING * INTERNET_MAX_URL_LENGTH + 1
    DIM cchOut AS DWORD = SIZEOF(_wszOut)
    DIM hr AS HRESULT = UrlApplySchemeW(wszUrl, _wszOut, @cchOut, dwFlags)
    IF hr = S_OK OR hr = S_FALSE THEN RETURN _wszOut ELSE RETURN wszUrl
@@ -713,7 +754,7 @@ END FUNCTION
 ' Takes a URL string and converts it into canonical form.
 ' ========================================================================================
 PRIVATE FUNCTION AfxUrlCanonicalize (BYREF wszUrl AS WSTRING, BYVAL dwFlags AS DWORD) AS DWSTRING
-   DIM _wszCanonicalized AS WSTRING * INTERNET_MAX_URL_LENGTH
+   DIM _wszCanonicalized AS WSTRING * INTERNET_MAX_URL_LENGTH + 1
    DIM cchCanonicalized AS DWORD = SIZEOF(_wszCanonicalized)
    DIM hr AS HRESULT = UrlCanonicalizeW(wszUrl, _wszCanonicalized, @cchCanonicalized, dwFlags)
    IF hr = S_OK THEN RETURN _wszCanonicalized ELSE RETURN wszUrl
@@ -724,7 +765,7 @@ END FUNCTION
 ' When provided with a relative URL and its base, returns a URL in canonical form.
 ' ========================================================================================
 PRIVATE FUNCTION AfxUrlCombine (BYREF wszBase AS WSTRING, BYREF wszRelative AS WSTRING, BYVAL dwFlags AS DWORD) AS DWSTRING
-   DIM _wszCombined AS WSTRING * INTERNET_MAX_URL_LENGTH
+   DIM _wszCombined AS WSTRING * INTERNET_MAX_URL_LENGTH + 1
    DIM cchCombined AS DWORD = SIZEOF(_wszCombined)
    DIM hr AS HRESULT = UrlCombineW(wszBase, wszRelative, _wszCombined, @cchCombined, dwFlags)
    IF hr = S_OK THEN RETURN _wszCombined ELSE RETURN wszBase
@@ -743,7 +784,7 @@ END FUNCTION
 ' Takes a Microsoft MS-DOS path and converts it to a canonicalized URL.
 ' ========================================================================================
 PRIVATE FUNCTION AfxUrlCreateFromPath (BYREF wszPath AS WSTRING) AS DWSTRING
-   DIM _wszUrl AS WSTRING * INTERNET_MAX_URL_LENGTH
+   DIM _wszUrl AS WSTRING * INTERNET_MAX_URL_LENGTH + 1
    DIM cchUrl AS DWORD = SIZEOF(_wszUrl)
    DIM hr AS HRESULT = UrlCreateFromPathW(wszPath, _wszUrl, @cchUrl, 0)
    IF hr = S_OK OR hr = S_FALSE THEN RETURN _wszUrl ELSE RETURN wszPath
@@ -755,7 +796,7 @@ END FUNCTION
 ' Internet ("unsafe" characters) into their corresponding escape sequences.
 ' ========================================================================================
 PRIVATE FUNCTION AfxUrlEscape (BYREF wszURL AS WSTRING, BYVAL dwFlags AS DWORD) AS DWSTRING
-   DIM _wszEscaped AS WSTRING * INTERNET_MAX_URL_LENGTH
+   DIM _wszEscaped AS WSTRING * INTERNET_MAX_URL_LENGTH + 1
    DIM cchEscaped AS DWORD = SIZEOF(_wszEscaped)
    DIM hr AS HRESULT = UrlEscapeW(wszURL, _wszEscaped, @cchEscaped, 0)
    IF hr = S_OK THEN RETURN _wszEscaped ELSE RETURN wszURL
@@ -766,7 +807,7 @@ END FUNCTION
 ' Converts space characters into their corresponding escape sequence.
 ' ========================================================================================
 PRIVATE FUNCTION AfxUrlEscapeSpaces (BYREF wszURL AS WSTRING) AS DWSTRING
-   DIM _wszEscaped AS WSTRING * INTERNET_MAX_URL_LENGTH
+   DIM _wszEscaped AS WSTRING * INTERNET_MAX_URL_LENGTH + 1
    DIM cchEscaped AS DWORD = SIZEOF(_wszEscaped)
    DIM hr AS HRESULT = UrlEscapeSpaces(wszURL, _wszEscaped, @cchEscaped)
    IF hr = S_OK THEN RETURN _wszEscaped ELSE RETURN wszURL
@@ -788,7 +829,7 @@ END FUNCTION
 ' Accepts a URL string and returns a specified part of that URL.
 ' ========================================================================================
 PRIVATE FUNCTION AfxUrlGetPart (BYREF wszUrl AS CONST WSTRING, BYVAL dwPart AS DWORD, BYVAL dwFlags AS DWORD) AS DWSTRING
-   DIM _wszOut AS WSTRING * INTERNET_MAX_URL_LENGTH
+   DIM _wszOut AS WSTRING * INTERNET_MAX_URL_LENGTH + 1
    DIM cchOut AS DWORD = SIZEOF(_wszOut)
    DIM hr AS HRESULT = UrlGetPartW(wszUrl, _wszOut, @cchOut, dwPart, dwFlags)
    IF hr = S_OK THEN RETURN _wszOut
@@ -840,7 +881,7 @@ END FUNCTION
 ' Converts escape sequences back into ordinary characters.
 ' ========================================================================================
 PRIVATE FUNCTION AfxUrlUnescape (BYREF wszURL AS WSTRING, BYVAL dwFlags AS DWORD) AS DWSTRING
-   DIM _wszUnescaped AS WSTRING * INTERNET_MAX_URL_LENGTH
+   DIM _wszUnescaped AS WSTRING * INTERNET_MAX_URL_LENGTH + 1
    DIM cchUnescaped AS DWORD = SIZEOF(_wszUnescaped)
    DIM hr AS HRESULT = UrlUnescapeW(wszURL, _wszUnescaped, @cchUnescaped, 0)
    IF hr = S_OK THEN
@@ -895,12 +936,161 @@ PRIVATE FUNCTION AfxUrlFixup (BYREF wszUrl AS CONST WSTRING) AS DWSTRING
    DIM pProc AS FUNCTION (BYREF wszUrl AS WSTRING, BYREF pszTranslatedUrl AS WSTRING, BYVAL cchMax AS DWORD) AS HRESULT
    pProc = DyLibSymbol(pLib, "UrlFixupW")
    IF pProc = 0 THEN RETURN ""
-   DIM _wszUrl AS WSTRING * INTERNET_MAX_URL_LENGTH = wszUrl
-   DIM _wszTranslatedUrl AS WSTRING * INTERNET_MAX_URL_LENGTH
-   DIM hr AS HRESULT = pProc(_wszUrl, _wszTranslatedUrl, INTERNET_MAX_URL_LENGTH)
+   DIM _wszUrl AS WSTRING * INTERNET_MAX_URL_LENGTH + 1 = wszUrl
+   DIM _wszTranslatedUrl AS WSTRING * INTERNET_MAX_URL_LENGTH + 1
+   DIM hr AS HRESULT = pProc(_wszUrl, _wszTranslatedUrl, INTERNET_MAX_URL_LENGTH + 1)
    DyLibFree(pLib)
    RETURN _wszTranslatedUrl
 END FUNCTION
 ' ========================================================================================
 
-END NAMESPACE
+' ========================================================================================
+' Determines if a specified string is a valid URL.
+' Example: print AfxIsValidUrl("https://user@example.com:8080/path/to/resource?id=123&lang=es")
+' ========================================================================================
+PRIVATE FUNCTION AfxIsValidUrl (BYREF wszUrl AS CONST WSTRING) AS BOOLEAN
+   DIM AS ANY PTR pLib = DyLibLoad("urlmon.dll")
+   IF pLib = 0 THEN RETURN FALSE
+   DIM pProc AS FUNCTION (BYVAL pBC AS LPBC, BYVAL szURL AS LPCWSTR, BYVAL dwReserved AS DWORD) AS HRESULT
+   pProc = DyLibSymbol(pLib, "IsValidURL")
+   IF pProc = 0 THEN RETURN FALSE
+   DIM hr AS HRESULT = pProc(NULL, wszUrl, 0)
+   DyLibFree(pLib)
+   IF hr = S_OK THEN RETURN TRUE ELSE RETURN FALSE
+END FUNCTION
+' ========================================================================================
+
+' ========================================================================================
+' Accepts a URL string and returns the host name.
+' Example: print AfxUrlGetHostName("https://user@example.com:8080/path/to/resource?id=123&lang=es")
+' ========================================================================================
+PRIVATE FUNCTION AfxUrlGetHostName (BYREF wszUrl AS CONST WSTRING) AS DWSTRING
+   DIM wszOut AS WSTRING * INTERNET_MAX_URL_LENGTH + 1
+   DIM cbLen AS DWORD = INTERNET_MAX_URL_LENGTH + 1
+   DIM hr AS HRESULT = UrlGetPartW(wszUrl, @wszOut, @cbLen, URL_PART_HOSTNAME, 0)
+   RETURN wszOut
+END FUNCTION
+' ========================================================================================
+
+' ========================================================================================
+' Accepts a URL string and returns the user name.
+' Example: print AfxUrlGetUserName("https://user@example.com:8080/path/to/resource?id=123&lang=es")
+' ========================================================================================
+PRIVATE FUNCTION AfxUrlGetUserName (BYREF wszUrl AS CONST WSTRING) AS DWSTRING
+   DIM wszOut AS WSTRING * INTERNET_MAX_URL_LENGTH + 1
+   DIM cbLen AS DWORD = INTERNET_MAX_URL_LENGTH + 1
+   DIM hr AS HRESULT = UrlGetPartW(wszUrl, @wszOut, @cbLen, URL_PART_USERNAME, 0)
+   RETURN wszOut
+END FUNCTION
+' ========================================================================================
+
+' ========================================================================================
+' Accepts a URL string and returns the password.
+' print AfxUrlGetPassword("https://user:secret@example.com:8080/path/to/resource?id=123&lang=es")
+' ========================================================================================
+PRIVATE FUNCTION AfxUrlGetPassword (BYREF wszUrl AS CONST WSTRING) AS DWSTRING
+   DIM wszOut AS WSTRING * INTERNET_MAX_URL_LENGTH + 1
+   DIM cbLen AS DWORD = INTERNET_MAX_URL_LENGTH + 1
+   DIM hr AS HRESULT = UrlGetPartW(wszUrl, @wszOut, @cbLen, URL_PART_PASSWORD, 0)
+   RETURN wszOut
+END FUNCTION
+' ========================================================================================
+
+' ========================================================================================
+' Accepts a URL string and returns the port number.
+' Example: print AfxUrlGetPortNumber("https://user@example.com:8080/path/to/resource?id=123&lang=es")
+' ========================================================================================
+PRIVATE FUNCTION AfxUrlGetPortNumber (BYREF wszUrl AS CONST WSTRING) AS DWSTRING
+   DIM wszOut AS WSTRING * INTERNET_MAX_URL_LENGTH + 1
+   DIM cbLen AS DWORD = INTERNET_MAX_URL_LENGTH + 1
+   DIM hr AS HRESULT = UrlGetPartW(wszUrl, @wszOut, @cbLen, URL_PART_PORT, 0)
+   RETURN wszOut
+END FUNCTION
+' ========================================================================================
+
+' ========================================================================================
+' Accepts a URL string and returns the query portion.
+' Example: print AfxUrlGetQuery("https://user@example.com:8080/path/to/resource?id=123&lang=es")
+' ========================================================================================
+PRIVATE FUNCTION AfxUrlGetQuery (BYREF wszUrl AS CONST WSTRING) AS DWSTRING
+   DIM wszOut AS WSTRING * INTERNET_MAX_URL_LENGTH + 1
+   DIM cbLen AS DWORD = INTERNET_MAX_URL_LENGTH + 1
+   DIM hr AS HRESULT = UrlGetPartW(wszUrl, @wszOut, @cbLen, URL_PART_QUERY, 0)
+   RETURN wszOut
+END FUNCTION
+' ========================================================================================
+
+' ========================================================================================
+' Accepts a URL string and returns the scheme.
+' print AfxUrlGetScheme("https://user@example.com:8080/path/to/resource?id=123&lang=es")
+' ========================================================================================
+PRIVATE FUNCTION AfxUrlGetScheme (BYREF wszUrl AS CONST WSTRING) AS DWSTRING
+   DIM wszOut AS WSTRING * INTERNET_MAX_URL_LENGTH + 1
+   DIM cbLen AS DWORD = INTERNET_MAX_URL_LENGTH + 1
+   DIM hr AS HRESULT = UrlGetPartW(wszUrl, @wszOut, @cbLen, URL_PART_SCHEME, 0)
+   RETURN wszOut
+END FUNCTION
+' ========================================================================================
+
+' ========================================================================================
+' Converts a path string into a canonical form.
+' Usage example AfxPathAllocCanonicalize(ExePath, PATHCCH_ENSURE_TRAILING_SLASH)
+' ========================================================================================
+PRIVATE FUNCTION AfxPathAllocCanonicalize (BYVAL pwszPathIn AS PCWSTR, BYVAL dwFlags AS ULONG) AS DWSTRING
+   IF pwszPathIn = NULL THEN FUNCTION = "" : EXIT FUNCTION
+   DIM m_hLib AS ANY PTR = DyLibLoad("KernelBase.dll")
+   IF m_hLib THEN
+      DIM pPathAllocCanonicalize AS FUNCTION (BYVAL pszPathIn AS PCWSTR, BYVAL dwFlags AS ULONG, BYVAL ppszPathOut AS PWSTR PTR) AS HRESULT
+      pPathAllocCanonicalize = DyLibSymbol(m_hLib, "PathAllocCanonicalize")
+      DIM pwszPathOut AS PWSTR
+      IF pPathAllocCanonicalize THEN SetLastError(pPathAllocCanonicalize(pwszPathIn, dwFlags, @pwszPathOut))
+      IF pwszPathOut THEN
+         FUNCTION = *pwszPathOut
+         LocalFree(pwszPathOut)
+      END IF
+      DyLibFree(m_hLib)
+   ELSE
+      FUNCTION = *pwszPathIn
+   END IF
+END FUNCTION
+' ========================================================================================
+
+' ========================================================================================
+' Converts a path string into a canonical form.
+' Usage example AfxPathAllocCombine(ExePath, "Test", PATHCCH_ENSURE_TRAILING_SLASH)
+' ========================================================================================
+PRIVATE FUNCTION AfxPathAllocCombine (BYVAL pwszPathIn AS PCWSTR, BYVAL pwszMore AS PCWSTR, BYVAL dwFlags AS ULONG) AS DWSTRING
+   IF pwszPathIn = NULL THEN FUNCTION = "" : EXIT FUNCTION
+   DIM m_hLib AS ANY PTR = DyLibLoad("KernelBase.dll")
+   IF m_hLib THEN
+      DIM pPathAllocCombine AS FUNCTION (BYVAL pszPathIn AS PCWSTR, BYVAL pwszMore AS PCWSTR, BYVAL dwFlags AS ULONG, BYVAL ppszPathOut AS PWSTR PTR) AS HRESULT
+      pPathAllocCombine = DyLibSymbol(m_hLib, "PathAllocCombine")
+      DIM pwszPathOut AS PWSTR
+      IF pPathAllocCombine THEN SetLastError(pPathAllocCombine(pwszPathIn, pwszMore, dwFlags, @pwszPathOut))
+      FUNCTION = *pwszPathOut
+      IF pwszPathOut THEN LocalFree(pwszPathOut)
+      DyLibFree(m_hLib)
+   ELSE
+      FUNCTION = *pwszPathIn
+   END IF
+END FUNCTION
+' ========================================================================================
+
+' ========================================================================================
+' Removes the trailing backslash from a given path.
+' Usage eample: DIM dws AS DWSTRING = AfxPathRemoveBackslashEx("c:\a\b\File\")
+' ========================================================================================
+PRIVATE FUNCTION AfxPathRemoveBackslashEx (BYREF wszPath AS CONST WSTRING) AS DWSTRING
+   DIM _wszPath AS WSTRING * PATHCCH_MAX_CCH = wszPath
+   DIM m_hLib AS ANY PTR = DyLibLoad("KernelBase.dll")
+   IF m_hLib THEN
+      DIM pPathCchRemoveBackslashEx AS FUNCTION (BYVAL pwszPath AS PCWSTR, BYVAL cchPath AS size_t, BYVAL ppszEnd AS PWSTR PTR, BYVAL pcchRemaining AS size_t PTR) AS HRESULT
+      pPathCchRemoveBackslashEx = DyLibSymbol(m_hLib, "PathCchRemoveBackslashEx")
+      IF pPathCchRemoveBackslashEx THEN SetLastError(pPathCchRemoveBackslashEx(_wszPath, PATHCCH_MAX_CCH, NULL, NULL))
+      FUNCTION = _wszPath
+      DyLibFree(m_hLib)
+   ELSE
+      FUNCTION = wszPath
+   END IF
+END FUNCTION
+' ========================================================================================

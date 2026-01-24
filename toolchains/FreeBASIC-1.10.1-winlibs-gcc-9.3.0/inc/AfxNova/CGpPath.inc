@@ -33,7 +33,7 @@ END CONSTRUCTOR
 
 ' =====================================================================================
 ' Creates a GraphicsPath object based on an array of points, an array of types, and a fill mode.
-' Default value for filolMode: FillModeAlternate(0).
+' Default value for fillMode: FillModeAlternate(0).
 ' =====================================================================================
 PRIVATE CONSTRUCTOR CGpGraphicsPath (BYVAL pts AS GpPointF PTR, BYVAL types AS BYTE PTR, BYVAL nCount AS LONG, BYVAL nFillMode AS FillMode = FillModeAlternate)
    m_Status = GdipCreatePath2(pts, types, nCount, nFillmode, @m_pPath)
@@ -155,20 +155,27 @@ PRIVATE FUNCTION CGpGraphicsPath.GetLastPoint (BYVAL lastPoint AS GpPointF PTR) 
    RETURN SetStatus(GdipGetPathLastPoint(m_pPath, lastPoint))
 END FUNCTION
 ' =====================================================================================
+' =====================================================================================
+PRIVATE FUNCTION CGpGraphicsPath.GetLastPoint () AS GpPointF
+   DIM lastPoint AS GpPointF
+   SetStatus(GdipGetPathLastPoint(m_pPath, @lastPoint))
+   RETURN lastPoint
+END FUNCTION
+' =====================================================================================
 
 ' =====================================================================================
 ' Adds a line to the current figure of this path.
 ' =====================================================================================
 PRIVATE FUNCTION CGpGraphicsPath.AddLine (BYVAL x1 AS SINGLE, BYVAL y1 AS SINGLE, BYVAL x2 AS SINGLE, BYVAL y2 AS SINGLE) AS GpStatus
-   RETURN SetStatus(GdipAddPathLine(m_pPath, x1, y1, x2, y1))
+   RETURN SetStatus(GdipAddPathLine(m_pPath, x1, y1, x2, y2))
 END FUNCTION
 ' =====================================================================================
 ' =====================================================================================
 ' * Adds a line to the current figure of this path.
 ' =====================================================================================
-PRIVATE FUNCTION CGpGraphicsPath.AddLine (BYVAL x1 AS INT_, BYVAL y1 AS INT_, BYVAL x2 AS INT_, BYVAL y2 AS INT_) AS GpStatus
-   RETURN SetStatus(GdipAddPathLineI(m_pPath, x1, y1, x2, y1))
-END FUNCTION
+'PRIVATE FUNCTION CGpGraphicsPath.AddLine (BYVAL x1 AS INT_, BYVAL y1 AS INT_, BYVAL x2 AS INT_, BYVAL y2 AS INT_) AS GpStatus
+'   RETURN SetStatus(GdipAddPathLineI(m_pPath, x1, y1, x2, y2))
+'END FUNCTION
 ' =====================================================================================
 ' =====================================================================================
 PRIVATE FUNCTION CGpGraphicsPath.AddLine (BYVAL pt1 AS GpPointF PTR, BYVAL pt2 AS GpPointF PTR) AS GpStatus
@@ -205,14 +212,14 @@ PRIVATE FUNCTION CGpGraphicsPath.AddArc (BYVAL x AS SINGLE, BYVAL y AS SINGLE, B
 END FUNCTION
 ' =====================================================================================
 ' =====================================================================================
+'PRIVATE FUNCTION CGpGraphicsPath.AddArc (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, _
+'   BYVAL nHeight AS INT_, BYVAL startAngle AS SINGLE, BYVAL sweepAngle AS SINGLE) AS GpStatus
+'   RETURN SetStatus(GdipAddPathArcI(m_pPath, x, y, nWidth, nHeight, startAngle, sweepAngle))
+'END FUNCTION
+' =====================================================================================
+' =====================================================================================
 PRIVATE FUNCTION CGpGraphicsPath.AddArc (BYVAL rcf AS GpRectF PTR, BYVAL startAngle AS SINGLE, BYVAL sweepAngle AS SINGLE) AS GpStatus
    RETURN SetStatus(GdipAddPathArc(m_pPath, rcf->x, rcf->y, rcf->Width, rcf->Height, startAngle, sweepAngle))
-END FUNCTION
-' =====================================================================================
-' =====================================================================================
-PRIVATE FUNCTION CGpGraphicsPath.AddArc (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, _
-   BYVAL nHeight AS INT_, BYVAL startAngle AS SINGLE, BYVAL sweepAngle AS SINGLE) AS GpStatus
-   RETURN SetStatus(GdipAddPathArcI(m_pPath, x, y, nWidth, nHeight, startAngle, sweepAngle))
 END FUNCTION
 ' =====================================================================================
 ' =====================================================================================
@@ -231,11 +238,11 @@ PRIVATE FUNCTION CGpGraphicsPath.AddBezier (BYVAL x1 AS SINGLE, BYVAL y1 AS SING
 END FUNCTION
 ' =====================================================================================
 ' =====================================================================================
-PRIVATE FUNCTION CGpGraphicsPath.AddBezier (BYVAL x1 AS INT_, BYVAL y1 AS INT_, BYVAL x2 AS INT_, BYVAL y2 AS INT_, _
-   BYVAL x3 AS INT_, BYVAL y3 AS INT_, BYVAL x4 AS INT_, BYVAL y4 AS INT_) AS GpStatus
-   m_Status = GdipAddPathBezierI(m_pPath, x1, y1, x2, y2, x3, y3, x4, y4)
-   FUNCTION = m_Status
-END FUNCTION
+'PRIVATE FUNCTION CGpGraphicsPath.AddBezier (BYVAL x1 AS INT_, BYVAL y1 AS INT_, BYVAL x2 AS INT_, BYVAL y2 AS INT_, _
+'   BYVAL x3 AS INT_, BYVAL y3 AS INT_, BYVAL x4 AS INT_, BYVAL y4 AS INT_) AS GpStatus
+'   m_Status = GdipAddPathBezierI(m_pPath, x1, y1, x2, y2, x3, y3, x4, y4)
+'   FUNCTION = m_Status
+'END FUNCTION
 ' =====================================================================================
 ' =====================================================================================
 PRIVATE FUNCTION CGpGraphicsPath.AddBezier (BYVAL pt1 AS GpPointF PTR, BYVAL pt2 AS GpPointF PTR, BYVAL pt3 AS GpPointF PTR, BYVAL pt4 AS GpPointF PTR) AS GpStatus
@@ -339,9 +346,9 @@ PRIVATE FUNCTION CGpGraphicsPath.AddRectangle (BYVAL x AS SINGLE, BYVAL y AS SIN
 END FUNCTION
 ' =====================================================================================
 ' =====================================================================================
-PRIVATE FUNCTION CGpGraphicsPath.AddRectangle (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_) AS GpStatus
-   RETURN SetStatus(GdipAddPathRectangleI(m_pPath, x, y, nWidth, nHeight))
-END FUNCTION
+'PRIVATE FUNCTION CGpGraphicsPath.AddRectangle (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_) AS GpStatus
+'   RETURN SetStatus(GdipAddPathRectangleI(m_pPath, x, y, nWidth, nHeight))
+'END FUNCTION
 ' =====================================================================================
 ' =====================================================================================
 PRIVATE FUNCTION CGpGraphicsPath.AddRectangle (BYVAL rcf AS GpRectF PTR) AS GpStatus
@@ -375,9 +382,9 @@ PRIVATE FUNCTION CGpGraphicsPath.AddEllipse (BYVAL x AS SINGLE, BYVAL y AS SINGL
 END FUNCTION
 ' =====================================================================================
 ' =====================================================================================
-PRIVATE FUNCTION CGpGraphicsPath.AddEllipse (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_) AS GpStatus
-   RETURN SetStatus(GdipAddPathEllipseI(m_pPath, x, y, nWidth, nHeight))
-END FUNCTION
+'PRIVATE FUNCTION CGpGraphicsPath.AddEllipse (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_) AS GpStatus
+'   RETURN SetStatus(GdipAddPathEllipseI(m_pPath, x, y, nWidth, nHeight))
+'END FUNCTION
 ' =====================================================================================
 ' =====================================================================================
 PRIVATE FUNCTION CGpGraphicsPath.AddEllipse (BYVAL rcf AS GpRectF PTR) AS GpStatus
@@ -401,10 +408,10 @@ PRIVATE FUNCTION CGpGraphicsPath.AddPie (BYVAL x AS SINGLE, BYVAL y AS SINGLE, B
 END FUNCTION
 ' =====================================================================================
 ' =====================================================================================
-PRIVATE FUNCTION CGpGraphicsPath.AddPie (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_, _
-   BYVAL startAngle AS SINGLE, BYVAL sweepAngle AS SINGLE) AS GpStatus
-   RETURN SetStatus(GdipAddPathPieI(m_pPath, x, y, nWidth, nHeight, startAngle, sweepAngle))
-END FUNCTION
+'PRIVATE FUNCTION CGpGraphicsPath.AddPie (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_, _
+'   BYVAL startAngle AS SINGLE, BYVAL sweepAngle AS SINGLE) AS GpStatus
+'   RETURN SetStatus(GdipAddPathPieI(m_pPath, x, y, nWidth, nHeight, startAngle, sweepAngle))
+'END FUNCTION
 ' =====================================================================================
 ' =====================================================================================
 PRIVATE FUNCTION CGpGraphicsPath.AddPie (BYVAL rcf AS GpRectF PTR, BYVAL startAngle AS SINGLE, BYVAL sweepAngle AS SINGLE) AS GpStatus
@@ -568,11 +575,11 @@ PRIVATE FUNCTION CGpGraphicsPath.IsVisible (BYVAL x AS SINGLE, BYVAL y AS SINGLE
 END FUNCTION
 ' =====================================================================================
 ' =====================================================================================
-PRIVATE FUNCTION CGpGraphicsPath.IsVisible (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL pGraphics AS CGpGraphics PTR = NULL) AS BOOLEAN
-   DIM bResult AS BOOL
-   m_Status = GdipIsVisiblePathPointI(m_pPath, x, y, IIF(pGraphics, pGraphics->m_pGraphics, NULL), @bResult)
-   RETURN bResult
-END FUNCTION
+'PRIVATE FUNCTION CGpGraphicsPath.IsVisible (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL pGraphics AS CGpGraphics PTR = NULL) AS BOOLEAN
+'   DIM bResult AS BOOL
+'   m_Status = GdipIsVisiblePathPointI(m_pPath, x, y, IIF(pGraphics, pGraphics->m_pGraphics, NULL), @bResult)
+'   RETURN bResult
+'END FUNCTION
 ' =====================================================================================
 ' =====================================================================================
 PRIVATE FUNCTION CGpGraphicsPath.IsVisible (BYVAL pt AS GpPointF PTR, BYVAL pGraphics AS CGpGraphics PTR = NULL) AS BOOLEAN
@@ -600,11 +607,11 @@ PRIVATE FUNCTION CGpGraphicsPath.IsOutlineVisible (BYVAL x AS SINGLE, BYVAL y AS
 END FUNCTION
 ' =====================================================================================
 ' =====================================================================================
-PRIVATE FUNCTION CGpGraphicsPath.IsOutlineVisible (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL pPen AS CGpPen PTR, BYVAL pGraphics AS CGpGraphics PTR = NULL) AS BOOLEAN
-   DIM bResult AS BOOL
-   m_Status = GdipIsOutlineVisiblePathPointI(m_pPath, x, y, IIF(pPen, pPen->m_pPen, NULL), IIF(pGraphics, pGraphics->m_pGraphics, NULL), @bResult)
-   FUNCTION = bResult
-END FUNCTION
+'PRIVATE FUNCTION CGpGraphicsPath.IsOutlineVisible (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL pPen AS CGpPen PTR, BYVAL pGraphics AS CGpGraphics PTR = NULL) AS BOOLEAN
+'   DIM bResult AS BOOL
+'   m_Status = GdipIsOutlineVisiblePathPointI(m_pPath, x, y, IIF(pPen, pPen->m_pPen, NULL), IIF(pGraphics, pGraphics->m_pGraphics, NULL), @bResult)
+'   FUNCTION = bResult
+'END FUNCTION
 ' =====================================================================================
 ' =====================================================================================
 PRIVATE FUNCTION CGpGraphicsPath.IsOutlineVisible (BYVAL pt AS GpPointF PTR, BYVAL pPen AS CGpPen PTR, BYVAL pGraphics AS CGpGraphics PTR = NULL) AS BOOLEAN
@@ -631,7 +638,7 @@ END FUNCTION
 ' Creates a new CGpGraphicsPathIterator object and associates it with a CGpGraphicsPath object.
 ' =====================================================================================
 PRIVATE CONSTRUCTOR CGpGraphicsPathIterator (BYVAL pPath AS CGpGraphicsPath PTR)
-   m_Status = GdipCreatePathIter(@m_pPathIretator, pPath->m_pPath)
+   m_Status = GdipCreatePathIter(@m_pPathIterator, pPath->m_pPath)
 END CONSTRUCTOR
 ' =====================================================================================
 
@@ -639,7 +646,7 @@ END CONSTRUCTOR
 ' Cleanup
 ' ========================================================================================
 PRIVATE DESTRUCTOR CGpGraphicsPathIterator
-   IF m_pPathIretator THEN GdipDeletePathIter(m_pPathIretator)
+   IF m_pPathIterator THEN GdipDeletePathIter(m_pPathIterator)
 END DESTRUCTOR
 ' ========================================================================================
 
@@ -649,7 +656,7 @@ END DESTRUCTOR
 ' =====================================================================================
 PRIVATE FUNCTION CGpGraphicsPathIterator.NextSubpath (BYVAL startIndex AS INT_ PTR, BYVAL endIndex AS INT_ PTR, BYVAL isClosed AS BOOL PTR) AS INT_
    DIM resultCount AS INT_
-   m_Status = GdipPathIterNextSubpath(m_pPathIretator, @resultCount, startIndex, endIndex, isClosed)
+   m_Status = GdipPathIterNextSubpath(m_pPathIterator, @resultCount, startIndex, endIndex, isClosed)
    RETURN resultCount
 END FUNCTION
 ' =====================================================================================
@@ -659,7 +666,7 @@ END FUNCTION
 ' =====================================================================================
 PRIVATE FUNCTION CGpGraphicsPathIterator.NextSubpathPath (BYVAL pPath AS CGpGraphicsPath PTR, BYVAL isClosed AS BOOL PTR) AS INT_
    DIM resultCount AS INT_
-   m_Status = GdipPathIterNextSubpathPath(m_pPathIretator, @resultCount, pPath->m_pPath, isClosed)
+   m_Status = GdipPathIterNextSubpathPath(m_pPathIterator, @resultCount, pPath->m_pPath, isClosed)
    RETURN resultCount
 END FUNCTION
 ' =====================================================================================
@@ -670,7 +677,7 @@ END FUNCTION
 ' =====================================================================================
 PRIVATE FUNCTION CGpGraphicsPathIterator.NextPathType (BYVAL pathType AS BYTE PTR, BYVAL startIndex AS INT_ PTR, BYVAL endIndex AS INT_ PTR) AS INT_
    DIM resultCount AS INT_
-   m_Status = GdipPathIterNextPathType(m_pPathIretator, @resultCount, pathType, startIndex, endIndex)
+   m_Status = GdipPathIterNextPathType(m_pPathIterator, @resultCount, pathType, startIndex, endIndex)
    RETURN resultCount
 END FUNCTION
 ' =====================================================================================
@@ -681,14 +688,14 @@ END FUNCTION
 ' =====================================================================================
 PRIVATE FUNCTION CGpGraphicsPathIterator.NextMarker (BYVAL startIndex AS INT_ PTR, BYVAL endIndex AS INT_ PTR) AS INT_
    DIM resultCount AS INT_
-   m_Status = GdipPathIterNextMarker(m_pPathIretator, @resultCount, startIndex, endIndex)
+   m_Status = GdipPathIterNextMarker(m_pPathIterator, @resultCount, startIndex, endIndex)
    RETURN resultCount
 END FUNCTION
 ' =====================================================================================
 ' =====================================================================================
 PRIVATE FUNCTION CGpGraphicsPathIterator.NextMarker (BYVAL pPath AS CGpGraphicsPath PTR) AS INT_
    DIM resultCount AS INT_
-   m_Status = GdipPathIterNextMarkerPath(m_pPathIretator, @resultCount, pPath->m_pPath)
+   m_Status = GdipPathIterNextMarkerPath(m_pPathIterator, @resultCount, pPath->m_pPath)
    RETURN resultCount
 END FUNCTION
 ' =====================================================================================
@@ -698,7 +705,7 @@ END FUNCTION
 ' =====================================================================================
 PRIVATE FUNCTION CGpGraphicsPathIterator.GetCount () AS INT_
    DIM resultCount AS INT_
-   m_Status = GdipPathIterGetCount(m_pPathIretator, @resultCount)
+   m_Status = GdipPathIterGetCount(m_pPathIterator, @resultCount)
    RETURN resultCount
 END FUNCTION
 ' =====================================================================================
@@ -708,7 +715,7 @@ END FUNCTION
 ' =====================================================================================
 PRIVATE FUNCTION CGpGraphicsPathIterator.GetSubpathCount () AS INT_
    DIM resultCount AS INT_
-   m_Status = GdipPathIterGetSubpathCount(m_pPathIretator, @resultCount)
+   m_Status = GdipPathIterGetSubpathCount(m_pPathIterator, @resultCount)
    RETURN resultCount
 END FUNCTION
 ' =====================================================================================
@@ -718,7 +725,7 @@ END FUNCTION
 ' =====================================================================================
 PRIVATE FUNCTION CGpGraphicsPathIterator.HasCurve () AS BOOLEAN
    DIM bHasCurve AS BOOL
-   m_Status = GdipPathIterHasCurve(m_pPathIretator, @bHasCurve)
+   m_Status = GdipPathIterHasCurve(m_pPathIterator, @bHasCurve)
    FUNCTION = bHasCurve
 END FUNCTION
 ' =====================================================================================
@@ -727,7 +734,7 @@ END FUNCTION
 ' Rewinds this iterator to the beginning of its associated path.
 ' =====================================================================================
 PRIVATE SUB CGpGraphicsPathIterator.Rewind
-   GdipPathIterRewind(m_pPathIretator)
+   GdipPathIterRewind(m_pPathIterator)
 END SUB
 ' =====================================================================================
 
@@ -736,7 +743,7 @@ END SUB
 ' =====================================================================================
 PRIVATE FUNCTION CGpGraphicsPathIterator.Enumerate (BYVAL pts AS GpPointF PTR, BYVAL types AS BYTE PTR, BYVAL nCount AS INT_) AS INT_
    DIM resultCount AS INT_
-   m_Status = GdipPathIterEnumerate(m_pPathIretator, @resultCount, pts, types, nCount)
+   m_Status = GdipPathIterEnumerate(m_pPathIterator, @resultCount, pts, types, nCount)
    RETURN resultCount
 END FUNCTION
 ' =====================================================================================
@@ -747,8 +754,19 @@ END FUNCTION
 ' =====================================================================================
 PRIVATE FUNCTION CGpGraphicsPathIterator.CopyData (BYVAL pts AS GpPointF PTR, BYVAL types AS BYTE PTR, BYVAL startIndex AS INT_, BYVAL endIndex AS INT_) AS INT_
    DIM resultCount AS INT_
-   m_Status = GdipPathIterCopyData(m_pPathIretator, @resultCount, pts, types, startIndex, endIndex)
+   m_Status = GdipPathIterCopyData(m_pPathIterator, @resultCount, pts, types, startIndex, endIndex)
    RETURN resultCount
+END FUNCTION
+' =====================================================================================
+
+' =====================================================================================
+' Checks whether a GraphicsPathIterator is valid, meaning it’s properly associated with a
+' GraphicsPath and ready for use.
+' =====================================================================================
+PRIVATE FUNCTION CGpGraphicsPathIterator.IsValid () AS BOOLEAN
+   DIM valid AS BOOL
+   m_Status = GdipPathIterIsValid(m_pPathIterator, @valid)
+   RETURN valid
 END FUNCTION
 ' =====================================================================================
 

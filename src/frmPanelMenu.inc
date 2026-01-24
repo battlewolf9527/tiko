@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -23,10 +23,10 @@
 ' ========================================================================================
 ' Format the tooltip based on menu id
 ' ========================================================================================
-function frmPanelMenu_FormatTooltip( byval id as integer ) as CWSTR
-    dim as CWSTR wszTooltip = getMenuText(id)
-    dim as CWSTR wszCaption = rtrim(AfxStrParse(wszTooltip, 1, wchr(9)), "...")
-    dim as CWSTR wszShortcut = AfxStrParse(wszTooltip, 2, wchr(9))
+function frmPanelMenu_FormatTooltip( byval id as integer ) as DWSTRING
+    dim as DWSTRING wszTooltip = getMenuText(id)
+    dim as DWSTRING wszCaption = rtrim(AfxStrParse(wszTooltip, 1, wchr(9)), "...")
+    dim as DWSTRING wszShortcut = AfxStrParse(wszTooltip, 2, wchr(9))
     
     if len(wszShortcut) then wszShortcut = " (" & wszShortcut & ")"
     
@@ -77,12 +77,21 @@ function frmPanelMenu_PositionWindows() as LRESULT
     gPanelMenu(3).rc = type(nLeft, nTop, nLeft + nButtonWidth, nTop + nButtonHeight)
     gPanelMenu(3).wszTooltip = frmPanelMenu_FormatTooltip(IDM_OPTIONSDIALOG)
     
+    '(Right to left orientation)
+    
     ' Build & Execute
     nLeft = nRight - nButtonWidth
-    gPanelMenu(5).wszCaption = wszIconBuildExecute
-    gPanelMenu(5).id = IDM_BUILDEXECUTE
+    gPanelMenu(6).wszCaption = wszIconBuildExecute
+    gPanelMenu(6).id = IDM_BUILDEXECUTE
+    gPanelMenu(6).rc = type(nLeft, nTop, nLeft + nButtonWidth, nTop + nButtonHeight)
+    gPanelMenu(6).wszTooltip = frmPanelMenu_FormatTooltip(IDM_BUILDEXECUTE)
+
+    ' Debug
+    nLeft -= nButtonWidth
+    gPanelMenu(5).wszCaption = wszIconDebug
+    gPanelMenu(5).id = IDM_DEBUG_STARTDEBUGGING
     gPanelMenu(5).rc = type(nLeft, nTop, nLeft + nButtonWidth, nTop + nButtonHeight)
-    gPanelMenu(5).wszTooltip = frmPanelMenu_FormatTooltip(IDM_BUILDEXECUTE)
+    gPanelMenu(5).wszTooltip = frmPanelMenu_FormatTooltip(IDM_DEBUG_STARTDEBUGGING)
     
     ' Compile
     nLeft -= nButtonWidth
@@ -132,7 +141,7 @@ function frmPanelMenu_OnPaint( byval hwnd as HWND ) as LRESULT
     b.SetFont( SYMBOLFONT_10 )
 
     for i as integer = lbound(gPanelMenu) to ubound(gPanelMenu)
-        dim as CWSTR wszCaption = gPanelMenu(i).wszCaption
+        dim as DWSTRING wszCaption = gPanelMenu(i).wszCaption
         dim as integer id       = gPanelMenu(i).id
         dim as RECT rc          = gPanelMenu(i).rc
 
@@ -185,7 +194,7 @@ function frmPanelMenu_WndProc( _
             byval lParam as LPARAM _
             ) as LRESULT
 
-    static as CWSTR wszPrevTooltip 
+    static as DWSTRING wszPrevTooltip 
     static as HWND hTooltip
     if (uMsg = WM_DESTROY) andalso (IsWindow(hToolTip)) then DestroyWindow(hToolTip)
 
@@ -254,7 +263,7 @@ function frmPanelMenu_WndProc( _
 
 
     case WM_MOUSEHOVER
-        dim as CWSTR wszTooltip 
+        dim as DWSTRING wszTooltip 
         for i as integer = lbound(gPanelMenu) to ubound(gPanelMenu)
             dim as boolean isHot = isMouseOverRECT(hwnd, gPanelMenu(i).rc)
             if isHot then

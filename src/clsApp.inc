@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -169,7 +169,7 @@ function clsApp.GetHeaderDocumentPtr( byval pDocIn as clsDocument ptr ) as clsDo
     
     dim pDoc as clsDocument ptr
     
-    dim as CWSTR wszFilename = _
+    dim as DWSTRING wszFilename = _
                     AfxStrPathname( "PATH", pDocIn->Diskfilename ) & _
                     AfxStrPathname( "NAME", pDocIn->Diskfilename ) & ".bi"
     pDoc = this.GetDocumentPtrByFilename( wszFilename )
@@ -191,7 +191,7 @@ function clsApp.GetSourceDocumentPtr( byval pDocIn as clsDocument ptr ) as clsDo
     ' is simply the same file name but with a ".bas" or ".inc" extension.
     if pDocIn = 0 then exit function
     
-    dim as CWSTR wszFilename
+    dim as DWSTRING wszFilename
     dim pDoc as clsDocument ptr
     
     wszFilename = AfxStrPathname( "PATH", pDocIn->Diskfilename ) & _
@@ -269,7 +269,7 @@ end function
 ''
 function clsApp.ProjectSetFileType( _
             byval pDoc as clsDocument ptr, _
-            byval wszFileType as CWSTR _       ' new filetype 
+            byval wszFileType as DWSTRING _       ' new filetype 
             ) as LRESULT
 
     if pDoc = 0 then exit function

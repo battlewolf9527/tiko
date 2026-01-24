@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -45,8 +45,8 @@ end enum
 type REPLACE_RESULTS
     NumReplaced as integer
     FilesSearched as integer
-    wszResults as CWSTR
-    wszFileText as CWSTR
+    wszResults as DWSTRING
+    wszFileText as DWSTRING
     pDoc as clsDocument ptr
     pSci as any ptr
 end type

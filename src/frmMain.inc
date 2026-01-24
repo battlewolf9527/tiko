@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -128,7 +128,7 @@ function frmMain_SetStatusbar() as long
         frmEditorVScroll_calcVThumbRect(pDoc)
         AfxRedrawWindow( iif( hEdit = pDoc->hWindow(0), HWND_FRMEDITOR_VSCROLLBAR(0), HWND_FRMEDITOR_VSCROLLBAR(1)) )
         
-        ' PANEL Line/Col/Sel -or- VD coordinates
+        ' PANEL Line/Col/Sel
         gSBPanels(GOTO_PANEL).wszText = wszText
 
         ' PANEL Themes dialog
@@ -244,11 +244,11 @@ end function
 ' ========================================================================================
 function frmMain_ProcessFilesArray( _
             byval hwnd as HWND, _
-            wszFiles() as CWSTR _
+            wszFiles() as DWSTRING _
             ) as long
 
     dim wszExt as wstring * MAX_PATH
-    dim as CWSTR wszArg
+    dim as DWSTRING wszArg
     dim as integer numProcessed
     
     for i as integer = lbound(wszFiles) to ubound(wszFiles)
@@ -311,7 +311,7 @@ function frmMain_ProcessCommandLine( byval hwnd as HWND ) as long
     dim wszPath as wstring * MAX_PATH
     dim wszArg  as wstring * MAX_PATH
     dim as integer numProcessed
-    dim wszFiles(any) as CWSTR
+    dim wszFiles(any) as DWSTRING
     
     if IsIconic(hwnd) then 
         dim WinPla as WINDOWPLACEMENT
@@ -1035,7 +1035,7 @@ function frmMain_OnDropFiles( _
     
     dim as long i, nLen
     dim wszPath as wstring * MAX_PATH
-    dim wszFiles(any) as CWSTR
+    dim wszFiles(any) as DWSTRING
 
     for i = 0 To nCount - 1
         nLen = DragQueryFile(hDrop, i, @wszPath, MAX_PATH)
@@ -1130,6 +1130,10 @@ function frmMain_OnDestroy( byval hwnd as HWND ) as LRESULT
     ' default filename as tested for in wm_create.
     if AfxFileExists(gApp.wszQuickRunFilename) then AfxDeleteFile( gApp.wszQuickRunFilename )
     
+    if gApp.SpinnerTimerID <> 0 then
+        KillTimer( HWND_FRMMAIN, gApp.SpinnerTimerID )
+    end if
+
     ' Disable drag and drop files
     DragAcceptFiles hwnd, false
     
@@ -1359,36 +1363,6 @@ function frmMain_WndProc( _
         HWND_FRMMAIN = 0
         return 0
 
-'        case WM_MEASUREITEM
-'            dim mi as LPMEASUREITEMSTRUCT = cast(LPMEASUREITEMSTRUCT, lParam)
-'            mi->itemWidth = AfxScaleX(150)
-'            mi->itemHeight = AfxScaleY(24)
-'            return true
-
-'        case WM_DRAWITEM
-'            dim pdis as DRAWITEMSTRUCT ptr = cast(DRAWITEMSTRUCT ptr, lParam)
-'            dim as HBRUSH hBrush
-'            dim as COLORREF bgColor = ghPopup.BackColor
-'            dim as COLORREF textColor = ghPopup.ForeColor
-
-'            if (pdis->itemState and ODS_SELECTED) then
-'                ' Hover/selected state colors
-'                bgColor = ghPopup.BackColorHot
-'                textColor = ghPopup.ForeColorHot
-'            end if
-
-'            ' Draw background
-'            hBrush = CreateSolidBrush(bgColor)
-'            FillRect(pdis->hDC, @pdis->rcItem, hBrush)
-'            DeleteObject(hBrush)
-
-'            ' Set text color and draw text
-'            SetBkMode(pdis->hDC, TRANSPARENT)
-'            SetTextColor(pdis->hDC, textColor)
-'            dim as CWSTR wszMenuText = "Menu Text"
-'            DrawText(pdis->hDC, wszMenuText, -1, @pdis->rcItem, DT_SINGLELINE or DT_VCENTER or DT_LEFT or DT_NOPREFIX)
-'            return true
-
         case WM_ERASEBKGND
             return true      ' prevents painting the background
             
@@ -1402,7 +1376,15 @@ function frmMain_WndProc( _
                 frmTopTabs_ShowShadow()
             end if
                 
-        
+        case WM_TIMER
+            ' Handle any Spinner (used when compiling)
+            if wParam = gApp.SpinnerTimerID then
+                ' Update Spinner display frame 
+                gApp.SpinnerCurrentFrame = (gApp.SpinnerCurrentFrame + 1) mod 8
+                frmMain_SetStatusbar
+                AfxRedrawWindow( HWND_FRMMAIN_STATUSBAR )
+            end if
+            
         case WM_NCACTIVATE
             ' if wParam is false then the system wants to draw an inactive title bar. we
             ' will prevent this action if a popup menu from the menubar is active.
@@ -1442,10 +1424,10 @@ function frmMain_WndProc( _
             dim pDataToGet as COPYDATASTRUCT ptr = cast(COPYDATASTRUCT ptr, lParam)
             if pDataToGet then
                 if pDataToGet->dwData = IDM_COPYDATA_COMMANDLINE then  
-                    dim as CWSTR wszCommandLine = *cast(wstring ptr, pDataToGet->lpData)
+                    dim as DWSTRING wszCommandLine = *cast(wstring ptr, pDataToGet->lpData)
                     
                     dim as integer numfiles = AfxStrParseCount(wszCommandLine, ";")
-                    dim wszFiles(numfiles) as CWSTR
+                    dim wszFiles(numfiles) as DWSTRING
 
                     for i as integer = 1 to numfiles
                         wszFiles(i) = AfxStrParse(wszCommandLine, i, ";")

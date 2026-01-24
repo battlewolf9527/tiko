@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ end enum
 
 ' type and array to hold values related to the statusbar panels
 type STATUSBAR_PANEL_TYPE
-    wszText as CWSTR
+    wszText as DWSTRING
     rc      as RECT            ' client coordinates 
     nID     as long            ' id to invoke if clicked on
     isHot   as boolean

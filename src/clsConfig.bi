@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -16,26 +16,26 @@
 
 type TYPE_BUILDS
     id               as string    ' GUID
-    wszDescription   as CWSTR
+    wszDescription   as DWSTRING
     IsDefault        as long      ' 0:False, 1:True
     Is32bit          as long      ' 0:False, 1:True
     Is64bit          as long      ' 0:False, 1:True
     ExcludeInPopup   as long      ' 0:False, 1:True  (do not show in statusbar popup menu)
-    wszOptions       as CWSTR     ' Compiler options (manual and selected from listbox)
+    wszOptions       as DWSTRING     ' Compiler options (manual and selected from listbox)
     idMenu           as long      ' Used to match selected build from statusbar popup menu 
                                 ' because some items can be excluded from the popup.
     IsCtrl           as long
     IsAlt            as long
     IsShift          as long
-    wszKey           as CWSTR
+    wszKey           as DWSTRING
 end type
 
 type TYPE_TOOLS
-    wszDescription   as CWSTR
-    wszCommand       as CWSTR
-    wszParameters    as CWSTR
-    wszKey           as CWSTR
-    wszWorkingFolder as CWSTR
+    wszDescription   as DWSTRING
+    wszCommand       as DWSTRING
+    wszParameters    as DWSTRING
+    wszKey           as DWSTRING
+    wszWorkingFolder as DWSTRING
     IsCtrl           as long
     IsAlt            as long
     IsShift          as long
@@ -48,7 +48,7 @@ end type
 
 type TYPE_CATEGORIES
     idFileType       as string    ' GUID or special node value (FILETYPE_*)
-    wszDescription   as CWSTR
+    wszDescription   as DWSTRING
     bShow            as boolean = true
 end type
 
@@ -65,19 +65,19 @@ end type
 
 type clsConfig
     public:
-        ConfigFilename            as CWSTR 
-        FBKeywordsFilename        as CWSTR 
-        WinApiKeywordsFilename    as CWSTR 
-        FBKeywordsDefaultFilename as CWSTR 
-        FBCodetipsFilename        as CWSTR
-        WinAPICodetipsFilename    as CWSTR 
-        WinFBXCodetipsFilename    as CWSTR
-        DefaultSessionFilename    as CWSTR 
-        HelpTableOfContents       as CWSTR
+        ConfigFilename            as DWSTRING 
+        FBKeywordsFilename        as DWSTRING 
+        WinApiKeywordsFilename    as DWSTRING 
+        FBKeywordsDefaultFilename as DWSTRING 
+        FBCodetipsFilename        as DWSTRING
+        WinAPICodetipsFilename    as DWSTRING 
+        WinFBXCodetipsFilename    as DWSTRING
+        DefaultSessionFilename    as DWSTRING 
+        HelpTableOfContents       as DWSTRING
          
         DateFileTime              as FILETIME
         
-        SettingsVersion           as CWSTR
+        SettingsVersion           as DWSTRING
         Tools(any)                as TYPE_TOOLS
         ToolsTemp(any)            as TYPE_TOOLS  
         Builds(any)               as TYPE_BUILDS  
@@ -93,7 +93,7 @@ type clsConfig
         AutoSaveInterval          as long = 10            ' seconds between autosave checks
         idAutoSaveTimer           as long = 999           ' id of Autosave timer
         RestoreSession            as long = true
-        wszLastActiveSession      as CWSTR
+        wszLastActiveSession      as DWSTRING
         CompactMenus              as long = false
         ShowPanel                 as long = true
         ShowPanelWidth            as long = 250
@@ -106,7 +106,7 @@ type clsConfig
         AutoComplete              as long = true
         CharacterAutoComplete     as long = false
         RightEdge                 as long = false
-        RightEdgePosition         as CWSTR = "80"
+        RightEdgePosition         as DWSTRING = "80"
         LeftMargin                as long = true
         FoldMargin                as long = false
         AutoIndentation           as long = true
@@ -116,19 +116,20 @@ type clsConfig
         HighlightCurrentLine      as long = true
         IndentGuides              as long = false
         PositionMiddle            as long = false         ' position found text to middle of screen
+        ClickToggleBreakpoint     as long = false         ' left margin click toggles Breakpoint instead of Bookmark
         BraceHighlight            as long = false
         OccurrenceHighlight       as long = false
         TabIndentSpaces           as long = true
         MultipleInstances         as long = true
         CompileAutosave           as long = true
         UnicodeEncoding           as long = false
-        TabSize                   as CWSTR = "4"
-        LocalizationFile          as CWSTR = "english.lang"
-        EditorFontname            as CWSTR = "Consolas"
-        EditorFontCharSet         as CWSTR = "Default"
-        EditorFontsize            as CWSTR = "11"
-        FontExtraSpace            as CWSTR = "2"
-        ThemeShortFilename        as CWSTR = "default_dark.theme"
+        TabSize                   as DWSTRING = "4"
+        LocalizationFile          as DWSTRING = "english.lang"
+        EditorFontname            as DWSTRING = "Consolas"
+        EditorFontCharSet         as DWSTRING = "Default"
+        EditorFontsize            as DWSTRING = "11"
+        FontExtraSpace            as DWSTRING = "2"
+        ThemeShortFilename        as DWSTRING = "default_dark.theme"
         KeywordCase               as long = 3  ' "Original Case"
         StartupLeft               as long = 0
         StartupTop                as long = 0
@@ -141,17 +142,17 @@ type clsConfig
         HelpStartupBottom         as long = 0
         HelpStartupMaximized      as long = false
         HelpLeftPanelWidth        as long = 0
-        FBWINCompiler32           as CWSTR
-        FBWINCompiler64           as CWSTR
-        CompilerBuild             as CWSTR     ' Build GUID
-        CompilerSwitches          as CWSTR
-        CompilerIncludes          as CWSTR
-        CompilerHelpfile          as CWSTR
+        FBWINCompiler32           as DWSTRING
+        FBWINCompiler64           as DWSTRING
+        CompilerBuild             as DWSTRING     ' Build GUID
+        CompilerSwitches          as DWSTRING
+        CompilerIncludes          as DWSTRING
+        CompilerHelpfile          as DWSTRING
         RunViaCommandWindow       as long = false
         DisableCompileBeep        as long = false
-        MRU(9)                    as CWSTR
-        MRUProject(9)             as CWSTR
-        MRUSession(9)             as CWSTR
+        MRU(9)                    as DWSTRING
+        MRUProject(9)             as DWSTRING
+        MRUSession(9)             as DWSTRING
                                 
         declare constructor()
         declare function SetCategoryDefaults() as long
@@ -168,11 +169,11 @@ type clsConfig
         declare function SaveDefaultSessionFile() as boolean    
         declare function LoadDefaultSessionFile() as boolean    
         declare function ProjectSaveToFile() as boolean    
-        declare function ProjectLoadFromFile( byval wszFile as CWSTR ) as boolean    
+        declare function ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean    
         declare function LoadCodetipsFB() as boolean
         declare function LoadCodetipsWinAPI() as boolean
         declare function LoadCodetipsWinFBX() as boolean
-        declare function LoadCodetipsGeneric( byval wszFilename as CWSTR, byval nFiletype as long) as boolean
+        declare function LoadCodetipsGeneric( byval wszFilename as DWSTRING, byval nFiletype as long) as boolean
         declare function LoadCodetips() as long
         declare function ReloadConfigFileTest() as boolean    
 end type

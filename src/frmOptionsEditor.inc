@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -83,6 +83,10 @@ function frmOptionsEditor_Show( byval hwndParent as HWND ) as LRESULT
         WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_NOTIFY or BS_AUTOCHECKBOX or BS_LEFT or BS_VCENTER, _
         WS_EX_LEFT or WS_EX_LTRREADING)
 
+    pWindow->AddControl("CHECKBOX", , IDC_FRMOPTIONSEDITOR_CHKTOGGLEBREAKPOINT, L(414,"Margin click toggles Breakpoint rather than Bookmark"), 0, 234, 400, 20, _
+        WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_NOTIFY or BS_AUTOCHECKBOX or BS_LEFT or BS_VCENTER, _
+        WS_EX_LEFT or WS_EX_LTRREADING)
+
     pWindow->AddControl("LABEL", , IDC_FRMOPTIONSEDITOR_LBLTABSIZE, L(127,"Tab Size"), _
         0, 305, 100, 17, _
         WS_CHILD or WS_VISIBLE or WS_CLIPSIBLINGS or WS_CLIPCHILDREN or SS_LEFT or SS_NOTIFY, _
@@ -114,6 +118,7 @@ function frmOptionsEditor_Show( byval hwndParent as HWND ) as LRESULT
     Button_SetCheck( GetDlgItem( hwnd, IDC_FRMOPTIONSEDITOR_CHKTABTOSPACES),        gConfig.TabIndentSpaces)
     Button_SetCheck( GetDlgItem( hwnd, IDC_FRMOPTIONSEDITOR_CHKSHOWRIGHTEDGE),      gConfig.RightEdge)
     Button_SetCheck( GetDlgItem( hwnd, IDC_FRMOPTIONSEDITOR_CHKPOSITIONMIDDLE),     gConfig.PositionMiddle)
+    Button_SetCheck( GetDlgItem( hwnd, IDC_FRMOPTIONSEDITOR_CHKTOGGLEBREAKPOINT),   gConfig.ClickToggleBreakpoint)
 
     AfxSetWindowText( GetDlgItem( hwnd, IDC_FRMOPTIONSEDITOR_TXTRIGHTEDGE), gConfig.RightEdgePosition )
     AfxSetWindowText( GetDlgItem( hwnd, IDC_FRMOPTIONSEDITOR_TXTTABSIZE), gConfig.TabSize )

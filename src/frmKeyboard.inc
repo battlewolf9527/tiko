@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -18,10 +18,10 @@
 ' ========================================================================================
 ' Save the gKeys() keybinding array to disk file
 ' ========================================================================================
-function frmKeyboard_SaveKeyBindings( byval wszFilename as CWSTR ) as long
+function frmKeyboard_SaveKeyBindings( byval wszFilename as DWSTRING ) as long
     dim pStream as CTextStream
     if pStream.Create( wszFilename ) = S_OK then 
-        dim as CWSTR wszLine
+        dim as DWSTRING wszLine
         for i as long = lbound(gKeys) to ubound(gKeys)
             wszLine = gKeys(i).wszMsgString 
             
@@ -42,12 +42,12 @@ end function
 ' Load a keybinding into the global array
 ' ========================================================================================
 function frmKeyBoard_AddKeyBinding( _
-            byval wszCategory as CWSTR, _
+            byval wszCategory as DWSTRING, _
             byval idAction as long, _
-            byval wszMsgString as CWSTR, _
-            byval wszDescription as CWSTR, _
-            byval wszDefaultKeys as CWSTR, _
-            byval wszUserKeys as CWSTR, _
+            byval wszMsgString as DWSTRING, _
+            byval wszDescription as DWSTRING, _
+            byval wszDefaultKeys as DWSTRING, _
+            byval wszUserKeys as DWSTRING, _
             byval bDisabled as boolean _
             ) as long
             
@@ -159,12 +159,13 @@ function frmKeyboard_CreateDefaultKeyBindings() as long
 
     '' VIEW MENU
     frmKeyBoard_AddKeyBinding( "View", IDM_VIEWSIDEPANEL, "IDM_VIEWSIDEPANEL", "View Side Panel", "Ctrl+B", "", false )
-    frmKeyBoard_AddKeyBinding( "View", IDM_VIEWEXPLORER, "IDM_VIEWEXPLORER", "View Explorer window", "F9", "", false )
+    frmKeyBoard_AddKeyBinding( "View", IDM_VIEWEXPLORER, "IDM_VIEWEXPLORER", "View Explorer window", "Ctrl+F4", "", false )
     frmKeyBoard_AddKeyBinding( "View", IDM_VIEWOUTPUT, "IDM_VIEWOUTPUT", "View Output window", "Ctrl+F9", "", false )
     frmKeyBoard_AddKeyBinding( "View", IDM_FUNCTIONLIST, "IDM_FUNCTIONLIST", "View function List", "F4", "", false )
     frmKeyBoard_AddKeyBinding( "View", IDM_BOOKMARKSLIST, "IDM_BOOKMARKSLIST", "View Bookmarks List", "Shift+F4", "", false )
-    frmKeyBoard_AddKeyBinding( "View", IDM_ZOOMIN, "IDM_ZOOMIN", "Zoom in", "Ctrl+Plus", "", false )     ' VK_OEM_PLUS
-    frmKeyBoard_AddKeyBinding( "View", IDM_ZOOMOUT, "IDM_ZOOMOUT", "Zoom out", "Ctrl+Minus", "", false )   ' VK_OEM_MINUS
+    frmKeyBoard_AddKeyBinding( "View", IDM_ZOOMIN, "IDM_ZOOMIN", "Zoom In", "Ctrl+Plus", "", false )     ' VK_OEM_PLUS
+    frmKeyBoard_AddKeyBinding( "View", IDM_ZOOMOUT, "IDM_ZOOMOUT", "Zoom Out", "Ctrl+Minus", "", false )   ' VK_OEM_MINUS
+    frmKeyBoard_AddKeyBinding( "View", IDM_ZOOMRESET, "IDM_ZOOMRESET", "Zoom Reset", "Ctrl+0", "", false )   ' Ctrl+ZERO
     frmKeyBoard_AddKeyBinding( "View", IDM_SPLITLEFTRIGHT, "IDM_SPLITLEFTRIGHT", "Toggle Split Editor Left/Right", "Ctrl+\", "", false )
     frmKeyBoard_AddKeyBinding( "View", IDM_SPLITTOPBOTTOM, "IDM_SPLITTOPBOTTOM", "Toggle Split Editor Top/Bottom", "Ctrl+Shift+\", "", false )
     frmKeyBoard_AddKeyBinding( "View", IDM_FOLDTOGGLE, "IDM_FOLDTOGGLE", "Toggle current fold point", "F8", "", false )
@@ -186,7 +187,7 @@ function frmKeyboard_CreateDefaultKeyBindings() as long
     frmKeyBoard_AddKeyBinding( "Project", IDM_PROJECTNEW, "IDM_PROJECTNEW", "New project", "", "", false )
     frmKeyBoard_AddKeyBinding( "Project", IDM_PROJECTSAVE, "IDM_PROJECTSAVE", "Save project", "", "", false )
     frmKeyBoard_AddKeyBinding( "Project", IDM_PROJECTSAVEAS, "IDM_PROJECTSAVEAS", "Save project as a different name ", "", "", false )
-    frmKeyBoard_AddKeyBinding( "Project", IDM_PROJECTOPEN, "IDM_PROJECTOPEN", "Open project", "F11", "", false )
+    frmKeyBoard_AddKeyBinding( "Project", IDM_PROJECTOPEN, "IDM_PROJECTOPEN", "Open project", "", "", false )
     frmKeyBoard_AddKeyBinding( "Project", IDM_PROJECTFILESADD, "IDM_PROJECTFILESADD", "Add files to project", "Ctrl+F11", "", false )
     frmKeyBoard_AddKeyBinding( "Project", IDM_PROJECTCLOSE, "IDM_PROJECTCLOSE", "Close project", "", "", false )
     frmKeyBoard_AddKeyBinding( "Project", IDM_PROJECTOPTIONS, "IDM_PROJECTOPTIONS", "Project options", "", "", false )
@@ -199,25 +200,35 @@ function frmKeyboard_CreateDefaultKeyBindings() as long
     frmKeyBoard_AddKeyBinding( "Compile", IDM_RUNEXE, "IDM_RUNEXE", "Run executable", "Shift+F5", "", false )
     frmKeyBoard_AddKeyBinding( "Compile", IDM_COMMANDLINE, "IDM_COMMANDLINE", "Command line", "", "", false )
     
+    '' DEBUG MENU
+    frmKeyBoard_AddKeyBinding( "Debug", IDM_DEBUG_STARTDEBUGGING, "IDM_DEBUG_STARTDEBUGGING", "Start Debugging", "F6", "", false )
+    frmKeyBoard_AddKeyBinding( "Debug", IDM_DEBUG_STOPDEBUGGING, "IDM_DEBUG_STOPDEBUGGING", "Stop Debugging", "Shift+F6", "", false )
+    frmKeyBoard_AddKeyBinding( "Debug", IDM_DEBUG_STEPINTO, "IDM_DEBUG_STEPINTO", "Step Into", "F11", "", false )
+    frmKeyBoard_AddKeyBinding( "Debug", IDM_DEBUG_STEPOVER, "IDM_DEBUG_STEPOVER", "Step Over", "F10", "", false )
+    frmKeyBoard_AddKeyBinding( "Debug", IDM_DEBUG_STEPOUT, "IDM_DEBUG_STEPOUT", "Step Out", "Shift+F11", "", false )
+    frmKeyBoard_AddKeyBinding( "Debug", IDM_DEBUG_RUNTOCURSOR, "IDM_DEBUG_RUNTOCURSOR", "Run to Cursor", "Ctrl+F10", "", false )
+    frmKeyBoard_AddKeyBinding( "Debug", IDM_DEBUG_TOGGLEBREAKPOINT, "IDM_DEBUG_TOGGLEBREAKPOINT", "Toggle Breakpoint", "F9", "", false )
+    frmKeyBoard_AddKeyBinding( "Debug", IDM_DEBUG_DELETEALLBREAKPOINTS, "IDM_DEBUG_DELETEALLBREAKPOINTS", "Delete All Breakpoints", "Ctrl+Shift+F9", "", false )
+
     '' HELP MENU
     frmKeyBoard_AddKeyBinding( "Help", IDM_HELP_FB, "IDM_HELP_FB", "FreeBasic Help (context sensitive help)", "F1", "", false )
     
     ' Load the keybindings settings file. This will update the gKeys array with any
     ' user defined key mappings.
-    dim as CWSTR wszFilename = AfxGetExePathName & "settings\keybindings.ini" 
+    dim as DWSTRING wszFilename = AfxGetExePathName & "settings\keybindings.ini" 
     
     dim pStream as CTextStream
     
     if pStream.Open( wszFilename ) = S_OK then 
         do until pStream.EOS
-            dim as CWSTR wst = pStream.ReadLine
+            dim as DWSTRING wst = pStream.ReadLine
             wst = trim(wst)
             if len(wst) = 0 then continue Do
             
             ' Each keybinding entry has fields separated by a colon 
             if instr( wst, ":" ) = 0 then continue do
             
-            dim as CWSTR wszMsgString = AfxStrParse(wst, 1, ":")  
+            dim as DWSTRING wszMsgString = AfxStrParse(wst, 1, ":")  
             
             ' The MsgString could have an embedded (DISABLED) flag indicating that the
             ' default key combination should be disabled.
@@ -229,7 +240,7 @@ function frmKeyboard_CreateDefaultKeyBindings() as long
                 wszMsgString = left(wszMsgString, i-1 )
             end if   
             
-            dim as CWSTR wszUserKeys = trim(AfxStrParse(wst, 2, ":"))
+            dim as DWSTRING wszUserKeys = trim(AfxStrParse(wst, 2, ":"))
             frmKeyBoard_AddKeyBinding( "", 0, wszMsgString, "", "", wszUserKeys, bDisabled )
         Loop
         pStream.Close
@@ -245,7 +256,7 @@ end function
 ' ========================================================================================
 ' Convert a virtual key string (Ctrl, Alt, Shift) to virtual key value
 ' ========================================================================================
-function frmKeyboard_VirtKeyToValue( byval wszString as CWSTR ) as long
+function frmKeyboard_VirtKeyToValue( byval wszString as DWSTRING ) as long
     select case ucase(wszString)
         case "CTRL":  return FCONTROL
         case "ALT":   return FALT
@@ -271,7 +282,7 @@ end function
 ' ========================================================================================
 ' Convert an accelerator key string (F1, TAB, "A", etc..) to virtual key value
 ' ========================================================================================
-function frmKeyboard_AccelKeyToValue( byval wszString as CWSTR ) as long
+function frmKeyboard_AccelKeyToValue( byval wszString as DWSTRING ) as long
     select case ucase(wszString)
         case "BACKSPACE": return VK_BACK
         case "TAB": return VK_TAB
@@ -386,7 +397,7 @@ function frmKeyboard_BuildAcceleratorTable() as long
     ' Create the accelerator table based on the data in the gKeys() array
     for i as long = lbound(gKeys) to ubound(gKeys)
         
-        dim as CWSTR wszKeys = gKeys(i).wszDefaultKeys
+        dim as DWSTRING wszKeys = gKeys(i).wszDefaultKeys
 
         ' wszUserKeys will override the wszDefaultKeys entry
         if len(gKeys(i).wszUserKeys) then 
@@ -418,7 +429,7 @@ function frmKeyboard_BuildAcceleratorTable() as long
         for ii as long = nCount to 1 step -1
             ' The accelerator key will always be the last parse regardless of 
             ' number of items in the string
-            dim as CWSTR wszString = AfxStrParse( wszKeys, ii, "+" )
+            dim as DWSTRING wszString = AfxStrParse( wszKeys, ii, "+" )
             if ii = nCount then
                 nAccelValue = frmKeyboard_AccelKeyToValue( wszString )
             else
@@ -440,12 +451,12 @@ end function
 ' Check for keybinding conflict with other keys and display warning label message
 ' ========================================================================================
 function frmKeyboard_CheckForKeyConflict ( _
-            byval wszKeys as CWSTR, _
+            byval wszKeys as DWSTRING, _
             byval nSkipIndex as long _
             ) as long
             
-    dim as CWSTR wszMessage
-    dim as CWSTR wszCheck
+    dim as DWSTRING wszMessage
+    dim as DWSTRING wszCheck
     
     for i as long = lbound(gKeys) to ubound(gKeys)
         if i = nSkipIndex then continue for
@@ -499,7 +510,7 @@ function frmKeyboard_OnNotify( _
             if id = IDC_FRMKEYBOARD_LIST1 then
                 dim as long nCurSel = ListView_GetSelection( HWND_FRMKEYBOARD_LISTVIEW )
                 if nCurSel < 0 then exit function
-                dim as CWSTR wszKeys = iif( len(gKeys(nCurSel).wszUserKeys), _
+                dim as DWSTRING wszKeys = iif( len(gKeys(nCurSel).wszUserKeys), _
                                                 gKeys(nCurSel).wszUserKeys, gKeys(nCurSel).wszDefaultKeys )
                 frmKeyboard_CheckForKeyConflict( wszKeys, nCurSel )
             end if   
@@ -554,7 +565,7 @@ end function
 ' Process WM_CLOSE message for window/dialog: frmKeyboard
 ' ========================================================================================
 function frmKeyboard_OnClose( byval hwnd as HWND ) as LRESULT
-    dim as CWSTR wszFilename = AfxGetExePathName & "settings\keybindings.ini" 
+    dim as DWSTRING wszFilename = AfxGetExePathName & "settings\keybindings.ini" 
     frmKeyboard_SaveKeyBindings( wszFilename )
     frmKeyboard_BuildAcceleratorTable()
 
@@ -683,8 +694,8 @@ function frmKeyboard_Show( byval hWndParent as HWND ) as LRESULT
     HWND_FRMKEYBOARD_LISTVIEW = _
         pWindow->AddControl("LISTVIEW", , IDC_FRMKEYBOARD_LIST1, "", 0, 0, 622, 364, _
         WS_CHILD or WS_VISIBLE or WS_TABSTOP or LVS_REPORT or LVS_SHOWSELALWAYS or LVS_SINGLESEL, _
-        WS_EX_LEFT or WS_EX_RIGHTSCROLLBAR, , _
-        cast(SUBCLASSPROC, @frmKeyboard_ListView_SubclassProc), IDC_FRMKEYBOARD_LIST1, cast(DWORD_PTR, @pWindow))
+        WS_EX_LEFT or WS_EX_RIGHTSCROLLBAR)
+    pWindow->SetControlSubclass(HWND_FRMKEYBOARD_LISTVIEW, @frmKeyboard_ListView_SubclassProc, IDC_FRMKEYBOARD_LIST1, @pWindow)
                                         
     ' Make the listview header flat
     ListView_MakeHeaderFlat( HWND_FRMKEYBOARD_LISTVIEW )
@@ -724,7 +735,7 @@ function frmKeyboard_Show( byval hWndParent as HWND ) as LRESULT
         LV_InsertItem( hLV, i, 1, "" ) 
         LV_InsertItem( hLV, i, 2, gKeys(i).wszCategory ) 
         LV_InsertItem( hLV, i, 3, gKeys(i).wszDescription ) 
-        dim as CWSTR wszTemp = gKeys(i).wszDefaultKeys
+        dim as DWSTRING wszTemp = gKeys(i).wszDefaultKeys
         if gKeys(i).bDefaultDisabled then
             wszTemp = wszTemp & " (DISABLED)"
         end if

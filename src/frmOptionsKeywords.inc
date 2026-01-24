@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -117,12 +117,11 @@ function frmOptionsKeywords_Show( byval hwndParent as HWND ) as LRESULT
     ' Height and width of this child form is set in frmOptions_OnNotify when the treeview option is selected.
     
     dim as HWND hTextBox = _
-    pWindow->AddControl("TEXTBOX", , IDC_FRMOPTIONSKEYWORDS_TXTKEYWORDS, "", 0, 0, 386, 345, _
+        pWindow->AddControl("TEXTBOX", , IDC_FRMOPTIONSKEYWORDS_TXTKEYWORDS, "", 0, 0, 386, 345, _
         WS_CHILD or WS_VISIBLE or WS_VSCROLL or WS_TABSTOP or ES_LEFT or _
         ES_MULTILINE or ES_AUTOVSCROLL or ES_WANTRETURN, _
-        WS_EX_CLIENTEDGE or WS_EX_LEFT or WS_EX_LTRREADING , , _
-        cast(SUBCLASSPROC, @frmOptionsKeywordsTextBox_SubclassProc ), _
-        IDC_FRMOPTIONSKEYWORDS_TXTKEYWORDS, cast(DWORD_PTR, @pWindow)) 
+        WS_EX_CLIENTEDGE or WS_EX_LEFT or WS_EX_LTRREADING)
+    pWindow->SetControlSubclass(hTextBox, @frmOptionsKeywordsTextBox_SubclassProc, IDC_FRMOPTIONSKEYWORDS_TXTKEYWORDS, @pWindow)        
         
     SendMessage( hTextBox, EM_SETLIMITTEXT, (1024 * 100), 0 )    ' max 100K text   
     

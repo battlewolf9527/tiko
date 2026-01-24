@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General public License as published by
@@ -12,6 +12,8 @@
 '    GNU General public License for more details.
 
 #pragma once
+
+#include once "frmDebug.bi"
 
 '  Scintilla Control identifiers
 #define IDC_SCINTILLA              100
@@ -29,13 +31,18 @@
 #define FILETYPE_RESOURCE         "4"
 #define FILETYPE_HEADER           "5"
 
+' define marker numbers (0-31 available)
+#define MARKER_BOOKMARK            1
+#define MARKER_BREAKPOINT          2
+#define MARKER_OCCURRENCES         3
+#define MARKER_DEBUGGER_CURLINE    4
 
 ' Structure that holds all of the user embedded compiler directives
 ' in the source code. Currently, only the main source file is searched
 ' for the '#CONSOLE ON|OFF directive but others can be added as needed.
 type COMPILE_DIRECTIVES
     DirectiveFlag as long              ' IDM_GUI, IDM_CONSOLE, IDM_RESOURCE
-    DirectiveText as CWSTR             ' resource filename, link modules
+    DirectiveText as DWSTRING             ' resource filename, link modules
 end type
 
 ' Forward references
@@ -55,10 +62,11 @@ end enum
 type PROJECT_FILELOAD_DATA
     bIsValidData    as boolean      ' True set on projectload. Checked in AssignTextBuffer.
     bLoadInTab      as boolean
-    wszFilename     as CWSTR        ' full path and filename
-    wszFiletype     as CWSTR        ' pDoc->ProjectFileType
-    wszBookmarks    as CWSTR        ' pDoc->GetBookmarks()
-    wszFoldPoints   as CWSTR        ' pDoc->GetFoldPoints()
+    wszFilename     as DWSTRING        ' full path and filename
+    wszFiletype     as DWSTRING        ' pDoc->ProjectFileType
+    wszBookmarks    as DWSTRING        ' pDoc->GetBookmarks()
+    wszBreakPoints  as DWSTRING        ' pDoc->GetBreakPoints()
+    wszFoldPoints   as DWSTRING        ' pDoc->GetFoldPoints()
     nFirstLine      as long         ' first line of main view 
     nPosition       as long         ' current position of main view
     nFirstLine1     as long         ' first line of second view 
@@ -98,7 +106,7 @@ type clsDocument
     pSci(1)               as any ptr      
     
     ' Code document related
-    ProjectFiletype       as CWSTR = FILETYPE_UNDEFINED
+    ProjectFiletype       as DWSTRING = FILETYPE_UNDEFINED
     DiskFilename          as wstring * MAX_PATH
     DateFileTime          as FILETIME  
     bBookmarkExpanded     as boolean = true     ' Bookmarks list expand/collapse state
@@ -114,7 +122,7 @@ type clsDocument
     lastCaretPos          as long               ' used for checking in SCN_UPDATEUI
     lastXOffsetPos        as long               ' used for checking in SCN_UPDATEUI (horizontal offset)
     LastCharTyped         as long               ' used to test for BACKSPACE resetting the autocomplete popup.
-    wszEOL                as CWSTR              ' used in replace in files when constructing each line of new file
+    wszEOL                as DWSTRING              ' used in replace in files when constructing each line of new file
     CurrentSelection      as SELECTION_INFO     ' set during scintilla wm_notfy and used in Find/Replace dialog
     
     ' Following used for split edit views
@@ -151,7 +159,7 @@ type clsDocument
     declare function FindReplace( byval strFindText as string, byval strReplaceText as string ) as long
     declare function InsertFile() as boolean
     declare function SaveFile(byval bSaveAs as boolean = false ) as boolean
-    declare function SaveTempFile( byval wszFilename as CWSTR ) as boolean
+    declare function SaveTempFile( byval wszFilename as DWSTRING ) as boolean
     declare function ApplyProperties() as long
     declare function GetTextRange( byval cpMin as long, byval cpMax as long) as string
     declare function ChangeSelectionCase( byval fCase as long) as long 
@@ -174,9 +182,17 @@ type clsDocument
     declare function CurrentLineDown() as long
     declare function MoveCurrentLines( byval flagMoveDown as boolean ) as long
     declare function NewLineBelowCurrent() as long
+    declare function ToggleMarker( byval nLine as long, byval MarkerType as long ) as long
     declare function ToggleBookmark( byval nLine as long ) as long
     declare function NextBookmark() as long 
     declare function PrevBookmark() as long 
+    declare function GetMarkers( byval MarkerType as long ) as string
+    declare function SetMarkers( byval sMarkers as string, byval MarkerType as long ) as long
+    declare function GetBookmarks() as string
+    declare function SetBookmarks( byval sBookmarks as string ) as long
+    declare function GetBreakPoints() as string
+    declare function SetBreakPoints( byval sBreakPoints as string ) as long
+    declare function ToggleBreakPoint( byval nLine as long ) as long
     declare function FoldToggle( byval nLine as long ) as long
     declare function FoldAll() as long
     declare function UnFoldAll() as long
@@ -184,8 +200,6 @@ type clsDocument
     declare function ConvertEOL( byval nMode as long) as long
     declare function TabsToSpaces() as long
     declare function GetWord( byval curPos as long = -1 ) as string
-    declare function GetBookmarks() as string
-    declare function SetBookmarks( byval sBookmarks as string ) as long
     declare function GetFoldPoints() as string
     declare function SetFoldPoints( byval sFoldPoints as string ) as long
     declare function GetCurrentFunctionName( byref sFunctionName as string, byref nGetSet as ClassProperty ) as long

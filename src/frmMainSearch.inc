@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -62,7 +62,7 @@ function OnCommand_SearchGotoDefinition( byval pDoc as clsDocument ptr ) as LRES
     If pDoc = 0 Then Exit Function
     
     dim pData as DB2_DATA ptr
-    dim as CWSTR wszFilename
+    dim as DWSTRING wszFilename
     dim as string sTypeName, sFunctionName, sLookFor, sTrigger
     dim as long nLineNum = 0
     
@@ -153,7 +153,7 @@ function OnCommand_SearchGotoFile( _
     if pDoc = 0 then exit function
     
     dim pDocFile as clsDocument ptr
-    dim as CWSTR wszFilename
+    dim as DWSTRING wszFilename
 
     dim as HWND hEdit = pDoc->hWndActiveScintilla
     
@@ -239,11 +239,15 @@ function OnCommand_SearchBookmarks( _
             AfxRedrawWindow( HWND_FRMBOOKMARKS )
 
         case IDM_BOOKMARKCLEARALLDOCS
+            if MessageBox( HWND_FRMMAIN, L(316,"Do you want to delete all bookmarks?"), L(276,"Confirm"), _
+                        MB_YESNOCANCEL or MB_ICONQUESTION or MB_DEFBUTTON1 ) <> IDYES then
+                return true
+            end if            
             dim pDoc as clsDocument ptr = gApp.pDocList
             do until pDoc = 0
-            hEdit = pDoc->hWindow(0)
-            SciExec( hEdit, SCI_MARKERDELETEALL, -1, 0 )
-            pDoc = pDoc->pDocNext
+                hEdit = pDoc->hWindow(0)
+                SciExec( hEdit, SCI_MARKERDELETEALL, MARKER_BOOKMARK, 0 )
+                pDoc = pDoc->pDocNext
             loop
             LoadBookmarksFiles
             AfxRedrawWindow( HWND_FRMBOOKMARKS )

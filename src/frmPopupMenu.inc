@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -234,7 +234,7 @@ function frmPopupMenu_OnDrawItem( _
         dim as COLORREF backclr
         dim as COLORREF foreclr
         
-        dim as CWSTR wszCaption = getMenuText(pMenu->nID)
+        dim as DWSTRING wszCaption = getMenuText(pMenu->nID)
 
         if (pMenu->isSeparator = true) orelse (pMenu->isDisabled = true) then
             foreclr = ghPopup.ForeColorDisabled
@@ -267,8 +267,8 @@ function frmPopupMenu_OnDrawItem( _
                             rcText.right, (rcText.bottom-rcText.top) / 2 )
         else
             ' Handle caption, keyboard accelerator or submenu marker
-            dim as CWSTR wszLeft = AfxStrParse(wszCaption, 1, chr(9))
-            dim as CWSTR wszRight = AfxStrParse(wszCaption, 2, chr(9))
+            dim as DWSTRING wszLeft = AfxStrParse(wszCaption, 1, chr(9))
+            dim as DWSTRING wszRight = AfxStrParse(wszCaption, 2, chr(9))
             
             ' checkmark
             if pMenu->isChecked then
@@ -496,14 +496,14 @@ function frmPopupMenu_GetMaxMenuWidth( byval nCtrlID as long ) as long
     ' and any padding. Need to do this calculation because menu widths will vary
     ' based on the language used.
     ' Returns an unscaled value.
-    dim as CWSTR wszText
+    dim as DWSTRING wszText
     dim as long max_left_width
     dim as long max_right_width
     dim as long left_width
     dim as long right_width
     dim as long interior_width = 0
-    dim as CWSTR wszLeft
-    dim as CWSTR wszRight
+    dim as DWSTRING wszLeft
+    dim as DWSTRING wszRight
     
     for i as long = lbound(gTopMenu) to ubound(gTopMenu)
         if gTopMenu(i).nParentID = nCtrlID then
@@ -615,8 +615,8 @@ function frmPopupMenu_Show( _
     dim as HWND hPopupListBox = _ 
         pWindow->AddControl("LISTBOX", , IDC_MENU_LISTBOX, "", 0, 0, 0, 0, _
         WS_CHILD or WS_TABSTOP or LBS_NOINTEGRALHEIGHT or _
-        LBS_OWNERDRAWFIXED or LBS_HASSTRINGS or LBS_NOTIFY, WS_EX_LEFT or WS_EX_RIGHTSCROLLBAR, , _
-        cast(SUBCLASSPROC, @frmPopupMenu_SubclassProc), IDC_MENU_LISTBOX, cast(DWORD_PTR, @pWindow))
+        LBS_OWNERDRAWFIXED or LBS_HASSTRINGS or LBS_NOTIFY, WS_EX_LEFT or WS_EX_RIGHTSCROLLBAR)
+        pWindow->SetControlSubclass(hPopupListBox, @frmPopupMenu_SubclassProc, IDC_MENU_LISTBOX, @pWindow)
 
     dim as long margin_width = 40
     ' get unscaled text width and add left/right margin areas

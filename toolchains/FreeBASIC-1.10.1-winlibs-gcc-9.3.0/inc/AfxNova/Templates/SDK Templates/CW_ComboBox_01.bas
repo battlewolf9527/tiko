@@ -47,7 +47,7 @@ FUNCTION wWinMain (BYVAL hInstance AS HINSTANCE, _
    ' // Set the main window background color
    pWindow.SetBackColor(RGB_OLDLACE)
 
-   ' // Adds a button
+   ' // Adds a combobox
    DIM hComboBox AS HWND = pWindow.AddControl("Combobox", hWin, IDC_COMBOBOX, "", 80, 30, 230, 100)
    ' // Anchors the button to the bottom and the right side of the main window
    pWindow.AnchorControl(IDC_COMBOBOX, AFX_ANCHOR_WIDTH)

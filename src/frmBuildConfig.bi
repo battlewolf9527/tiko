@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@ common shared as HACCEL ghAccelBuildConfigurations
 
 declare function frmBuildConfig_CreateAcceleratorTable() as long
 declare function frmBuildConfig_getActiveBuildIndex() as long
-declare function frmBuildConfig_GetSelectedBuildDescription() as CWSTR
+declare function frmBuildConfig_GetSelectedBuildDescription() as DWSTRING
 declare function frmBuildConfig_GetSelectedBuildGUID() as string
 declare function frmBuildConfig_GetDefaultBuildGUID() as string
 declare function frmBuildConfig_Show( byval hWndParent as HWND ) as LRESULT

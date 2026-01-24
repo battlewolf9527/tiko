@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -277,7 +277,7 @@ function AttemptAutoInsert() as Long
     ' FOR/NEXT
     if left(strPrevLine, 4) = "FOR " then
         strFill = FillString(space(nSpaces + IndentSize))
-        dim as CWSTR wszLoopVar
+        dim as DWSTRING wszLoopVar
         if gConfig.FornextVariable then
             ' Determine the loop variable and append it to the "next" statement
             strPrevLine = ltrim(AfxStrShrink(strPrevLineOrig))

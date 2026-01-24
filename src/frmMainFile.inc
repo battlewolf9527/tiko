@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -59,7 +59,7 @@ function OnCommand_FileOpen( _
     pItems->lpVtbl->GetCount(pItems, @dwItemCount)
     
     ' Variable length array to hold all filenames to open. 
-    dim AllFilenames(dwItemCount - 1) as CWSTR
+    dim AllFilenames(dwItemCount - 1) as DWSTRING
     
     ' Variable length array to hold sequence of TabCtrl tabs to open. We save the sequence
     ' here and open them only after all over documents have been loaded. This will look
@@ -126,7 +126,7 @@ function OnCommand_FileOpen( _
 
 
     ' Loop through all files that are tagged to be displayed in the top tabcontrol.
-    ' Files being added to a Project do not get added to the tabe control.
+    ' Files being added to a Project do not get added to the tabs control.
     dim as long iTab = -1
     for i = lbound(pDocTabs) to ubound(pDocTabs)
         if pDocTabs(i) = 0 then continue for
@@ -197,7 +197,7 @@ function OnCommand_FileSave( _
         If (cbool(SciExec( pDoc->hWindow(0), SCI_GETMODIFY, 0, 0 ) <> 0)) orelse _
            (pDoc->UserModified = true) orelse (bSaveAs = true) then   
             ' Do the actual saving to disk
-            dim wszFilename as CWSTR = pDoc->DiskFilename
+            dim wszFilename as DWSTRING = pDoc->DiskFilename
             if pDoc->SaveFile(bSaveAs) = false then
                 pDoc->ApplyProperties
                 pDoc->ParseDocument()
@@ -373,6 +373,13 @@ function OnCommand_FileClose( _
             bRemoveFile = true
         else
             bRemoveFile = iif( gApp.IsProjectActive, false, true )
+            ' If the file was added to the tab control via a right-click include open then it
+            ' is not technically part of the project. We need to remove it from the gApp doc
+            ' list because if we try to later do an "Add files to Project" then the load will
+            ' fail because the document is already in the gApp doc list.
+            if (gApp.IsProjectActive = true) andalso (pDoc->ProjectFileType = FILETYPE_UNDEFINED) then
+                bRemoveFile = true
+            end if
         end if
 
         if bRemoveFile then

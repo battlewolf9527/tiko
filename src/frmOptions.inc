@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -48,16 +48,17 @@ function frmOptions_SaveEditorOptions() as long
 
     ' EDITOR OPTIONS   
     hwnd = HWND_FRMOPTIONSEDITOR
-    gConfig.SyntaxHighlighting   = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKSYNTAXHIGHLIGHTING) )
-    gConfig.LeftMargin           = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKSHOWLEFTMARGIN) )
-    gConfig.FoldMargin           = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKSHOWFOLDMARGIN) )
-    gConfig.ConfineCaret         = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKCONFINECARET) )
-    gConfig.LineNumbering        = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKLINENUMBERING) )
-    gConfig.HighlightCurrentLine = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKCURRENTLINE) )
-    gConfig.TabIndentSpaces      = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKTABTOSPACES) )
-    gConfig.IndentGuides         = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKINDENTGUIDES ) )
-    gConfig.RightEdge            = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKSHOWRIGHTEDGE) )
-    gConfig.PositionMiddle       = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKPOSITIONMIDDLE) )
+    gConfig.SyntaxHighlighting    = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKSYNTAXHIGHLIGHTING) )
+    gConfig.LeftMargin            = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKSHOWLEFTMARGIN) )
+    gConfig.FoldMargin            = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKSHOWFOLDMARGIN) )
+    gConfig.ConfineCaret          = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKCONFINECARET) )
+    gConfig.LineNumbering         = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKLINENUMBERING) )
+    gConfig.HighlightCurrentLine  = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKCURRENTLINE) )
+    gConfig.TabIndentSpaces       = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKTABTOSPACES) )
+    gConfig.IndentGuides          = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKINDENTGUIDES ) )
+    gConfig.RightEdge             = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKSHOWRIGHTEDGE) )
+    gConfig.PositionMiddle        = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKPOSITIONMIDDLE) )
+    gConfig.ClickToggleBreakpoint = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKTOGGLEBREAKPOINT) )
 
     gConfig.RightEdgePosition = AfxGetWindowText( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_TXTRIGHTEDGE) )
     gConfig.TabSize = AfxGetWindowText( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_TXTTABSIZE) )
@@ -108,7 +109,7 @@ function frmOptions_SaveEditorOptions() as long
     hwnd = HWND_FRMOPTIONSCOMPILER
     
     ' Get the selected toolchain and then build the paths to the compilers
-    dim as CWSTR wszPath
+    dim as DWSTRING wszPath
     idx = ListBox_GetCurSel( GetDlgItem(hwnd, IDC_FRMOPTIONSCOMPILER_LSTTOOLCHAINS) )
     if idx <> -1 then
         wszPath = AfxGetExePathName + "Toolchains\" + AfxGetListBoxText( GetDlgItem(hwnd, IDC_FRMOPTIONSCOMPILER_LSTTOOLCHAINS), idx )

@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -20,8 +20,8 @@ declare function OpenMRUFile( byval hwnd as HWND, byval wID as Long ) as long
 declare function ClearMRUlist( byval wID as long ) as long
 declare function UpdateMRUList( byref wzFilename as wstring ) as long
 declare function OpenMRUSessionFile( byval hwnd as HWND, byval wID as long) as long
-declare function UpdateMRUSessionList( byval wszFilename as CWSTR ) as long
+declare function UpdateMRUSessionList( byval wszFilename as DWSTRING ) as long
 declare function OpenMRUProjectFile( byval hwnd as HWND, byval wID as long) as long
-declare function UpdateMRUProjectList( byval wszFilename as CWSTR ) as long
+declare function UpdateMRUProjectList( byval wszFilename as DWSTRING ) as long
 
 

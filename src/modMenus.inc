@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -167,7 +167,7 @@ function frmMain_ViewTopMenuStates() as long
     CheckMarkTopMenuItem( IDM_VIEWSIDEPANEL, iif( IsWindowVisible(HWND_FRMPANEL), true, false ))
     CheckMarkTopMenuItem( IDM_VIEWEXPLORER, iif( IsWindowVisible(HWND_FRMEXPLORER), true, false ))
     CheckMarkTopMenuItem( IDM_VIEWOUTPUT, iif( IsWindowVisible(HWND_FRMOUTPUT), true, false ))
-    CheckMarkTopMenuItem( IDM_functionLIST, iif( IsWindowVisible(HWND_FRMfunctionS), true, false ))
+    CheckMarkTopMenuItem( IDM_FUNCTIONLIST, iif( IsWindowVisible(HWND_FRMFUNCTIONS), true, false ))
     CheckMarkTopMenuItem( IDM_BOOKMARKSLIST, iif( IsWindowVisible(HWND_FRMBOOKMARKS), true, false ))
 
     ' Enable or disable specific edit menu items (based on the currently active document)
@@ -233,9 +233,36 @@ function frmMain_CompileTopMenuStates() as long
     end if
     
     ' Determine if an executable exists based on the current active file or project
-    dim as CWSTR wszRunFile = GetRunExecutableFilename()
+    dim as DWSTRING wszRunFile = GetRunExecutableFilename()
     if AfxFileExists(wszRunFile) then EnableTopMenuItem( IDM_RUNEXE, true )
     
+    function = 0
+end function
+
+
+' ========================================================================================
+' Enable/Disable top menu items depending on application state
+' ========================================================================================
+function frmMain_DebugTopMenuStates() as long
+    
+    ' Start off by disabling everything in order to make things easier. 
+    for idMenu as long = IDM_DEBUG_START to IDM_DEBUG_END
+        EnableTopMenuItem( idMenu, false )
+    next
+
+    dim as boolean fEnabled = iif( gApp.IsProjectActive orelse cbool(gTTabCtl.GetItemCount), true, false )
+    EnableTopMenuItem( IDM_DEBUG_STARTDEBUGGING, fEnabled )
+    
+    EnableTopMenuItem( IDM_DEBUG_STOPDEBUGGING, gApp.IsDebuggerActive )
+    EnableTopMenuItem( IDM_DEBUG_STEPINTO, gApp.IsDebuggerActive )
+    EnableTopMenuItem( IDM_DEBUG_STEPOVER, gApp.IsDebuggerActive )
+    EnableTopMenuItem( IDM_DEBUG_STEPOUT, gApp.IsDebuggerActive )
+    EnableTopMenuItem( IDM_DEBUG_RUNTOCURSOR, gApp.IsDebuggerActive )
+    
+    fEnabled = iif( cbool(gTTabCtl.GetItemCount), true, false )
+    EnableTopMenuItem( IDM_DEBUG_TOGGLEBREAKPOINT, fEnabled )
+    EnableTopMenuItem( IDM_DEBUG_DELETEALLBREAKPOINTS, fEnabled )
+
     function = 0
 end function
 
@@ -266,6 +293,7 @@ function frmMain_ChangeTopMenuStates() as long
         case IDC_MENUBAR_VIEW:     frmMain_ViewTopMenuStates()
         case IDC_MENUBAR_PROJECT:  frmMain_ProjectTopMenuStates()
         case IDC_MENUBAR_COMPILE:  frmMain_CompileTopMenuStates()
+        case IDC_MENUBAR_DEBUG:    frmMain_DebugTopMenuStates()
         case IDC_MENUBAR_HELP:     frmMain_HelpTopMenuStates()
     end select
     
@@ -355,13 +383,13 @@ function CreateStatusBarBuildConfigContextMenu() as HMENU
     dim hPopUpMenu as HMENU
     
     dim as long curSelected
-    dim as CWSTR wszCurrentBuild = frmBuildConfig_GetSelectedBuildDescription()
+    dim as DWSTRING wszCurrentBuild = frmBuildConfig_GetSelectedBuildDescription()
     
     hPopUpMenu = CreatePopupMenu
     for i as long = lbound(gConfig.Builds) to ubound(gConfig.Builds)
         if gConfig.Builds(i).ExcludeInPopup then continue for
         dim as long idMenu = IDM_BUILDCONFIG_POPUP + i
-        dim as CWSTR wszCaption = gConfig.Builds(i).wszDescription
+        dim as DWSTRING wszCaption = gConfig.Builds(i).wszDescription
         if wszCaption = wszCurrentBuild then curSelected = idMenu
         gConfig.Builds(i).idMenu = idMenu
         AppendMenu hPopUpMenu, MF_ENABLED or MFT_RADIOCHECK, idMenu, wszCaption
@@ -411,7 +439,7 @@ function CreateStatusBarSpacesContextMenu() as HMENU
         hPopUpMenu = CreatePopupMenu
         for i as long = 0 to 8
             dim as long idMenu = IDM_SPACES + i
-            dim as CWSTR wszCaption = str(i)
+            dim as DWSTRING wszCaption = str(i)
             if i = val(gConfig.TabSize) then wszCaption = wszCaption & "  (Current Tab Size)"
             AppendMenu hPopUpMenu, MF_ENABLED or MFT_RADIOCHECK, idMenu, wszCaption
         next
@@ -509,6 +537,11 @@ function CreateScintillaContextMenu() as HMENU
     AppendMenu hPopupMenu, MF_ENABLED, IDM_COPY, L(18,"Copy")
     AppendMenu hPopupMenu, MF_ENABLED, IDM_PASTE, L(19,"Paste")
     AppendMenu hPopupMenu, MF_SEPARATOR, 0, ""
+    AppendMenu hPopupMenu, MF_ENABLED, IDM_DEBUG_TOGGLEBREAKPOINT, L(313,"Toggle Breakpoint") 
+    if gApp.IsDebuggerActive = true then
+        AppendMenu hPopupMenu, MF_ENABLED, IDM_DEBUG_RUNTOCURSOR, L(320,"Run to Cursor") 
+    end if
+    AppendMenu hPopupMenu, MF_SEPARATOR, 0, ""
     AppendMenu hPopupMenu, MF_ENABLED, IDM_INDENTBLOCK, L(23,"Block Indent") 
     AppendMenu hPopupMenu, MF_ENABLED, IDM_UNINDENTBLOCK, L(24,"Block Unindent")
     AppendMenu hPopupMenu, MF_SEPARATOR, 0, ""
@@ -539,7 +572,7 @@ function CreateExplorerContextMenu(byval pDoc as clsDocument ptr ) as HMENU
         if gApp.IsProjectActive then
             AppendMenu hPopUpMenu, MF_ENABLED, IDM_FILEOPEN_EXPLORERLISTBOX,   L(75,"Open") 
             AppendMenu hPopUpMenu, MF_SEPARATOR, 0, "" 
-            if (gTTabCtl.GetTabIndexByDocumentPtr( pDoc ) <> -1) orelse (nSelCount > 0) then
+            if (gTTabCtl.GetTabIndexByDocumentPtr( pDoc ) <> -1) orelse (nSelCount > 1) then
                 AppendMenu hPopUpMenu, MF_ENABLED, IDM_FILECLOSE_EXPLORERLISTBOX,  L(5,"Close") 
                 AppendMenu hPopUpMenu, MF_SEPARATOR, 0, "" 
             end if
@@ -571,7 +604,7 @@ end function
 ''
 function CreateExplorerActionButtonContextMenu() as HMENU
     dim hPopUpMenu as HMENU
-    dim as CWSTR wszCaption
+    dim as DWSTRING wszCaption
     
     hPopUpMenu = CreatePopupMenu
     AppendMenu hPopUpMenu, MF_ENABLED, IDM_EXPLORER_EXPANDALL, L(441,"Expand All") 
@@ -586,7 +619,7 @@ end function
 ''
 function CreateFunctionsActionButtonContextMenu() as HMENU
     dim hPopUpMenu as HMENU
-    dim as CWSTR wszCaption
+    dim as DWSTRING wszCaption
     
     hPopUpMenu = CreatePopupMenu
     AppendMenu hPopUpMenu, MF_ENABLED, IDM_FUNCTIONS_EXPANDALL, L(441,"Expand All") 
@@ -604,7 +637,7 @@ end function
 ''
 function CreateBookmarksActionButtonContextMenu() as HMENU
     dim hPopUpMenu as HMENU
-    dim as CWSTR wszCaption
+    dim as DWSTRING wszCaption
     
     hPopUpMenu = CreatePopupMenu
     AppendMenu hPopUpMenu, MF_ENABLED, IDM_BOOKMARKS_EXPANDALL, L(441,"Expand All") 
@@ -621,7 +654,7 @@ end function
 ''
 function CreateBookmarksHeaderNodeContextMenu() as HMENU
     dim hPopUpMenu as HMENU
-    dim as CWSTR wszCaption
+    dim as DWSTRING wszCaption
     
     hPopUpMenu = CreatePopupMenu
     AppendMenu hPopUpMenu, MF_ENABLED, IDM_CLEARALLBOOKMARKNODE, L(53,"Clear Bookmarks") 
@@ -633,7 +666,7 @@ end function
 ''
 function CreateBookmarksBookmarkNodeContextMenu() as HMENU
     dim hPopUpMenu as HMENU
-    dim as CWSTR wszCaption
+    dim as DWSTRING wszCaption
     
     hPopUpMenu = CreatePopupMenu
     AppendMenu hPopUpMenu, MF_ENABLED, IDM_REMOVEBOOKMARKNODE, L(444,"Remove Bookmark") 
@@ -645,7 +678,7 @@ end function
 ''
 function CreateTopTabsActionButtonContextMenu() as HMENU
     dim hPopUpMenu as HMENU
-    dim as CWSTR wszCaption
+    dim as DWSTRING wszCaption
     ' List all of the Top Tab open tabs in the popup menu. Simply use the array
     ' index as the ID because the calling program will use this ID to set the
     ' gTTabCtl.CurSel. Must add 1 to idMenu because Win32 returns 0 if the popup

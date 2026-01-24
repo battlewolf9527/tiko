@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -302,7 +302,7 @@ function frmMain_OnCommand( _
         case IDM_FOLDTOGGLE, IDM_FOLDBELOW, IDM_FOLDALL, IDM_UNFOLDALL
             OnCommand_ViewFold( id, pDoc )
 
-        case IDM_ZOOMIN, IDM_ZOOMOUT
+        case IDM_ZOOMIN, IDM_ZOOMOUT, IDM_ZOOMRESET
             OnCommand_ViewZoom( id, pDoc )
 
         case IDM_SPLITLEFTRIGHT, IDM_SPLITTOPBOTTOM
@@ -332,12 +332,16 @@ function frmMain_OnCommand( _
         case IDM_MRUPROJECTBASE to (IDM_MRUPROJECTBASE + 10)
             OpenMRUProjectFile( hwnd, id )
 
-            
         ''  COMPILE MENU          
         case IDM_BUILDEXECUTE, IDM_COMPILE, IDM_REBUILDALL, IDM_QUICKRUN, _
             IDM_RUNEXE, IDM_COMMANDLINE
             OnCommand_CompileCommon( id )
 
+        ''  DEBUG MENU          
+        case IDM_DEBUG_STARTDEBUGGING, IDM_DEBUG_STOPDEBUGGING, _
+            IDM_DEBUG_STEPINTO, IDM_DEBUG_STEPOVER, IDM_DEBUG_STEPOUT, IDM_DEBUG_RUNTOCURSOR, _
+            IDM_DEBUG_TOGGLEBREAKPOINT, IDM_DEBUG_DELETEALLBREAKPOINTS
+            OnCommand_DebugCommon( id )
 
         ''   HELP MENU
         case IDM_HELP_FB

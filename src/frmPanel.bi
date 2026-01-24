@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
 
 
 type PANEL_BUTTON_TYPE
-    wszCaption   as CWSTR
+    wszCaption   as DWSTRING
     hActionChild as HWND
     rc           as RECT
 end type
@@ -23,7 +23,7 @@ dim shared gPanelButton(any) as PANEL_BUTTON_TYPE
 
 type PANEL_TYPE
     hActiveChild    as HWND
-    wszHeader       as CWSTR
+    wszHeader       as DWSTRING
     rcDividerLine   as RECT
     rcHeader        as RECT     ' EXPLORER, FUNCTION LIST, BOOKMARKS
     rcActionMenu    as RECT

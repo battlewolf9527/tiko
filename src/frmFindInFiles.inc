@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -92,7 +92,7 @@ function FindInFiles_ProcessFile( _
 
     if pStream.Open( wszFilename, IOMODE_FORREADING, false, bUnicode ) <> S_OK then return 1
 
-    dim as CWSTR wszLine, wszResult, wszLookLine
+    dim as DWSTRING wszLine, wszResult, wszLookLine
     
     if bMatchCase = false then wszFindText = ucase(wszFindText)
     
@@ -180,7 +180,7 @@ function FindInFiles_RecursiveFileSearch( _
             byref wszFindText as wstring, _
             byref wszIconReplaceText as wstring, _
             byref wszFilePath as wstring, _
-            wszFileSpecs() as CWSTR, _
+            wszFileSpecs() as DWSTRING, _
             byval bSubFolders as boolean, _
             byval bMatchCase  as boolean, _
             byval bWholeWords as boolean, _
@@ -209,7 +209,7 @@ function FindInFiles_RecursiveFileSearch( _
                 end if
             else
                 dim as boolean bProcessFile = false
-                dim as CWSTR wszExt
+                dim as DWSTRING wszExt
             
                 for i as long = lbound(wszFileSpecs) to ubound(wszFileSpecs)
                     bProcessFile = false
@@ -426,7 +426,7 @@ end function
 ' ========================================================================================
 function frmFindInFiles_DoFindInFilesEx( byval SearchMode as SEARCH_MODE ) as long
     dim ShExecInfo as SHELLEXECUTEINFOW  
-    dim as CWSTR DQ = wchr(34)
+    dim as DWSTRING DQ = wchr(34)
     
     dim as HCURSOR hCurSave = GetCursor()
     SetCursor( LoadCursor(0, IDC_WAIT) )
@@ -468,20 +468,20 @@ function frmFindInFiles_DoFindInFilesEx( byval SearchMode as SEARCH_MODE ) as lo
     frmFindInFiles_AddToFolderCombo(gFindInFiles.txtFolder)
     
     if right(gFindInFiles.txtFolder,1) <> "\" then gFindInFiles.txtFolder = gFindInFiles.txtFolder & "\"
-    dim wszFolder as CWSTR = gFindInFiles.txtFolder 
+    dim wszFolder as DWSTRING = gFindInFiles.txtFolder 
 
     ' What files are we searching in
     dim as boolean bInString
     dim as long ub
-    dim as CWSTR wszFiles, wszSearchFiles, wszFilename
+    dim as DWSTRING wszFiles, wszSearchFiles, wszFilename
     
     wszFiles = trim(AfxGetWindowText( GetDlgItem(HWnd_FRMFINDINFILES, IDC_FRMFINDINFILES_COMBOFILES)))
     gFindInFiles.txtFiles = wszFiles
     frmFindInFiles_AddToFilesCombo( gFindInFiles.txtFiles )
     
-    dim wszFileSpecs(any) as CWSTR
+    dim wszFileSpecs(any) as DWSTRING
     ' Examples:
-    '     dim wszFileSpecs(2) as CWSTR
+    '     dim wszFileSpecs(2) as DWSTRING
     '     wszFileSpecs(0) = "*.bas"
     '     wszFileSpecs(1) = "*.bi"
     '     wszFileSpecs(2) = "*.inc"
@@ -528,7 +528,7 @@ function frmFindInFiles_DoFindInFilesEx( byval SearchMode as SEARCH_MODE ) as lo
 
     ' Create a results file to capture the results (for Find only)
     dim pStreamResults as CTextStream  ' (create)(utf16)
-    dim as CWSTR wszSearchResults = AfxGetExePathName & "__searchresults.txt"
+    dim as DWSTRING wszSearchResults = AfxGetExePathName & "__searchresults.txt"
     if SearchMode = FindOnly then
         if pStreamResults.Create( wszSearchResults, true, true) <> S_OK then return 1
     end if
@@ -734,8 +734,8 @@ function frmFindInFiles_OnCommand( _
                 dim dwItemCount as long, i as long, idx as long, pItem as IShellItem ptr, pwszName as wstring ptr
                 pItems->lpVtbl->GetCount(pItems, @dwItemCount)
                 
-                dim wszFolder as CWSTR
-                dim wszFiles as CWSTR
+                dim wszFolder as DWSTRING
+                dim wszFiles as DWSTRING
 
                 for i = 0 to dwItemCount - 1
                     pItems->lpVtbl->GetItemAt(pItems, i, @pItem)
@@ -760,8 +760,8 @@ function frmFindInFiles_OnCommand( _
 
         Case IDC_FRMFINDINFILES_CMDFOLDERS
             If codeNotify = BN_CLICKED Then
-                static wszStartFolder as CWSTR
-                dim wszFolder as CWSTR
+                static wszStartFolder as DWSTRING
+                dim wszFolder as DWSTRING
                 if len(wszStartFolder) = 0 then wszStartFolder = AfxGetExePathName
                 wszFolder = AfxBrowseForFolder( HWND_FRMFINDINFILES, L(261,"Choose the folder to search in:"), wszStartFolder )
                 if len(wszFolder) then
@@ -1022,8 +1022,10 @@ function frmFindInFiles_Show( byval hWndParent as HWND ) as LRESULT
     if gFindInFiles.bFirstTimeInvoked then
         if gApp.IsProjectActive then
             gFindInFiles.nSearchProject = BST_CHECKED
-            frmFindInFiles_SetControlStates
+        else
+            gFindInFiles.nSearchAllOpenDocs = BST_CHECKED
         end if
+        frmFindInFiles_SetControlStates
         gFindInFiles.bFirstTimeInvoked = false
     end if
 

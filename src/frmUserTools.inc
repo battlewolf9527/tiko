@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -72,18 +72,17 @@ function frmUserTools_ExecuteUserTool( byval nToolNum as long ) as long
     dim pDocMain    as clsDocument ptr 
     dim pDocCurrent as clsDocument ptr 
     
-    dim wszCommand       as CWSTR
-    dim wszParameters    as CWSTR
-    dim wszProjectName   as CWSTR
-    dim wszMainSource    as CWSTR
-    dim wszExeName       as CWSTR
-    dim wszWord          as CWSTR
-    dim wszWorkingFolder as CWSTR 
+    dim wszCommand       as DWSTRING
+    dim wszParameters    as DWSTRING
+    dim wszProjectName   as DWSTRING
+    dim wszMainSource    as DWSTRING
+    dim wszExeName       as DWSTRING
+    dim wszWord          as DWSTRING
+    dim wszWorkingFolder as DWSTRING 
     dim sCurrentDir      as string
     
-    dim nWndStyle      as long = SW_SHOWNORMAL
+    dim nWndStyle        as long = SW_SHOWNORMAL
 
-    
     ' Make sure that the incoming Tool Number is valid
     if (nToolNum < lbound(gConfig.Tools)) orelse (nToolNum > ubound(gConfig.Tools)) then exit function
         
@@ -209,8 +208,8 @@ end Function
 ' ========================================================================================
 ' Create the keyboard shortcut text description.
 ' ========================================================================================
-function createToolsMenuShortcut( byval nCtrlID as long ) as CWSTR
-    dim wszShortcut as CWSTR
+function createToolsMenuShortcut( byval nCtrlID as long ) as DWSTRING
+    dim wszShortcut as DWSTRING
         
     if gConfig.Tools(nCtrlID).IsCtrl then wszShortcut = "Ctrl+"
     if gConfig.Tools(nCtrlID).IsShift then wszShortcut = wszShortcut + "Shift+"
@@ -468,7 +467,7 @@ function frmUserTools_OnCommand( _
                     
         case IDC_FRMUSERTOOLS_CMDBROWSEFOLDER
             if codeNotify = BN_CLICKED then
-                dim as CWSTR cwsFolder = AfxBrowseForFolder(hwnd, L(293,"Working Folder:"), curdir)
+                dim as DWSTRING cwsFolder = AfxBrowseForFolder(hwnd, L(293,"Working Folder:"), curdir)
                 if len(cwsFolder) then
                     AfxSetWindowText( GetDlgItem(hwnd, IDC_FRMUSERTOOLS_TXTWORKINGFOLDER), cwsFolder)
                 end if

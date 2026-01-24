@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@
 ''  CONSTRUCTOR
 ''
 constructor clsConfig
-    dim as CWSTR exe_path = AfxGetExePathName 
+    dim as DWSTRING exe_path = AfxGetExePathName 
     ConfigFilename            = exe_path & "settings\settings.ini" 
     FBKeywordsFilename        = exe_path & "settings\keywords\freebasic_keywords.txt" 
     WinApiKeywordsFilename    = exe_path & "settings\keywords\winapi_keywords.txt" 
@@ -87,7 +87,7 @@ end function
 ''
 function clsConfig.LoadCodetipsFB() as boolean
 
-    dim as CWSTR wst
+    dim as DWSTRING wst
     dim as long i
     
     dim parser as ctxParser
@@ -121,11 +121,11 @@ end function
 ''
 ''
 function clsConfig.LoadCodetipsGeneric( _
-            byval wszFilename as CWSTR, _
+            byval wszFilename as DWSTRING, _
             byval nFileType as long _
             ) as boolean
                                         
-    dim as CWSTR wst, wsID, wsTypeName, wsTypeElements, wsParts, wsPart, wsBaseType
+    dim as DWSTRING wst, wsID, wsTypeName, wsTypeElements, wsParts, wsPart, wsBaseType
     dim as long i, nCount
     
     dim parser as ctxParser
@@ -240,7 +240,7 @@ function fonts_EnumFontName( _
             HWnd as HWnd _
             ) as long
     dim as long ub = ubound(gFontNames)
-    redim preserve gFontNames(ub + 1) as CWSTR
+    redim preserve gFontNames(ub + 1) as DWSTRING
     gFontNames(ub + 1) = lf.lfFaceName 
     function = true
 end function
@@ -248,7 +248,7 @@ end function
 ' ========================================================================================
 ' Search the gFontNames() array to see if the font name exists
 ' ========================================================================================
-function isFontNameExist( byval wszFontName as CWSTR ) as boolean
+function isFontNameExist( byval wszFontName as DWSTRING ) as boolean
     wszFontName = ucase(wszFontName)
     for i as long = lbound(gFontnames) to ubound(gFontNames)
         if wszFontName = ucase(gFontNames(i)) then return true   
@@ -377,6 +377,7 @@ function clsConfig.SaveConfigFile() as long
     pStream.WriteLine "LocalizationFile="      & this.LocalizationFile     
     pStream.WriteLine "TabSize="               & this.TabSize              
     pStream.WriteLine "PositionMiddle="        & this.PositionMiddle
+    pStream.WriteLine "ClickToggleBreakpoint=" & this.ClickToggleBreakpoint
     pStream.WriteLine "BraceHighlight="        & this.BraceHighlight
     pStream.WriteLine "OccurrenceHighlight="   & this.OccurrenceHighlight
     pStream.WriteLine "EditorFontname="        & this.EditorFontname       
@@ -422,9 +423,9 @@ function clsConfig.SaveConfigFile() as long
     ' Do not modify the this.CompilerIncludes directly because that will put the
     ' {CURDRIVE} macro back into the path names causing future compiles to fail
     ' because that macro only gets resolved on LoadConfig.
-    dim as CWSTR allIncludes = rtrim(this.CompilerIncludes, ";")
-    dim as CWSTR SaveCompilerIncludes
-    dim as CWSTR includePath
+    dim as DWSTRING allIncludes = rtrim(this.CompilerIncludes, ";")
+    dim as DWSTRING SaveCompilerIncludes
+    dim as DWSTRING includePath
     dim as long numpaths = AfxStrParseCount(allIncludes, ";")
     for i as long = 1 to numpaths
         includePath = trim(AfxStrParse(allIncludes, i, ";"))
@@ -474,7 +475,7 @@ function clsConfig.SaveConfigFile() as long
         pStream.Write this.Tools(i).IsMinimized & "|-|"  
         pStream.Write this.Tools(i).IsWaitFinish & "|-|"
         pStream.Write this.Tools(i).IsDisplayMenu & "|-|"    
-        pStream.WriteLine this.Tools(i).Action   
+        pStream.WriteLine wstr(this.Tools(i).Action)   
     next
 
     pStream.WriteLine ""
@@ -517,7 +518,7 @@ function clsConfig.SaveConfigFile() as long
     next         
     
     dim hCtl as hwnd = GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES)
-    dim wszText as CWSTR = wstr("NOTES-START") + vbcrlf + _
+    dim wszText as DWSTRING = wstr("NOTES-START") + vbcrlf + _
                             gApp.NonProjectNotes + vbcrlf + _
                             wstr("NOTES-END") + vbcrlf
     pStream.WriteLine ""
@@ -541,10 +542,10 @@ end function
 ' the editor to work better with external tools that manually modify the
 ' settings.ini file.
 function clsConfig.WriteMRU() as long 
-    dim as CWSTR wszKeyName, wszValue
+    dim as DWSTRING wszKeyName, wszValue
     
     ' Delete the section name
-    dim as CWSTR wszSectionName = "MRU"
+    dim as DWSTRING wszSectionName = "MRU"
     WritePrivateProfileString( wszSectionName, null, null, this.ConfigFilename )
     
     ' Write the new values.
@@ -564,10 +565,10 @@ end function
 ' the editor to work better with external tools that manually modify the
 ' settings.ini file.
 function clsConfig.WriteMRUProjects() as long 
-    dim as CWSTR wszKeyName, wszValue
+    dim as DWSTRING wszKeyName, wszValue
     
     ' Delete the section name
-    dim as CWSTR wszSectionName = "MRUPROJECTS"
+    dim as DWSTRING wszSectionName = "MRUPROJECTS"
     WritePrivateProfileString( wszSectionName, null, null, this.ConfigFilename )
     
     ' Write the new values.
@@ -587,10 +588,10 @@ end function
 ' the editor to work better with external tools that manually modify the
 ' settings.ini file.
 function clsConfig.WriteMRUSessions() as long 
-    dim as CWSTR wszKeyName, wszValue
+    dim as DWSTRING wszKeyName, wszValue
     
     ' Delete the section name
-    dim as CWSTR wszSectionName = "MRUSESSIONS"
+    dim as DWSTRING wszSectionName = "MRUSESSIONS"
     WritePrivateProfileString( wszSectionName, null, null, this.ConfigFilename )
     
     ' Write the new values.
@@ -641,7 +642,7 @@ end function
 function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as long
     gApp.PreventConfigLoad = true
 
-    dim as CWSTR wst, wKey, wData
+    dim as DWSTRING wst, wKey, wData
     dim nData          as long  
     dim i              as long
     dim bReadingNote   as boolean
@@ -686,7 +687,7 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
             wKey = "": wData = "": nData = 0
             
             wKey  = left(wst, i-1)
-            wData = mid(wst.wstr, i+1)
+            wData = mid(wst, i+1)
             nData = val(wData)
             
 
@@ -789,6 +790,7 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
             case "IndentGuides":             this.IndentGuides          = nData
             case "TabIndentSpaces":          this.TabIndentSpaces       = nData
             case "PositionMiddle":           this.PositionMiddle        = nData
+            case "ClickToggleBreakpoint":    this.ClickToggleBreakpoint = nData
             case "BraceHighlight":           this.BraceHighlight        = nData
             case "OccurrenceHighlight":      this.OccurrenceHighlight   = nData
             case "LocalizationFile":         this.LocalizationFile      = ProcessFromCurdriveApp(wData)
@@ -842,9 +844,9 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
     end if
     
     ' Iterate the optional semi colon separated list of compiler include paths
-    dim as CWSTR allIncludes = rtrim(this.CompilerIncludes, ";")
+    dim as DWSTRING allIncludes = rtrim(this.CompilerIncludes, ";")
     this.CompilerIncludes = ""
-    dim as CWSTR includePath
+    dim as DWSTRING includePath
     dim as long numpaths = AfxStrParseCount(allIncludes, ";")
     for i as long = 1 to numpaths
         includePath = trim(AfxStrParse(allIncludes, i, ";"))
@@ -865,7 +867,7 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
     ' Set some defaults if the config file was missing.
     ' if no Tools exist then create some default ones...
     if (ubound(this.Tools) = -1) andalso (bNewConfigFile = true) then
-        dim wszTools(1) as CWSTR
+        dim wszTools(1) as DWSTRING
         wszTools(0) = "ASCII Chart|-|.\settings\tools\asciichart32.exe|-||-|1|-||-|1|-|0|-|0|-|0|-|0|-|0|-|1|-|0"
         wszTools(1) = "GUID Generator|-|.\settings\tools\GUIDgen32.exe|-||-|2|-||-|1|-|0|-|0|-|0|-|0|-|0|-|1|-|0"
         for i = lbound(wszTools) to ubound(wszTools)
@@ -938,7 +940,7 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
 
         this.Builds(6).id = AfxGuidText(AfxGuid())
         this.Builds(6).wszDescription = "Win64 GUI (Release)"
-        this.Builds(6).wszOptions = "-s gui -gen gas64"
+        this.Builds(6).wszOptions = "-s gui -gen gcc"
         this.Builds(6).Is32bit = 0
         this.Builds(6).Is64bit = 1
         this.Builds(6).ExcludeInPopup = 0
@@ -952,7 +954,7 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
         
         this.Builds(8).id = AfxGuidText(AfxGuid())
         this.Builds(8).wszDescription = "Win64 Console (Release)"
-        this.Builds(8).wszOptions = "-s console -gen gas64"
+        this.Builds(8).wszOptions = "-s console -gen gcc"
         this.Builds(8).IsDefault = 1
         this.Builds(8).Is32bit = 0
         this.Builds(8).Is64bit = 1
@@ -967,7 +969,7 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
 
         this.Builds(10).id = AfxGuidText(AfxGuid())
         this.Builds(10).wszDescription = "Win64 Windows DLL"
-        this.Builds(10).wszOptions = "-s gui -dll -export -gen gas64"
+        this.Builds(10).wszOptions = "-s gui -dll -export -gen gcc"
         this.Builds(10).Is32bit = 0
         this.Builds(10).Is64bit = 1
         this.Builds(10).ExcludeInPopup = 1
@@ -982,7 +984,7 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
     end if
 
     ' Attempt to fill in any missing compiler paths and help files
-    dim as CWSTR wszText
+    dim as DWSTRING wszText
     if len(this.FBWINCompiler32) = 0 then
         wszText = AfxGetExePathName & "toolchains\" & gwszDefaultToolchain & "\fbc32.exe"      
         if AfxFileExists(wszText) then this.FBWINCompiler32 = wszText
@@ -1023,7 +1025,7 @@ function clsConfig.SaveSessionFile( byref wszSessionFile as wstring ) as boolean
         return true
     end if
 
-    dim as CWSTR wszText 
+    dim as DWSTRING wszText 
     dim as long nCount 
 
     dim pDoc as clsDocument ptr
@@ -1050,12 +1052,13 @@ function clsConfig.SaveSessionFile( byref wszSessionFile as wstring ) as boolean
             pStream.WriteLine "FileType=" & pDoc->ProjectFileType
             pStream.WriteLine "TabIndex=" & -1     ' use -1 rather than true
             pStream.WriteLine "Bookmarks=" & pDoc->GetBookmarks()
+            pStream.WriteLine "BreakPoints=" & pDoc->GetBreakPoints()
             pStream.WriteLine "FoldPoints=" & pDoc->GetFoldPoints()
             pStream.WriteLine "FirstLine=" & SendMessage( pDoc->hWindow(0), SCI_GETFIRSTVISIBLELINE, 0, 0) 
             pStream.WriteLine "Position=" & SendMessage( pDoc->hWindow(0), SCI_GETCURRENTPOS, 0, 0)  
             pStream.WriteLine "FirstLine1=" & SendMessage( pDoc->hWindow(1), SCI_GETFIRSTVISIBLELINE, 0, 0) 
             pStream.WriteLine "Position1=" & SendMessage( pDoc->hWindow(1), SCI_GETCURRENTPOS, 0, 0)  
-            pStream.WriteLine "SplitMode=" & pDoc->EditorSplitMode
+            pStream.WriteLine "SplitMode=" & wstr(pDoc->EditorSplitMode)
             pStream.WriteLine "SplitPositionX=" & pDoc->SplitX
             pStream.WriteLine "SplitPositionY=" & pDoc->SplitY
             pStream.WriteLine "FocusEdit=" & iif(pDoc->hWndActiveScintilla = pDoc->hWindow(0), 0, 1)
@@ -1111,9 +1114,10 @@ function clsConfig.LoadSessionFile( byref wszSessionFile as wstring ) as boolean
     frmOutput_ResetAllControls()
 
     dim pDoc as clsDocument ptr
-    dim as CWSTR wst, wKey, wData, wszFilename, wszProjectName
+    dim as DWSTRING wst, wKey, wData, wszFilename, wszProjectName
         
     dim as string sBookmarks
+    dim as string sBreakPoints
     dim as string sFoldPoints
     dim as long nData, i, iTab, nActiveTab, nFocusEdit
     dim as long nFileIndex = -1
@@ -1122,7 +1126,7 @@ function clsConfig.LoadSessionFile( byref wszSessionFile as wstring ) as boolean
 
     ' Info saved for each File and used to create the file once Fileend is found
     dim as long nTabIndex
-    dim as CWSTR wszFileType
+    dim as DWSTRING wszFileType
     dim as boolean bLoadInTab
     
     dim pStream as CTextStream  ' (utf16)
@@ -1166,6 +1170,7 @@ function clsConfig.LoadSessionFile( byref wszSessionFile as wstring ) as boolean
             
             case "TabIndex":            bLoadInTab  = nData
             case "Bookmarks":           sBookmarks  = str(wData)
+            case "BreakPoints":         sBreakPoints = str(wData)
             case "FoldPoints":          sFoldPoints = str(wData)
             case "FirstLine":           nFirstLine  = nData
             case "Position":            nPosition   = nData
@@ -1193,6 +1198,7 @@ function clsConfig.LoadSessionFile( byref wszSessionFile as wstring ) as boolean
                 SciExec( pDoc->hWindow(1), SCI_GOTOPOS, nPosition1, 0) 
                 pDoc->hWndActiveScintilla = pDoc->hWindow(nFocusEdit)
                 pDoc->SetBookmarks(sBookmarks)
+                pDoc->SetBreakPoints(sBreakPoints)
                 pDoc->SetFoldPoints(sFoldPoints)
             end if
         
@@ -1261,7 +1267,7 @@ end function
 ' ========================================================================================
 function clsConfig.ProjectSaveToFile() as boolean    
 
-    dim as CWSTR cwzRelative, wszText 
+    dim as DWSTRING cwzRelative, wszText 
     dim as long nCount 
     dim as long i
 
@@ -1298,6 +1304,7 @@ function clsConfig.ProjectSaveToFile() as boolean
             pStream.WriteLine "FileType=" & pDoc->ProjectFileType
             pStream.WriteLine "TabIndex=" & "-1"     ' use -1 rather than true
             pStream.WriteLine "Bookmarks=" & pDoc->docData.wszBookmarks
+            pStream.WriteLine "BreakPoints=" & pDoc->docData.wszBreakPoints
             pStream.WriteLine "FoldPoints=" & pDoc->docData.wszFoldPoints
             pStream.WriteLine "FirstLine=" & pDoc->docData.nFirstLine 
             pStream.WriteLine "Position=" & pDoc->docData.nPosition  
@@ -1326,6 +1333,7 @@ function clsConfig.ProjectSaveToFile() as boolean
                 pStream.WriteLine "FileType=" & pDoc->ProjectFileType
                 pStream.WriteLine "TabIndex=" & "0"
                 pStream.WriteLine "Bookmarks=" & pDoc->docData.wszBookmarks
+                pStream.WriteLine "BreakPoints=" & pDoc->docData.wszBreakPoints
                 pStream.WriteLine "FoldPoints=" & pDoc->docData.wszFoldPoints
                 pStream.WriteLine "FirstLine=" & pDoc->docData.nFirstLine 
                 pStream.WriteLine "Position=" & pDoc->docData.nPosition  
@@ -1343,7 +1351,7 @@ function clsConfig.ProjectSaveToFile() as boolean
 
     ' if project is active then save NOTES to config file.
     if gApp.IsProjectActive then
-        dim wszText as CWSTR = wstr("NOTES-START") + vbcrlf + _
+        dim wszText as DWSTRING = wstr("NOTES-START") + vbcrlf + _
                                 gApp.ProjectNotes + vbcrlf + _
                                 wstr("NOTES-END") + vbcrlf
         pStream.WriteLine ""
@@ -1362,12 +1370,13 @@ end function
 ' ========================================================================================
 ' Load all options for the Project from a diskfile
 ' ========================================================================================
-function clsConfig.ProjectLoadFromFile( byval wszFile as CWSTR ) as boolean    
+function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean    
 
     dim pDoc as clsDocument ptr
-    dim as CWSTR wst, wKey, wData, wszFilename
+    dim as DWSTRING wst, wKey, wData, wszFilename
         
     dim sBookmarks as string
+    dim sBreakPoints as string
     dim sFoldPoints as string
     dim as long nData, i, iTab, nActiveTab, nFocusEdit
     dim as long nFileIndex = -1
@@ -1376,7 +1385,7 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as CWSTR ) as boolean
 
     ' Info saved for each File and used to create the file once Fileend is found
     dim as long nTabIndex
-    dim as CWSTR wszFileType
+    dim as DWSTRING wszFileType
     dim as boolean bLoadInTab
     dim as boolean bReadingNote
     
@@ -1442,6 +1451,7 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as CWSTR ) as boolean
             case "File":                wszFilename             = wData
             case "FileType":            wszFileType             = wData
             case "Bookmarks":           sBookmarks              = str(wData)
+            case "BreakPoints":         sBreakPoints            = str(wData)
             case "FoldPoints":          sFoldPoints             = str(wData)
             case "TabIndex":            bLoadInTab              = nData
             case "FirstLine":           nFirstLine              = nData
@@ -1471,6 +1481,7 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as CWSTR ) as boolean
                     .wszFileType     = wszFileType
                     .bLoadInTab      = bLoadInTab
                     .wszBookmarks    = sBookmarks
+                    .wszBreakPoints  = sBreakPoints
                     .wszFoldPoints   = sFoldPoints
                     .nFirstLine      = nFirstLine
                     .nPosition       = nPosition
@@ -1484,8 +1495,8 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as CWSTR ) as boolean
 
                 nFirstLine  = 0: nPosition  = 0
                 nFirstLine1 = 0: nPosition1 = 0
-                nFocusEdit  = 0: nSplitPositionX = 0: nSplitPositionY = 0
-                nSplitMode  = 0: sBookmarks  = "": sFoldPoints = ""
+                nFocusEdit  = 0: nSplitPositionX = 0: nSplitPositionY = 0: nSplitMode  = 0:
+                sBookmarks  = "": sBreakPoints = "": sFoldPoints = ""
                 bLoadInTab    = false
             end if
             

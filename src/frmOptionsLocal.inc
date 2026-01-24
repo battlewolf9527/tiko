@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -21,9 +21,9 @@
 function frmOptionsLocal_LocalEditCheck() as Long
     if gLocalPhrasesEdit = false then exit function
                 
-    dim as CWSTR wszLocalName = AfxGetWindowText( GetDlgItem(HWND_FRMOPTIONSLOCAL, IDC_FRMOPTIONSLOCAL_FRAMELOCALIZATION) )
-    dim as CWSTR wszFileName = AfxGetExePathName + wstr("settings\languages\" + wszLocalName)
-    dim as CWSTR wszTemp, wszPhrase
+    dim as DWSTRING wszLocalName = AfxGetWindowText( GetDlgItem(HWND_FRMOPTIONSLOCAL, IDC_FRMOPTIONSLOCAL_FRAMELOCALIZATION) )
+    dim as DWSTRING wszFileName = AfxGetExePathName + wstr("settings\languages\" + wszLocalName)
+    dim as DWSTRING wszTemp, wszPhrase
     
     ' If the english file is selected then we do not want to allow any modifications to that file.
     if ucase(trim(AfxStrPathname( "NAMEX", wszFilename ))) = "ENGLISH.LANG" then exit function
@@ -54,7 +54,7 @@ function frmOptionsLocal_LocalEditCheck() as Long
             LV_GetItemText(hLV, i, 0, @wszIndex, MAX_PATH )
             wszTemp = wspace(1024)
             wszPhrase = AfxStrRSet(wszIndex, 5, "0") + wstr(":") + gLocalPhrases(val(wszIndex))
-            ' Use ** version of CWSTR on MID statements per the documentation.
+            ' Use ** version of DWSTRING on MID statements per the documentation.
             mid(**wszTemp, 1) = wszPhrase
             if len(gLangEnglish(val(wszIndex))) then
                 ' Always attempt to insert the ENGLISH comment at position 60. If the local
@@ -76,7 +76,7 @@ end function
 ' ========================================================================================
 function frmOptionsLocal_DisableEnglish() as long
     dim as boolean bEnable, bEnglish
-    dim as CWSTR wszFilename = ucase(AfxGetWindowText(GetDlgItem(HWND_FRMOPTIONSLOCAL, IDC_FRMOPTIONSLOCAL_FRAMELOCALIZATION)))
+    dim as DWSTRING wszFilename = ucase(AfxGetWindowText(GetDlgItem(HWND_FRMOPTIONSLOCAL, IDC_FRMOPTIONSLOCAL_FRAMELOCALIZATION)))
     
     ' If the english file is selected then we do not want to allow any editing so disable the controls.
     bEnglish = iif( AfxStrPathname( "NAMEX", wszFilename ) = "ENGLISH.LANG", true, false)
@@ -134,7 +134,7 @@ function frmOptionsLocal_LoadLocalizationFile( byref wszFilename as wstring ) as
 
     if AfxFileExists( wszFileName ) = 0 then exit function
 
-    dim as CBSTR wst, wKey, wData
+    dim as BSTRING wst, wKey, wData
     dim as long nKey, nData, i, nRow, maxKey
     
     dim pStream as CTextStream
@@ -165,7 +165,7 @@ function frmOptionsLocal_LoadLocalizationFile( byref wszFilename as wstring ) as
         if ucase(wKey) <> "MAXIMUM" then
             if (nKey >= lbound(gLocalPhrases)) andalso (nKey <= ubound(gLocalPhrases)) then
                 ' Use ** to ensure that cyrillic langauge gets converted correctly. FB intrinsic
-                ' functions (RTRIM) automatically convert those incorrectly when using CBSTR or CWSTR.
+                ' functions (RTRIM) automatically convert those incorrectly when using CBSTR or DWSTRING.
                 gLocalPhrases(nKey) = rtrim(**AfxStrParse(wData, 1, ";"), any chr(9,32))
                 ' If the English phrase is blank then blank the translation phrase
                 if gLangEnglish(nKey) = "" then gLocalPhrases(nKey) = ""
@@ -277,7 +277,7 @@ function frmOptionsLocal_OnCommand( _
     case IDC_FRMOPTIONSLOCAL_CMDEDIT
         ' Edit the loaded localization file
         if codeNotify = BN_CLICKED then
-            dim as CWSTR wszLanguage = _
+            dim as DWSTRING wszLanguage = _
                 AfxGetExePathName & wstr("settings\languages\") & AfxGetWindowText( GetDlgItem(hwnd, IDC_FRMOPTIONSLOCAL_FRAMELOCALIZATION) )
             frmOptionsLocal_LoadLocalizationFile(wszLanguage)
             AfxSetWindowText( GetDlgItem(hwnd, IDC_FRMOPTIONSLOCAL_LBLTRANSLATE), AfxStrPathName("NAME", wszLanguage) )
@@ -296,7 +296,7 @@ function frmOptionsLocal_OnCommand( _
                     MB_YESNOCANCEL or MB_ICONQUESTION or MB_DEFBUTTON1 ) <> IDYES then
                 exit function
             end if
-            dim as CWSTR wszFileName = AfxGetExePathName + wstr("settings\languages\") + _
+            dim as DWSTRING wszFileName = AfxGetExePathName + wstr("settings\languages\") + _
                                         AfxGetWindowText( GetDlgItem(hwnd, IDC_FRMOPTIONSLOCAL_FRAMELOCALIZATION) )
             frmOptionsLocal_ClearGlobalArray()
             AfxDeleteFile(wszFileName)
@@ -447,7 +447,7 @@ function frmOptionsLocal_Show( byval hWndParent as HWND ) as LRESULT
     dim as long nRow = 0
     for i as long = lbound(gLangEnglish) to ubound(gLangEnglish)
         ' Add to the English phrase Listview
-        dim as CWSTR wKey = AfxStrRset(str(i), 5, "0")
+        dim as DWSTRING wKey = AfxStrRset(str(i), 5, "0")
         LV_InsertItem(hwndLV, nRow, 0, wKey, 0 )
         LV_InsertItem(hwndLV, nRow, 1, gLangEnglish(i), 0 )
         nRow = nRow + 1

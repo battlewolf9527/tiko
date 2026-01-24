@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -177,7 +177,7 @@ end function
 function frmHelpViewer_LoadHelpFile( byval nIndex as long ) as long
     if (nIndex >= lbound(gHelpViewer.Filenames)) andalso _
         (nIndex <= ubound(gHelpViewer.Filenames)) then
-        dim as CWSTR wszPath = AfxStrPathname("PATH", gConfig.HelpTableOfContents)
+        dim as DWSTRING wszPath = AfxStrPathname("PATH", gConfig.HelpTableOfContents)
         RichEdit_LoadRtfFromFile( HWND_FRMHELPVIEWER_RIGHTPANEL, wszPath & gHelpViewer.Filenames(nIndex) )
         RichEdit_SetZoom( HWND_FRMHELPVIEWER_RIGHTPANEL, 100, 100 )
     end if
@@ -476,7 +476,7 @@ function frmHelpViewer_OnDrawItem( _
         b.SetForeColors(foreclr, foreclr)
         b.SetBackColors(backclr, backclr)
 
-        dim as CWSTR wszCaption
+        dim as DWSTRING wszCaption
         if (lpdis->ItemID >= lbound(gHelpViewer.Filenames)) andalso _
             (lpdis->ItemID <= ubound(gHelpViewer.Filenames)) then
             wszCaption = gHelpViewer.Topics(lpdis->ItemID)
@@ -691,7 +691,7 @@ function frmHelpViewer_Show( byval hWndParent as HWND ) as LRESULT
     '  Create the main window and child controls
     dim pWindow as CWindow ptr = new CWindow
 
-    dim as CWSTR wszText = APPNAME & " " & L(73,"Help")
+    dim as DWSTRING wszText = APPNAME & " " & L(73,"Help")
     HWND_FRMHELPVIEWER = pWindow->Create( _
         hWndParent, wszText, @frmHelpViewer_WndProc, 0, 0, 0, 0, _
         WS_POPUP or WS_OVERLAPPEDWINDOW or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
@@ -725,13 +725,13 @@ function frmHelpViewer_Show( byval hWndParent as HWND ) as LRESULT
     SetWindowPlacement( pWindow->hWindow, @WinPla )
 
     dim as long nWidth = pWindow->UnScaleX(gConfig.HelpLeftPanelWidth)
+
     HWND_FRMHELPVIEWER_LEFTPANEL = _ 
         pWindow->AddControl("LISTBOX", , IDC_FRMHELPVIEWER_LEFTPANEL, "", 0, 0, nWidth, 0, _
         WS_CHILD or WS_VISIBLE or WS_CLIPSIBLINGS or WS_CLIPCHILDREN or WS_TABSTOP or _
         LBS_NOINTEGRALHEIGHT or LBS_OWNERDRAWFIXED or LBS_NOTIFY, _
-        WS_EX_LEFT or WS_EX_RIGHTSCROLLBAR, , _
-        cast(SUBCLASSPROC, @frmHelpViewerListBox_SubclassProc), _
-        IDC_FRMHELPVIEWER_LEFTPANEL, cast(DWORD_PTR, @pWindow))
+        WS_EX_LEFT or WS_EX_RIGHTSCROLLBAR)
+    pWindow->SetControlSubclass(HWND_FRMHELPVIEWER_LEFTPANEL, @frmHelpViewerListBox_SubclassProc, IDC_FRMHELPVIEWER_LEFTPANEL, @pWindow)
 
     dim pWindowPanel as CPanelWindow ptr = New CPanelWindow
     HWND_FRMHELPVIEWER_VSCROLLBAR = _
@@ -769,7 +769,7 @@ function frmHelpViewer_Show( byval hWndParent as HWND ) as LRESULT
     ' Load the Help table of contents
     dim pStream as CTextStream
     if pStream.Open(gConfig.HelpTableOfContents) = S_OK then
-        dim as CWSTR wst
+        dim as DWSTRING wst
         dim as long idx
         do until pStream.EOS
             wst = pStream.ReadLine

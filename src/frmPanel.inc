@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -386,7 +386,7 @@ function frmPanel_WndProc( _
 
     static as boolean isPrevHotAction, isPrevHotButton0, isPrevHotButton1
     
-    static as CWSTR wszPrevTooltip
+    static as DWSTRING wszPrevTooltip
     static as HWND hTooltip 
     if (uMsg = WM_DESTROY) andalso (IsWindow(hToolTip)) then DestroyWindow(hToolTip)
 
@@ -466,7 +466,7 @@ function frmPanel_WndProc( _
             dim as long nWidth = (rc.right - rc.left + nDiff)
             ' make sure width does not go below a specific size otherwise the user will not
             ' be able to grab the panel edge to resize and the panel menu will squish together
-            nWidth = max( nWidth, pWindow->ScaleX(164) )
+            nWidth = max( nWidth, pWindow->ScaleX(190) )
             SetWindowPos( HWND_FRMPANEL, 0, 0, 0, nWidth, rc.Bottom - rc.Top, SWP_NOMOVE or SWP_NOZORDER )
             RedrawWindow( HWND_FRMPANEL, null, null, RDW_INVALIDATE or RDW_UPDATENOW or RDW_ALLCHILDREN)                
             frmMain_PositionWindows()
@@ -545,7 +545,7 @@ function frmPanel_WndProc( _
 
 
     case WM_MOUSEHOVER
-        dim as CWSTR wszTooltip 
+        dim as DWSTRING wszTooltip 
         if isMouseOverRECT( hwnd, gPanel.rcActionMenu ) then
             wszTooltip  = L(440, "More Actions") & "..."
         end if

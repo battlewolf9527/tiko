@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -351,7 +351,7 @@ function frmListViewListBox_SubclassProc ( _
         case WM_LBUTTONDBLCLK 
             dim as long idx = Listbox_ItemFromPoint( hWin, GET_X_LPARAM(_lParam), GET_Y_LPARAM(_lParam)) 
             if (hiword(idx) <> 1) orelse (bEnterPressed = true) then
-                SetDocumentErrorPosition( GetParent(hWin), gCompile.CompileID )    
+                SendMessage( GetParent(GetParent(hWin)), MSG_USER_LISTVIEW_LBUTTONDBLCLK, cast(WPARAM, GetParent(hWin)), 0 )
             end if
             exit function
         
@@ -445,14 +445,14 @@ function frmListView_OnDrawItem( _
 
             b.SetFont( GUIFONT_9 )
 
-            dim as CWSTR wszCaption = AfxGetListBoxText(lpdis->hwndItem, lpdis->ItemID)
+            dim as DWSTRING wszCaption = pData->rowData(lpdis->ItemID)
 
             dim as long nCount = AfxStrParseCount(wszCaption, chr(9))
             for i as long = 0 to nCount - 1
                 rcText.right = rcText.left + pData->ColData(i).nWidth
                 ' offset the left margin ever so slightly
                 rcText.left += pWindow->ScaleX(4)
-                dim as CWSTR wszText = AfxStrParse(wszCaption, i + 1, chr(9))
+                dim as DWSTRING wszText = AfxStrParse(wszCaption, i + 1, chr(9))
                 dim as long flags = DT_LEFT
                 if i = 2 then flags = flags or DT_PATH_ELLIPSIS  ' for long filenames
                 b.PaintText( wszText, @rcText, flags )
@@ -601,17 +601,14 @@ function frmListView_Show( byval hwndParent as hwnd ) as HWND
     pData->hHeader = _
         pWindow->AddControl( "LABEL", , IDC_FRMLISTVIEW_HEADER, "", 0, 0, 0, EXPLORERITEM_HEIGHT_COMPACT, _
         WS_CHILD or WS_VISIBLE or WS_CLIPSIBLINGS or WS_CLIPCHILDREN or SS_NOTIFY or SS_LEFT, _
-        WS_EX_LEFT or WS_EX_LTRREADING, , _
-        cast(SUBCLASSPROC, @frmListViewHeader_SubclassProc), _
-        IDC_FRMLISTVIEW_HEADER, cast(DWORD_PTR, @pWindow))
-
+        WS_EX_LEFT or WS_EX_LTRREADING)
+        pWindow->SetControlSubclass(pData->hHeader, @frmListViewHeader_SubclassProc, IDC_FRMLISTVIEW_HEADER, @pWindow)
     pData->hListBox = _
         pWindow->AddControl( "LISTBOX", , IDC_FRMLISTVIEW_LISTBOX, "", 0, 0, 0, 0, _
         WS_CHILD or WS_VISIBLE or WS_CLIPSIBLINGS or WS_CLIPCHILDREN or WS_TABSTOP or _
-        LBS_NOINTEGRALHEIGHT or LBS_OWNERDRAWFIXED or LBS_HASSTRINGS or LBS_NOTIFY, _
-        WS_EX_LEFT or WS_EX_RIGHTSCROLLBAR, , _
-        cast(SUBCLASSPROC, @frmListViewListBox_SubclassProc), _
-        IDC_FRMLISTVIEW_LISTBOX, cast(DWORD_PTR, @pWindow))
+        LBS_NOINTEGRALHEIGHT or LBS_OWNERDRAWFIXED or LBS_NOTIFY or LBS_NODATA, _
+        WS_EX_LEFT or WS_EX_RIGHTSCROLLBAR)
+        pWindow->SetControlSubclass(pData->hListBox, @frmListViewListBox_SubclassProc, IDC_FRMLISTVIEW_LISTBOX, @pWindow)
 
     dim pWindowPanel as CPanelWindow ptr = New CPanelWindow
     pData->hVScroll = _

@@ -1,5 +1,5 @@
 ''    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-''    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+''    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 ''
 ''    This program is free software: you can redistribute it and/or modify
 ''    it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@
 #include once "modCompile.bi"
 #include once "modCompileErrors.bi"
 #include once "frmUserTools.bi"
+#include once "frmDebug.bi"
 #include once "frmOutput.bi"
 
 dim shared gCompile as COMPILE_TYPE
@@ -39,12 +40,12 @@ function code_Compile( byval wID as long ) as boolean
     
     dim wszTemp        as wstring * MAX_PATH 
     dim wszFileExe     as wstring * MAX_PATH
-    dim wszIconCompile as CWSTR
-    dim wszCommand     as CWSTR 
-    dim wszParams      as CWSTR
+    dim wszIconCompile as DWSTRING
+    dim wszCommand     as DWSTRING 
+    dim wszParams      as DWSTRING
     dim sConsoleText   as string 
     
-    dim as CWSTR wExeCmd, wDQ, wsLogSt, wst
+    dim as DWSTRING wExeCmd, wDQ, wsLogSt, wst
             
     dim as boolean fCompile32, fCompile64
     
@@ -162,10 +163,32 @@ function code_Compile( byval wID as long ) as boolean
     
     gCompile.ResourceFile = ""    ' default that there is no resource
     gCompile.CompileFlags = gConfig.Builds(idxBuild).wszOptions
+    
+    ' If debugging, then ensure that we use the GCC compiler rather than GAS and
+    ' also include the -g compile flag.
+    if gCompile.CompileID = IDM_DEBUG_STARTDEBUGGING then
+        ' Remove any -O optimization flags and add no inline flag.
+        gCompile.CompileFlags = AfxStrRemove( gCompile.CompileFlags, " -Wc" )
+        gCompile.CompileFlags = AfxStrRemove( gCompile.CompileFlags, " -O1" )
+        gCompile.CompileFlags = AfxStrRemove( gCompile.CompileFlags, " -O2" )
+        gCompile.CompileFlags = AfxStrRemove( gCompile.CompileFlags, " -O3" )
+        gCompile.CompileFlags = AfxStrRemove( gCompile.CompileFlags, " -Os" )
+        gCompile.CompileFlags = AfxStrRemove( gCompile.CompileFlags, " -Ofast" )
+        ' If gcc already exists then no need to replace chosen backend. Only do
+        ' the replacements if gcc is not found.
+        if instr( gCompile.CompileFlags, " -gen gcc" ) = 0 then
+            ' Replace llvm, gas, gas64 with gcc (ensure replacement string is same size as search string)
+            ' Search for gas64 before gas because gas will match before gas64.
+            gCompile.CompileFlags = AfxStrReplace( gCompile.CompileFlags, " -gen gas64", " -gen gcc  " )
+            gCompile.CompileFlags = AfxStrReplace( gCompile.CompileFlags, " -gen gas", " -gen gcc" )
+            gCompile.CompileFlags = AfxStrReplace( gCompile.CompileFlags, " -gen llvm", " -gen gcc " )
+        end if
+        gCompile.CompileFlags = gCompile.CompileFlags & " -g -exx -nostrip "
+    end if
 
     ' Iterate the optional semi colon separated list of compiler include paths
     gCompile.CompileIncludes = ""
-    dim as CWSTR includePath
+    dim as DWSTRING includePath
     dim as long numpaths = AfxStrParseCount(gConfig.CompilerIncludes, ";")
     for i as long = 1 to numpaths
         includePath = rtrim(AfxStrParse(gConfig.CompilerIncludes, i, ";"))
@@ -269,6 +292,28 @@ function code_Compile( byval wID as long ) as boolean
     ' if this is a project then we need to compile all of the modules first
     ' in order to create the necessary *.o object files
     if gApp.IsProjectActive then
+        ' Determine if we are switching from Release builds to Debug builds. This means
+        ' that any existing obj's would be invalid and will be forced to rebuild.
+        ' Look for the "_debug_active.txt" filename.
+        dim as DWSTRING wszDebugFilename = gCompile.ObjFolder & "_debug_active.txt"
+        dim as boolean bForceRebuild = false
+        dim as boolean bDebugFileExists = AfxFileExists( wszDebugFilename )
+        if gCompile.CompileID = IDM_DEBUG_STARTDEBUGGING then
+            ' Debug build
+            bForceRebuild = iif( bDebugFileExists, false, true )
+            ' Create the debug active file for later checks
+            dim pStream as CTextStream   '(utf16)
+            if pStream.Create( wszDebugFilename, true, true ) = S_OK then 
+                pStream.WriteLine "-- DEBUG OBJECT FILES --"
+            end if
+            pStream.Close
+        else
+            ' Release builds
+            if bDebugFileExists then bForceRebuild = true
+            ' Remove the existing debug check filename
+            AfxDeleteFile( wszDebugFilename )
+        end if
+
         gCompile.CompileFlags = " " & gCompile.CompileFlags & " "
         dim as string g_flag = iif(instr(gCompile.CompileFlags, " -g "), " -g -nostrip ", "")
         dim as string e_flag = iif(instr(gCompile.CompileFlags, " -e "), " -e ", "")
@@ -306,10 +351,11 @@ function code_Compile( byval wID as long ) as boolean
                     pDocInclude = pDocInclude->pDocNext
                 loop
                 
-                if (bRebuildModule = true) orelse (gCompile.CompileID = IDM_REBUILDALL)  then
+                if (bRebuildModule = true) orelse (bForceRebuild = true) orelse (gCompile.CompileID = IDM_REBUILDALL)  then
                     nFileCount = nFileCount + 1
                     if (nFileCount mod 5) = 0 then AfxDoEvents
                     
+                    ' Prepend with # so that spinner shows
                     wst = L(203, "Compiling") + "... " + AfxStrPathname("NAMEX", pDoc->DiskFilename) 
                     SetCompileStatusBarMessage( wst, 0 )
         
@@ -348,8 +394,8 @@ function code_Compile( byval wID as long ) as boolean
     ' So the main module file must be called twice in the command line:
     ' - after compile option '-m', but without specified extension,
     ' - and also like any module to compile, but there with its specified extension.
-    'dim as CWSTR wszMfile = wDQ + AfxStrPathName("PATH", gCompile.MainFilename) + AfxStrPathName("NAME", gCompile.MainFilename) + wDQ
-    'dim as CWSTR wszMfile = AfxStrPathName("NAME", gCompile.MainFilename) 
+    'dim as DWSTRING wszMfile = wDQ + AfxStrPathName("PATH", gCompile.MainFilename) + AfxStrPathName("NAME", gCompile.MainFilename) + wDQ
+    'dim as DWSTRING wszMfile = AfxStrPathName("NAME", gCompile.MainFilename) 
     'wszParams = "-m " + wszMfile + " " + wDQ + gCompile.MainFilename + wDQ 
     wszParams = "-m " + wDQ + gCompile.MainFilename + wDQ 
 
@@ -391,16 +437,31 @@ function code_Compile( byval wID as long ) as boolean
         AfxDeleteFile( gCompile.OutputFilename )
     end if
 
-    wst = L(203, "Compiling") + "... " + AfxStrPathname("NAMEX", gCompile.MainFilename) 
+    ' Prepend with # so that spinner shows
+    wst = "#" + L(203, "Compiling") + "... " + AfxStrPathname("NAMEX", gCompile.MainFilename) 
     SetCompileStatusBarMessage( wst, 0 )
     SetCursor( LoadCursor(0, IDC_WAIT) )
 
-
     sConsoleText = ""
     wszCommand = gCompile.CompilerPath
-    RedirConsoleToFile( wszCommand, wszParams, sConsoleText )
+    
+    dim as CompileThreadParams ctp
+    ctp.wszExe = wszCommand
+    ctp.wszCmdLine = wszParams
+    ctp.sConsoleText = ""
+
+    ' Do the compile in a separate thread so that the main thread GUI can display
+    ' the spinner in the statusbar.
+    gCompile.bCompileThreadComplete = false
+    dim as any ptr pThread = ThreadCreate( @compile_thread, @ctp )
+    
+    do until gCompile.bCompileThreadComplete = true
+        AfxDoEvents()
+    loop    
+    
     gCompile.wszFullCommandLine = wszCommand & " " & wszParams
-    gCompile.wszFullLogFile = sConsoleText
+    gCompile.wszFullLogFile = ctp.sConsoleText
+    sConsoleText = ctp.sConsoleText
                 
 
     ' Attempt to fix the random problem whereby the spinning mouse wait cursor is not reset
@@ -418,6 +479,8 @@ function code_Compile( byval wID as long ) as boolean
         AfxDeleteFile( gCompile.MainFilename )
     end if    
     
+    gApp.IsCompiling = false
+
     if ParseLogForError(sConsoleText, true, gCompile.CompileID, fCompile64, false) = true then 
         ' Error was found. Editor has now been set to the error position. Nothing
         ' more we can do now but exit out. 
@@ -430,13 +493,17 @@ function code_Compile( byval wID as long ) as boolean
             end if   
         next
         
-        if gCompile.RunAfterCompile then 
-            ' if gCompile.OutputFilename is a relative filename then convert it to full filename.
-            gCompile.OutputFilename = AfxStrReplace( gCompile.OutputFilename, "/", "\" )
-            if AfxPathIsRelative( gCompile.OutputFilename ) then 
-                gCompile.OutputFilename = AfxPathCombine( gCompile.MainFolder, gCompile.OutputFilename )
-            end if
+        ' if gCompile.OutputFilename is a relative filename then convert it to full filename.
+        gCompile.OutputFilename = AfxStrReplace( gCompile.OutputFilename, "/", "\" )
+        if AfxPathIsRelative( gCompile.OutputFilename ) then 
+            gCompile.OutputFilename = AfxPathCombine( gCompile.MainFolder, gCompile.OutputFilename )
+        end if
 
+        if gCompile.CompileID = IDM_DEBUG_STARTDEBUGGING then
+           frmDebug_Show( HWND_FRMMAIN, gCompile.OutputFilename )
+        end if
+        
+        if gCompile.RunAfterCompile then 
             RunEXE( _
                 pDocMain, _
                 gCompile.OutputFilename,    _
@@ -445,8 +512,6 @@ function code_Compile( byval wID as long ) as boolean
         end if
     
     end if
-    
-    gApp.IsCompiling = false
 
     function = true   ' successful
 End function
@@ -455,23 +520,23 @@ End function
 ''
 ''
 ''
-function AddPathsToLinkModules( byval modules as CWSTR ) as CWSTR
+function AddPathsToLinkModules( byval modules as DWSTRING ) as DWSTRING
     ' SEARCH ORDER
     ' (1) Current folder
     ' (2) User defined Include paths
     ' (3) \inc folder for the selected compiler toolchain
 
-    dim as CWSTR wszResult  ' the final fully path qualified list of space separated module filenames
-    dim as CWSTR wszTemp
+    dim as DWSTRING wszResult  ' the final fully path qualified list of space separated module filenames
+    dim as DWSTRING wszTemp
     
-    dim as CWSTR wszCurrentFolder = AfxStrPathname("PATH", gCompile.MainFilename)
-    dim as CWSTR wszIconCompilerIncFolder = AfxStrPathname("PATH", gCompile.CompilerPath) & "inc\"
+    dim as DWSTRING wszCurrentFolder = AfxStrPathname("PATH", gCompile.MainFilename)
+    dim as DWSTRING wszIconCompilerIncFolder = AfxStrPathname("PATH", gCompile.CompilerPath) & "inc\"
     
-    dim as CWSTR wszLinkModules = AfxStrShrink(gCompile.LinkModules)  
+    dim as DWSTRING wszLinkModules = AfxStrShrink(gCompile.LinkModules)  
     
     dim as long nummodules = AfxStrParseCount(wszLinkModules, " ")
     for i as long = 1 to nummodules
-        dim as CWSTR modulename = trim(AfxStrParse(wszLinkModules, i, " "))
+        dim as DWSTRING modulename = trim(AfxStrParse(wszLinkModules, i, " "))
         ' Remove any enclosing double quotes from the filename
         modulename = AfxStrRemove(modulename, chr(34))
 
@@ -487,7 +552,7 @@ function AddPathsToLinkModules( byval modules as CWSTR ) as CWSTR
         ' (2) User defined Include paths
         ' Iterate the optional semi colon separated list of compiler include paths
         gCompile.CompileIncludes = ""
-        dim as CWSTR includePath
+        dim as DWSTRING includePath
         dim as long numpaths = AfxStrParseCount(gConfig.CompilerIncludes, ";")
         for i as long = 1 to numpaths
             includePath = rtrim(AfxStrParse(gConfig.CompilerIncludes, i, ";"))

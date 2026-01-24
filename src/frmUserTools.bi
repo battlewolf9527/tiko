@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -56,7 +56,7 @@ declare function frmUserTools_ExecuteUserTool( byval nToolNum as long ) as long
 declare function frmUserTools_CreateAcceleratorTable() as long
 declare function frmUserTools_Show( byval hWndParent As HWND ) as LRESULT
 declare function updateUserToolsMenuItems() as long
-declare function createToolsMenuShortcut( byval nCtrlID as long ) as CWSTR
+declare function createToolsMenuShortcut( byval nCtrlID as long ) as DWSTRING
 
 
 

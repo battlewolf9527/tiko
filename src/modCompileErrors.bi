@@ -1,5 +1,5 @@
 '    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
-'    Copyright (C) 2016-2025 Paul Squires, PlanetSquires Software
+'    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU General Public License as published by
@@ -16,15 +16,15 @@
 declare function SetDocumentErrorPosition( byval hLV as HWnd, byval wID as long ) as long
 declare function SetLogFileTextbox() as long
 declare function ParseLogForError( _
-            byref wsLogSt as CWSTR, _
+            byref wsLogSt as DWSTRING, _
             byval bAllowSuccessMessage as boolean, _
             byval wID as long, _
             byval fCompile64 as boolean, _
             byval fCompilingObjFiles as boolean _
             ) as boolean
 declare function ResetScintillaCursors() as long
-declare function RunEXE( byval pDocMain as clsDocument ptr, byref wszFileExe as CWSTR, byref wszParam as CWSTR ) as long
+declare function RunEXE( byval pDocMain as clsDocument ptr, byref wszFileExe as DWSTRING, byref wszParam as DWSTRING ) as long
 declare function SetCompileStatusBarMessage(byref wszText as wstring, byval hIconCompile as long) as LRESULT
-declare function RedirConsoleToFile(byref wszExe as wstring, byref wszCmdLine as wstring, byref sConsoleText as string ) as long
+declare function RedirConsoleToFile(byval wszExe as DWSTRING, byval wszCmdLine as DWSTRING, byref sConsoleText as string ) as long
 declare function CreateTempResourceFile() as boolean
 
