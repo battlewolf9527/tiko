@@ -23,7 +23,7 @@ end type
 
 ' Create an array that holds all options in the Build compiler options listbox. The
 ' description contains a parenthesis enclosed action.
-dim shared gBuildOptions(23) as BUILD_OPTIONS
+dim shared gBuildOptions(25) as BUILD_OPTIONS
 gBuildOptions(0).groupid  = 0
 gBuildOptions(0).wszText  = "Subsystem to console (-s console)"
 gBuildOptions(1).groupid  = 0
@@ -80,6 +80,11 @@ gBuildOptions(22).groupid = 9
 gBuildOptions(22).wszText = "Do not delete the object files (-C)"
 gBuildOptions(23).groupid = 10
 gBuildOptions(23).wszText = "Emit preprocessed output, do not compile (-pp)"
+
+gBuildOptions(24).groupid = 11
+gBuildOptions(24).wszText = "Compile into *.asm / *.c / *.ll files only, do not assemble or link (-r)"
+gBuildOptions(25).groupid = 11
+gBuildOptions(25).wszText = "Preserve generated intermediate *.asm / *.c / *.ll files (-R)"
 
 
 ' ========================================================================================

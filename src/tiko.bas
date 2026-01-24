@@ -54,7 +54,7 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 #define ENABLE_AUTOSAVE false
 
 ' Comment out the following define in order to disable logging.
-#define LOGGING_ENABLED
+'#define LOGGING_ENABLED
 #include once "logging.bas"
 
 #include once "modScintilla.bi"

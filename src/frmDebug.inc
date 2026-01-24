@@ -106,10 +106,11 @@ function gdb_init( byval executable as DWSTRING = "" ) as boolean
     si.wShowWindow = SW_HIDE
     
     ' Build command line
+    dim as DWSTRING wszGDBexe = AfxGetExePathName & "\bin\gdb\gdb.exe"
     if len(executable) > 0 then
-        cmdline = "gdb.exe -q -i=mi2 " & chr(34) & executable & chr(34)
+        cmdline = wszGDBexe & " -q -i=mi2 " & chr(34) & executable & chr(34)
     else
-        cmdline = "gdb.exe -q -i=mi2"
+        cmdline = wszGDBexe & " -q -i=mi2"
     end if
     
     ' Create the GDB process

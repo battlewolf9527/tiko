@@ -47,6 +47,39 @@
 NAMESPACE AfxNova
 
 ' ########################################################################################
+' * GdiPlusObjects
+' ########################################################################################
+
+' ========================================================================================
+TYPE GdiPlusObjects
+Public:
+   m_token AS ULONG_PTR
+   DECLARE CONSTRUCTOR
+   DECLARE DESTRUCTOR
+END TYPE
+' ========================================================================================
+
+' ========================================================================================
+' Constructor - Initializes GDI+
+' ========================================================================================
+PRIVATE CONSTRUCTOR GdiPlusObjects
+   DIM StartupInput AS GdiplusStartupInput
+   StartupInput.GdiplusVersion = 1   ' Version must be 1
+   GdiplusStartup(@m_token, @StartupInput, NULL)
+   GDIP_DP("token: " & WSTR(m_token))
+END CONSTRUCTOR
+' ========================================================================================
+
+' ========================================================================================
+' Dstructor - Shutdowns GDI+
+' ========================================================================================
+PRIVATE DESTRUCTOR GdiPlusObjects
+   GDIP_DP("token: " & WSTR(m_token))
+   IF m_token THEN GdiplusShutdown(m_token)
+END DESTRUCTOR
+' ========================================================================================
+
+' ########################################################################################
 ' * GdiPlusCustomLLineCap object
 ' ########################################################################################
 
@@ -54,20 +87,21 @@ NAMESPACE AfxNova
 TYPE GdiPlusCustomLineCap
 Public:
    m_CustomLineCap AS GpCustomLineCap PTR
-   DECLARE CONSTRUCTOR (BYVAL customCap AS GpCustomLineCap PTR = NULL)
+   DECLARE CONSTRUCTOR (BYVAL customCap AS GpPath PTR)
    DECLARE CONSTRUCTOR (BYVAL fillPath AS GpPath PTR, BYVAL strokePath AS GpPath PTR, _
-           BYVAL baseCap AS GpLineCap = LinecapFLat, BYVAL baseInset AS SINGLE = 0.0)
+           BYVAL baseCap AS GpLineCap = LinecapFlat, BYVAL baseInset AS SINGLE = 0.0)
    DECLARE DESTRUCTOR
-   DECLARE OPERATOR @ () AS GpCustomLineCap PTR
+   DECLARE OPERATOR @ () AS GpCustomLineCap PTR PTR
+   DECLARE OPERATOR CAST () AS GpCustomLineCap PTR
 END TYPE
 ' ========================================================================================
 
 ' ========================================================================================
 ' Creates a CustomLineCap
 ' ========================================================================================
-PRIVATE CONSTRUCTOR GdiPlusCustomLineCap (BYVAL customCap AS GpCustomLineCap PTR = NULL)
-   GDIP_DP(WSTR(customCap))
+PRIVATE CONSTRUCTOR GdiPlusCustomLineCap (BYVAL customCap AS GpPath PTR)
    IF customCap THEN SetLastError(GdipCloneCustomLineCap(customCap, @m_CustomLineCap))
+   GDIP_DP("Clone - " & WSTR(m_CustomLineCap))
 END CONSTRUCTOR
 ' ========================================================================================
 
@@ -75,7 +109,7 @@ END CONSTRUCTOR
 ' Creates a CustomLineCap object from a fill path and a stroke path.
 ' =====================================================================================
 PRIVATE CONSTRUCTOR GdiPlusCustomLineCap (BYVAL fillPath AS GpPath PTR, BYVAL strokePath AS GpPath PTR, _
-BYVAL baseCap AS GpLineCap = LinecapFLat, BYVAL baseInset AS SINGLE = 0.0)
+BYVAL baseCap AS GpLineCap = LinecapFlat, BYVAL baseInset AS SINGLE = 0.0)
    SetLastError(GdipCreateCustomLineCap(fillPath, strokePath, baseCap, baseinset, @m_CustomLineCap))
    GDIP_DP("m_pCustomLineCap: " & WSTR(m_CustomLineCap))
 END CONSTRUCTOR
@@ -91,17 +125,23 @@ END DESTRUCTOR
 ' ========================================================================================
 ' Returns a pointer to the GpCustomLineCap object
 ' ========================================================================================
-PRIVATE OPERATOR GdiPlusCustomLineCap.@ () AS GpCustomLineCap PTR
-   RETURN m_CustomLineCap
-END OPERATOR
-' ========================================================================================
-' ========================================================================================
-' Returns a pointer to the GpCustomLineCap object
-' ========================================================================================
 PRIVATE OPERATOR * (BYREF cap AS GdiPlusCustomLineCap) AS GpCustomLineCap PTR
    RETURN cap.m_CustomLineCap
 END OPERATOR
 ' ========================================================================================
+' ========================================================================================
+' Returns the address of a pointer to the GpCustomLineCap object
+' ========================================================================================
+PRIVATE OPERATOR GdiPlusCustomLineCap.@ () AS GpCustomLineCap PTR PTR
+   RETURN @m_CustomLineCap
+END OPERATOR
+' ========================================================================================
+' ========================================================================================
+PRIVATE OPERATOR GdiPlusCustomLineCap.CAST () AS GpCustomLineCap PTR
+   RETURN m_CustomLineCap
+END OPERATOR
+' ========================================================================================
+
 
 ' ########################################################################################
 ' * GdiPlusAdjustableArrowCap object
@@ -113,8 +153,9 @@ Public:
    m_AdjustableArrowCap AS GpAdjustableArrowCap PTR
    DECLARE CONSTRUCTOR (BYVAL cap AS GpAdjustableArrowCap PTR = NULL)
    DECLARE CONSTRUCTOR (BYVAL nHeight AS SINGLE, BYVAL nWidth AS SINGLE, BYVAL bIsFilled AS BOOL = CTRUE)
-   DECLARE OPERATOR @ () AS GpAdjustableArrowCap PTR
    DECLARE DESTRUCTOR
+   DECLARE OPERATOR @ () AS GpAdjustableArrowCap PTR PTR
+   DECLARE OPERATOR CAST () AS GpAdjustableArrowCap PTR
 END TYPE
 ' ========================================================================================
 
@@ -147,15 +188,20 @@ END DESTRUCTOR
 ' ========================================================================================
 ' Returns a pointer to the GpAdjustableArrowCap object
 ' ========================================================================================
-PRIVATE OPERATOR GdiPlusAdjustableArrowCap.@ () AS GpAdjustableArrowCap PTR
-   RETURN m_AdjustableArrowCap
+PRIVATE OPERATOR * (BYREF cap AS GdiPlusAdjustableArrowCap) AS GpAdjustableArrowCap PTR
+   RETURN cap.m_AdjustableArrowCap
 END OPERATOR
 ' ========================================================================================
 ' ========================================================================================
-' Returns a pointer to the GpAdjustableArrowCap object
+' Returns the address of a pointer to the GpAdjustableArrowCap object
 ' ========================================================================================
-PRIVATE OPERATOR * (BYREF cap AS GdiPlusAdjustableArrowCap) AS GpAdjustableArrowCap PTR
-   RETURN cap.m_AdjustableArrowCap
+PRIVATE OPERATOR GdiPlusAdjustableArrowCap.@ () AS GpAdjustableArrowCap PTR PTR
+   RETURN @m_AdjustableArrowCap
+END OPERATOR
+' ========================================================================================
+' ========================================================================================
+PRIVATE OPERATOR GdiPlusAdjustableArrowCap.CAST () AS GpAdjustableArrowCap PTR
+   RETURN m_AdjustableArrowCap
 END OPERATOR
 ' ========================================================================================
 
@@ -170,7 +216,8 @@ Public:
    m_Brush AS GpBrush PTR
    DECLARE CONSTRUCTOR (BYVAL brush AS GpBrush PTR = NULL)
    DECLARE DESTRUCTOR
-   DECLARE OPERATOR @ () AS GpBrush PTR
+   DECLARE OPERATOR @ () AS GpBrush PTR PTR
+   DECLARE OPERATOR CAST () AS GpBrush PTR
 END TYPE
 ' ========================================================================================
 
@@ -191,15 +238,20 @@ END DESTRUCTOR
 ' ========================================================================================
 ' Returns a pointer to the GpBrush object
 ' ========================================================================================
-PRIVATE OPERATOR GdiPlusBrush.@ () AS GpBrush PTR
-   RETURN m_Brush
+PRIVATE OPERATOR * (BYREF brush AS GdiPlusBrush) AS GpBrush PTR
+   RETURN brush.m_Brush
 END OPERATOR
 ' ========================================================================================
 ' ========================================================================================
-' Returns a pointer to the GpBrush object
+' Returns the address of a pointer to the GpBrush object
 ' ========================================================================================
-PRIVATE OPERATOR * (BYREF brush AS GdiPlusBrush) AS GpBrush PTR
-   RETURN brush.m_Brush
+PRIVATE OPERATOR GdiPlusBrush.@ () AS GpBrush PTR PTR
+   RETURN @m_Brush
+END OPERATOR
+' ========================================================================================
+' ========================================================================================
+PRIVATE OPERATOR GdiPlusBrush.CAST () AS GpBrush PTR
+   RETURN m_Brush
 END OPERATOR
 ' ========================================================================================
 
@@ -215,7 +267,8 @@ Public:
    DECLARE CONSTRUCTOR (BYVAL brush AS GpSolidBrush PTR = NULL)
    DECLARE CONSTRUCTOR (BYVAL colour AS ARGB = &hFF000000)
    DECLARE DESTRUCTOR
-   DECLARE OPERATOR @ () AS GpSolidBrush PTR
+   DECLARE OPERATOR @ () AS GpSolidBrush PTR PTR
+   DECLARE OPERATOR CAST () AS GpSolidBrush PTR
 END TYPE
 ' ========================================================================================
 
@@ -247,15 +300,20 @@ END DESTRUCTOR
 ' ========================================================================================
 ' Returns a pointer to the GpSolidBrush object
 ' ========================================================================================
-PRIVATE OPERATOR GdiPlusSolidBrush.@ () AS GpSolidBrush PTR
-   RETURN m_Brush
+PRIVATE OPERATOR * (BYREF brush AS GdiPlusSolidBrush) AS GpSolidBrush PTR
+   RETURN brush.m_Brush
 END OPERATOR
 ' ========================================================================================
 ' ========================================================================================
-' Returns a pointer to the GpSolidBrush object
+' Returns the address of a pointer to the GpBrush object
 ' ========================================================================================
-PRIVATE OPERATOR * (BYREF brush AS GdiPlusSolidBrush) AS GpSolidBrush PTR
-   RETURN brush.m_Brush
+PRIVATE OPERATOR GdiPlusSolidBrush.@ () AS GpSolidBrush PTR PTR
+   RETURN @m_Brush
+END OPERATOR
+' ========================================================================================
+' ========================================================================================
+PRIVATE OPERATOR GdiPlusSolidBrush.CAST () AS GpSolidBrush PTR
+   RETURN m_Brush
 END OPERATOR
 ' ========================================================================================
 
@@ -271,7 +329,8 @@ Public:
    DECLARE CONSTRUCTOR (BYVAL brush AS GpHatchBrush PTR = NULL)
    DECLARE CONSTRUCTOR (BYVAL nHatchStyle AS HatchStyle, BYVAL foreColor AS ARGB, BYVAL backColor AS ARGB = &HFF000000)
    DECLARE DESTRUCTOR
-   DECLARE OPERATOR @ () AS GpHatchBrush PTR
+   DECLARE OPERATOR @ () AS GpHatchBrush PTR PTR
+   DECLARE OPERATOR CAST () AS GpHatchBrush PTR
 END TYPE
 ' ========================================================================================
 
@@ -302,15 +361,20 @@ END DESTRUCTOR
 ' ========================================================================================
 ' Returns a pointer to the GpHatchBrush object
 ' ========================================================================================
-PRIVATE OPERATOR GdiPlusHatchBrush.@ () AS GpHatchBrush PTR
-   RETURN m_Brush
+PRIVATE OPERATOR * (BYREF brush AS GdiPlusHatchBrush) AS GpHatchBrush PTR
+   RETURN brush.m_Brush
 END OPERATOR
 ' ========================================================================================
 ' ========================================================================================
-' Returns a pointer to the GpHatchBrush object
+' Returns the address of a pointer to the GpHatchBrush object
 ' ========================================================================================
-PRIVATE OPERATOR * (BYREF brush AS GdiPlusHatchBrush) AS GpHatchBrush PTR
-   RETURN brush.m_Brush
+PRIVATE OPERATOR GdiPlusHatchBrush.@ () AS GpHatchBrush PTR PTR
+   RETURN @m_Brush
+END OPERATOR
+' ========================================================================================
+' ========================================================================================
+PRIVATE OPERATOR GdiPlusHatchBrush.CAST () AS GpHatchBrush PTR
+   RETURN m_Brush
 END OPERATOR
 ' ========================================================================================
 
@@ -323,56 +387,57 @@ END OPERATOR
 TYPE GdiPlusLinearGradientBrush
 Public:
    m_Brush AS GpLinearGradientBrush PTR
-   DECLARE CONSTRUCTOR (BYVAL point1 AS GpPointF PTR, BYVAL point2 AS GpPointF PTR, BYVAL color1 AS ARGB, BYVAL color2 AS ARGB)
-   DECLARE CONSTRUCTOR (BYVAL point1 AS GpPoint PTR, BYVAL point2 AS GpPoint PTR, BYVAL color1 AS ARGB, BYVAL color2 AS ARGB)
-   DECLARE CONSTRUCTOR (BYVAL rc AS GpRectF PTR, BYVAL color1 AS ARGB, BYVAL color2 AS ARGB, BYVAL nMode AS LinearGradientMode)
-   DECLARE CONSTRUCTOR (BYVAL rc AS GpRect PTR, BYVAL color1 AS ARGB, BYVAL color2 AS ARGB, BYVAL nMode AS LinearGradientMode)
-   DECLARE CONSTRUCTOR (BYVAL rc AS GpRectF PTR, BYVAL color1 AS ARGB, BYVAL color2 AS ARGB, BYVAL angle AS SINGLE, BYVAL isAngleScalable AS BOOL)
-   DECLARE CONSTRUCTOR (BYVAL rc AS GpRect PTR, BYVAL color1 AS ARGB, BYVAL color2 AS ARGB, BYVAL angle AS SINGLE, BYVAL isAngleScalable AS BOOL)
+   DECLARE CONSTRUCTOR (BYVAL point1 AS GpPointF PTR, BYVAL point2 AS GpPointF PTR, BYVAL color1 AS ARGB, BYVAL color2 AS ARGB, BYVAL wrap AS WrapMode = WrapModeTile)
+   DECLARE CONSTRUCTOR (BYVAL point1 AS GpPoint PTR, BYVAL point2 AS GpPoint PTR, BYVAL color1 AS ARGB, BYVAL color2 AS ARGB, BYVAL wrap AS WrapMode = WrapModeTile)
+   DECLARE CONSTRUCTOR (BYVAL rc AS GpRectF PTR, BYVAL color1 AS ARGB, BYVAL color2 AS ARGB, BYVAL nMode AS LinearGradientMode, BYVAL wrap AS WrapMode = WrapModeTile)
+   DECLARE CONSTRUCTOR (BYVAL rc AS GpRect PTR, BYVAL color1 AS ARGB, BYVAL color2 AS ARGB, BYVAL nMode AS LinearGradientMode, BYVAL wrap AS WrapMode = WrapModeTile)
+   DECLARE CONSTRUCTOR (BYVAL rc AS GpRectF PTR, BYVAL color1 AS ARGB, BYVAL color2 AS ARGB, BYVAL angle AS SINGLE, BYVAL isAngleScalable AS BOOL, BYVAL wrap AS WrapMode = WrapModeTile)
+   DECLARE CONSTRUCTOR (BYVAL rc AS GpRect PTR, BYVAL color1 AS ARGB, BYVAL color2 AS ARGB, BYVAL angle AS SINGLE, BYVAL isAngleScalable AS BOOL, BYVAL wrap AS WrapMode = WrapModeTile)
    DECLARE DESTRUCTOR
-   DECLARE OPERATOR @ () AS GpLinearGradientBrush PTR
+   DECLARE OPERATOR @ () AS GpLinearGradientBrush PTR PTR
+   DECLARE OPERATOR CAST () AS GpLinearGradientBrush PTR
 END TYPE
 ' ========================================================================================
 
 ' =====================================================================================
 ' Creates a LinearGradientBrush object from a set of boundary points and boundary colors.
 ' =====================================================================================
-PRIVATE CONSTRUCTOR GdiPlusLinearGradientBrush (BYVAL point1 AS GpPointF PTR, BYVAL point2 AS GpPointF PTR, BYVAL color1 AS ARGB, BYVAL color2 AS ARGB)
-   SetLastError(GdipCreateLineBrush(point1, point2, color1, color2, WrapModeTile, @m_brush))
+PRIVATE CONSTRUCTOR GdiPlusLinearGradientBrush (BYVAL point1 AS GpPointF PTR, BYVAL point2 AS GpPointF PTR, BYVAL color1 AS ARGB, BYVAL color2 AS ARGB, BYVAL wrap AS WrapMode = WrapModeTile)
+   SetLastError(GdipCreateLineBrush(point1, point2, color1, color2, wrap, @m_brush))
    GDIP_DP("m_brush: " & WSTR(m_brush))
 END CONSTRUCTOR
 ' =====================================================================================
 ' =====================================================================================
-PRIVATE CONSTRUCTOR GdiPlusLinearGradientBrush (BYVAL point1 AS GpPoint PTR, BYVAL point2 AS GpPoint PTR, BYVAL color1 AS ARGB, BYVAL color2 AS ARGB)
-   SetLastError(GdipCreateLineBrushI(point1, point2, color1, color2, WrapModeTile, @m_brush))
-   GDIP_DP("m_brush: " & WSTR(m_brush))
-END CONSTRUCTOR
-' =====================================================================================
-' =====================================================================================
-' Creates a LinearGradientBrush object from a set of boundary points and boundary colors.
-' =====================================================================================
-PRIVATE CONSTRUCTOR GdiPlusLinearGradientBrush (BYVAL rc AS GpRectF PTR, BYVAL color1 AS ARGB, BYVAL color2 AS ARGB, BYVAL nMode AS LinearGradientMode)
-   SetLastError(GdipCreateLineBrushFromRect(rc, color1, color2, nMode, WrapModeTile, @m_brush))
-   GDIP_DP("m_brush: " & WSTR(m_brush))
-END CONSTRUCTOR
-' =====================================================================================
-' =====================================================================================
-PRIVATE CONSTRUCTOR GdiPlusLinearGradientBrush (BYVAL rc AS GpRect PTR, BYVAL color1 AS ARGB, BYVAL color2 AS ARGB, BYVAL nMode AS LinearGradientMode)
-   SetLastError(GdipCreateLineBrushFromRectI(rc, color1, color2, nMode, WrapModeTile, @m_brush))
+PRIVATE CONSTRUCTOR GdiPlusLinearGradientBrush (BYVAL point1 AS GpPoint PTR, BYVAL point2 AS GpPoint PTR, BYVAL color1 AS ARGB, BYVAL color2 AS ARGB, BYVAL wrap AS WrapMode = WrapModeTile)
+   SetLastError(GdipCreateLineBrushI(point1, point2, color1, color2, wrap, @m_brush))
    GDIP_DP("m_brush: " & WSTR(m_brush))
 END CONSTRUCTOR
 ' =====================================================================================
 ' =====================================================================================
 ' Creates a LinearGradientBrush object from a set of boundary points and boundary colors.
 ' =====================================================================================
-PRIVATE CONSTRUCTOR GdiPlusLinearGradientBrush (BYVAL rc AS GpRectF PTR, BYVAL color1 AS ARGB, BYVAL color2 AS ARGB, BYVAL angle AS SINGLE, BYVAL isAngleScalable AS BOOL)
-   SetLastError(GdipCreateLineBrushFromRectWithAngle(rc, color1, color2, angle, isAngleScalable, WrapModeTile, @m_brush))
+PRIVATE CONSTRUCTOR GdiPlusLinearGradientBrush (BYVAL rc AS GpRectF PTR, BYVAL color1 AS ARGB, BYVAL color2 AS ARGB, BYVAL nMode AS LinearGradientMode, BYVAL wrap AS WrapMode = WrapModeTile)
+   SetLastError(GdipCreateLineBrushFromRect(rc, color1, color2, nMode, wrap, @m_brush))
    GDIP_DP("m_brush: " & WSTR(m_brush))
 END CONSTRUCTOR
 ' =====================================================================================
 ' =====================================================================================
-PRIVATE CONSTRUCTOR GdiPlusLinearGradientBrush (BYVAL rc AS GpRect PTR, BYVAL color1 AS ARGB, BYVAL color2 AS ARGB, BYVAL angle AS SINGLE, BYVAL isAngleScalable AS BOOL)
-   SetLastError(GdipCreateLineBrushFromRectWithAngleI(rc, color1, color2, angle, isAngleScalable, WrapModeTile, @m_brush))
+PRIVATE CONSTRUCTOR GdiPlusLinearGradientBrush (BYVAL rc AS GpRect PTR, BYVAL color1 AS ARGB, BYVAL color2 AS ARGB, BYVAL nMode AS LinearGradientMode, BYVAL wrap AS WrapMode = WrapModeTile)
+   SetLastError(GdipCreateLineBrushFromRectI(rc, color1, color2, nMode, wrap, @m_brush))
+   GDIP_DP("m_brush: " & WSTR(m_brush))
+END CONSTRUCTOR
+' =====================================================================================
+' =====================================================================================
+' Creates a LinearGradientBrush object from a set of boundary points and boundary colors.
+' =====================================================================================
+PRIVATE CONSTRUCTOR GdiPlusLinearGradientBrush (BYVAL rc AS GpRectF PTR, BYVAL color1 AS ARGB, BYVAL color2 AS ARGB, BYVAL angle AS SINGLE, BYVAL isAngleScalable AS BOOL, BYVAL wrap AS WrapMode = WrapModeTile)
+   SetLastError(GdipCreateLineBrushFromRectWithAngle(rc, color1, color2, angle, isAngleScalable, wrap, @m_brush))
+   GDIP_DP("m_brush: " & WSTR(m_brush))
+END CONSTRUCTOR
+' =====================================================================================
+' =====================================================================================
+PRIVATE CONSTRUCTOR GdiPlusLinearGradientBrush (BYVAL rc AS GpRect PTR, BYVAL color1 AS ARGB, BYVAL color2 AS ARGB, BYVAL angle AS SINGLE, BYVAL isAngleScalable AS BOOL, BYVAL wrap AS WrapMode = WrapModeTile)
+   SetLastError(GdipCreateLineBrushFromRectWithAngleI(rc, color1, color2, angle, isAngleScalable, wrap, @m_brush))
    GDIP_DP("m_brush: " & WSTR(m_brush))
 END CONSTRUCTOR
 ' =====================================================================================
@@ -387,15 +452,20 @@ END DESTRUCTOR
 ' ========================================================================================
 ' Returns a pointer to the GpLinearGradientBrush object
 ' ========================================================================================
-PRIVATE OPERATOR GdiPlusLinearGradientBrush.@ () AS GpLinearGradientBrush PTR
-   RETURN m_Brush
+PRIVATE OPERATOR * (BYREF brush AS GdiPlusLinearGradientBrush) AS GpLinearGradientBrush PTR
+   RETURN brush.m_Brush
 END OPERATOR
 ' ========================================================================================
 ' ========================================================================================
-' Returns a pointer to the GpLinearGradientBrush object
+' Returns the address of a pointer to the GpLinearGradientBrush object
 ' ========================================================================================
-PRIVATE OPERATOR * (BYREF brush AS GdiPlusLinearGradientBrush) AS GpLinearGradientBrush PTR
-   RETURN brush.m_Brush
+PRIVATE OPERATOR GdiPlusLinearGradientBrush.@ () AS GpLinearGradientBrush PTR PTR
+   RETURN @m_Brush
+END OPERATOR
+' ========================================================================================
+' ========================================================================================
+PRIVATE OPERATOR GdiPlusLinearGradientBrush.CAST () AS GpLinearGradientBrush PTR
+   RETURN m_Brush
 END OPERATOR
 ' ========================================================================================
 
@@ -408,17 +478,34 @@ END OPERATOR
 TYPE GdiPlusPathGradientBrush
 Public:
    m_Brush AS GpPathGradientBrush PTR
-   DECLARE CONSTRUCTOR (BYVAL nHatchStyle AS HatchStyle, BYVAL foreColor AS ARGB, BYVAL backColor AS ARGB = &HFF000000)
+   DECLARE CONSTRUCTOR (BYVAL path AS GpPath PTR)
+   DECLARE CONSTRUCTOR (BYVAL points AS CONST GpPointF PTR, BYVAL count AS INT_, BYVAL wrapMode AS GpWrapMode = WrapModeClamp)
+   DECLARE CONSTRUCTOR (BYVAL points AS CONST GpPoint PTR, BYVAL count AS INT_, BYVAL wrapMode AS GpWrapMode = WrapModeClamp)
    DECLARE DESTRUCTOR
-   DECLARE OPERATOR @ () AS GpPathGradientBrush PTR
+   DECLARE OPERATOR @ () AS GpPathGradientBrush PTR PTR
+   DECLARE OPERATOR CAST () AS GpPathGradientBrush PTR
 END TYPE
 ' ========================================================================================
 
 ' =====================================================================================
-' Creates a HatchBrush object based on a hatch style, a foreground color, and a background color.
+' Creates a path gradient brush from a path
 ' =====================================================================================
-PRIVATE CONSTRUCTOR GdiPlusPathGradientBrush (BYVAL nHatchStyle AS HatchStyle, BYVAL foreColor AS ARGB, BYVAL backColor AS ARGB = &HFF000000)
-   SetLastError(GdipCreateHatchBrush(nHatchStyle, foreColor, backColor, @m_brush))
+PRIVATE CONSTRUCTOR GdiPlusPathGradientBrush (BYVAL path AS GpPath PTR)
+   SetLastError(GdipCreatePathGradientFromPath(path, @m_brush))
+   GDIP_DP("m_brush: " & WSTR(m_brush))
+END CONSTRUCTOR
+' =====================================================================================
+' =====================================================================================
+' Creates a path gradient brush
+' =====================================================================================
+PRIVATE CONSTRUCTOR GdiPlusPathGradientBrush (BYVAL points AS CONST GpPointF PTR, BYVAL count AS INT_, BYVAL wrapMode AS GpWrapMode = WrapModeClamp)
+   SetLastError(GdipCreatePathGradient(points, count, wrapMode, @m_brush))
+   GDIP_DP("m_brush: " & WSTR(m_brush))
+END CONSTRUCTOR
+' =====================================================================================
+' =====================================================================================
+PRIVATE CONSTRUCTOR GdiPlusPathGradientBrush (BYVAL points AS CONST GpPoint PTR, BYVAL count AS INT_, BYVAL wrapMode AS GpWrapMode = WrapModeClamp)
+   SetLastError(GdipCreatePathGradientI(points, count, wrapMode, @m_brush))
    GDIP_DP("m_brush: " & WSTR(m_brush))
 END CONSTRUCTOR
 ' =====================================================================================
@@ -433,15 +520,20 @@ END DESTRUCTOR
 ' ========================================================================================
 ' Returns a pointer to the GpPathGradientBrush object
 ' ========================================================================================
-PRIVATE OPERATOR GdiPlusPathGradientBrush.@ () AS GpPathGradientBrush PTR
-   RETURN m_Brush
+PRIVATE OPERATOR * (BYREF brush AS GdiPlusPathGradientBrush) AS GpPathGradientBrush PTR
+   RETURN brush.m_Brush
 END OPERATOR
 ' ========================================================================================
 ' ========================================================================================
-' Returns a pointer to the GpPathGradientBrush object
+' Returns the address of a pointer to the GpPathGradientBrush object
 ' ========================================================================================
-PRIVATE OPERATOR * (BYREF brush AS GdiPlusPathGradientBrush) AS GpPathGradientBrush PTR
-   RETURN brush.m_Brush
+PRIVATE OPERATOR GdiPlusPathGradientBrush.@ () AS GpPathGradientBrush PTR PTR
+   RETURN @m_Brush
+END OPERATOR
+' ========================================================================================
+' ========================================================================================
+PRIVATE OPERATOR GdiPlusPathGradientBrush.CAST () AS GpPathGradientBrush PTR
+   RETURN m_Brush
 END OPERATOR
 ' ========================================================================================
 
@@ -457,12 +549,15 @@ Public:
    DECLARE CONSTRUCTOR (BYVAL image AS GpImage PTR, BYVAL nWrapMode AS WrapMode = WrapModeTile)
    DECLARE CONSTRUCTOR (BYVAL image AS GpImage PTR, BYVAL dstRect AS GpRectF PTR, BYVAL imageAttributes AS GpImageAttributes PTR = NULL)
    DECLARE CONSTRUCTOR (BYVAL image AS GpImage PTR, BYVAL dstRect AS GpRect PTR, BYVAL imageAttributes AS GpImageAttributes PTR = NULL)
+   DECLARE CONSTRUCTOR (BYVAL image AS GpImage PTR, BYVAL dstX AS SINGLE, BYVAL dstY AS SINGLE, BYVAL dstWidth AS SINGLE, BYVAL dstHeight AS SINGLE, BYVAL imageAttributes AS GpImageAttributes PTR = NULL)
+   DECLARE CONSTRUCTOR (BYVAL image AS GpImage PTR, BYVAL dstX AS INT_, BYVAL dstY AS INT_, BYVAL dstWidth AS INT_, BYVAL dstHeight AS INT_, BYVAL imageAttributes AS GpImageAttributes PTR = NULL)
    DECLARE CONSTRUCTOR (BYVAL image AS GpImage PTR, BYVAL nWrapMode AS WrapMode, BYVAL dstRect AS GpRect PTR)
    DECLARE CONSTRUCTOR (BYVAL image AS GpImage PTR, BYVAL nWrapMode AS WrapMode, BYVAL dstRect AS GpRectF PTR)
    DECLARE CONSTRUCTOR (BYVAL image AS GpImage PTR, BYVAL nWrapMode AS WrapMode, BYVAL dstX AS SINGLE, BYVAL dstY AS SINGLE, BYVAL dstWidth AS SINGLE, BYVAL dstHeight AS SINGLE)
    DECLARE CONSTRUCTOR (BYVAL image AS GpImage PTR, BYVAL nWrapMode AS WrapMode, BYVAL dstX AS INT_, BYVAL dstY AS INT_, BYVAL dstWidth AS INT_, BYVAL dstHeight AS INT_)
    DECLARE DESTRUCTOR
-   DECLARE OPERATOR @ () AS GpTextureBrush PTR
+   DECLARE OPERATOR @ () AS GpTextureBrush PTR PTR
+   DECLARE OPERATOR CAST () AS GpTextureBrush PTR
 END TYPE
 ' ========================================================================================
 
@@ -487,6 +582,18 @@ END CONSTRUCTOR
 ' =====================================================================================
 PRIVATE CONSTRUCTOR GdiPlusTextureBrush (BYVAL image AS GpImage PTR, BYVAL dstRect AS GpRect PTR, BYVAL imageAttributes AS GpImageAttributes PTR = NULL)
    SetLastError(GdipCreateTextureIAI(image, imageAttributes, dstRect->x, dstRect->y, dstRect->Width, dstRect->Height, @m_Texture))
+   GDIP_DP("m_Texture: " & WSTR(m_Texture))
+END CONSTRUCTOR
+' =====================================================================================
+' =====================================================================================
+PRIVATE CONSTRUCTOR GdiPlusTextureBrush (BYVAL image AS GpImage PTR, BYVAL dstX AS SINGLE, BYVAL dstY AS SINGLE, BYVAL dstWidth AS SINGLE, BYVAL dstHeight AS SINGLE, BYVAL imageAttributes AS GpImageAttributes PTR = NULL)
+   SetLastError(GdipCreateTextureIA(image, imageAttributes, dstX, dstY, dstWidth, dstHeight, @m_Texture))
+   GDIP_DP("m_Texture: " & WSTR(m_Texture))
+END CONSTRUCTOR
+' =====================================================================================
+' =====================================================================================
+PRIVATE CONSTRUCTOR GdiPlusTextureBrush (BYVAL image AS GpImage PTR, BYVAL dstX AS INT_, BYVAL dstY AS INT_, BYVAL dstWidth AS INT_, BYVAL dstHeight AS INT_, BYVAL imageAttributes AS GpImageAttributes PTR = NULL)
+   SetLastError(GdipCreateTextureIA(image, imageAttributes, dstX, dstY, dstWidth, dstHeight, @m_Texture))
    GDIP_DP("m_Texture: " & WSTR(m_Texture))
 END CONSTRUCTOR
 ' =====================================================================================
@@ -527,15 +634,20 @@ END DESTRUCTOR
 ' ========================================================================================
 ' Returns a pointer to the GpTextureBrush object
 ' ========================================================================================
-PRIVATE OPERATOR GdiPlusTextureBrush.@ () AS GpTextureBrush PTR
-   RETURN m_Texture
+PRIVATE OPERATOR * (BYREF texture AS GdiPlusTextureBrush) AS GpTextureBrush PTR
+   RETURN texture.m_Texture
 END OPERATOR
 ' ========================================================================================
 ' ========================================================================================
-' Returns a pointer to the GpTextureBrush object
+' Returns the address of a pointer to the GpTextureBrush object
 ' ========================================================================================
-PRIVATE OPERATOR * (BYREF texture AS GdiPlusTextureBrush) AS GpTextureBrush PTR
-   RETURN texture.m_Texture
+PRIVATE OPERATOR GdiPlusTextureBrush.@ () AS GpTextureBrush PTR PTR
+   RETURN @m_Texture
+END OPERATOR
+' ========================================================================================
+' ========================================================================================
+PRIVATE OPERATOR GdiPlusTextureBrush.CAST () AS GpTextureBrush PTR
+   RETURN m_Texture
 END OPERATOR
 ' ========================================================================================
 
@@ -552,8 +664,10 @@ Public:
    DECLARE CONSTRUCTOR (BYVAL pwszFileName AS WSTRING PTR, BYVAL useEmbeddedColorManagement AS BOOLEAN = FALSE)
    DECLARE CONSTRUCTOR (BYVAL stream AS IStream PTR, BYVAL useEmbeddedColorManagement AS BOOLEAN = FALSE)
    DECLARE CONSTRUCTOR (BYVAL hInst AS HINSTANCE, BYREF wszImageName AS WSTRING)
+   DECLARE OPERATOR CAST () AS GpImage PTR
+   DECLARE OPERATOR @ () AS GpImage PTR PTR
    DECLARE DESTRUCTOR
-   DECLARE OPERATOR @ () AS GpImage PTR
+   DECLARE SUB SetResolution (BYVAL graphics AS GpGraphics PTR, BYVAL dpiX AS SINGLE = 0, BYVAL dpiY AS SINGLE = 0)
 END TYPE
 ' ========================================================================================
 
@@ -612,16 +726,30 @@ END DESTRUCTOR
 ' ========================================================================================
 ' Returns a pointer to the GpImage object
 ' ========================================================================================
-PRIVATE OPERATOR GdiPlusImage.@ () AS GpImage PTR
+PRIVATE OPERATOR * (BYREF img AS GdiPlusImage) AS GpImage PTR
+   RETURN img.m_Image
+END OPERATOR
+' ========================================================================================
+' ========================================================================================
+PRIVATE OPERATOR GdiPlusImage.CAST () AS GpImage PTR
    RETURN m_Image
 END OPERATOR
 ' ========================================================================================
 ' ========================================================================================
-' Returns a pointer to the GpImage object
+' Returns the address of a pointer to the GpImage object
 ' ========================================================================================
-PRIVATE OPERATOR * (BYREF img AS GdiPlusImage) AS GpImage PTR
-   RETURN img.m_Image
+PRIVATE OPERATOR GdiPlusImage.@ () AS GpImage PTR PTR
+   RETURN @m_Image
 END OPERATOR
+' ========================================================================================
+' ========================================================================================
+PRIVATE SUB GdiPlusImage.SetResolution (BYVAL graphics AS GpGraphics PTR, BYVAL dpiX AS SINGLE = 0, BYVAL dpiY AS SINGLE = 0)
+   IF dpiX = 0 AND dpiY = 0 THEN
+      GdipGetDpiX(graphics, @dpiX)
+      GdipGetDpiY(graphics, @dpiY)
+   END IF
+   SetLastError(GdipBitmapSetResolution(m_Image, dpiX, dpiY))
+END SUB
 ' ========================================================================================
 
 
@@ -649,8 +777,11 @@ Public:
    DECLARE CONSTRUCTOR (BYVAL hbm AS HBITMAP, BYVAL hPal AS HPALETTE)
    DECLARE CONSTRUCTOR (BYVAL hicon AS HICON)
    DECLARE CONSTRUCTOR (BYVAL hInstance AS HINSTANCE, BYVAL pwszBitmapName AS WSTRING PTR)
+   DECLARE CONSTRUCTOR (BYVAL inputBitmap AS GpBitmap PTR, BYVAL effect AS GpEffect PTR)
    DECLARE DESTRUCTOR
-   DECLARE OPERATOR @ () AS GpBitmap PTR
+   DECLARE OPERATOR @ () AS GpBitmap PTR PTR
+   DECLARE OPERATOR CAST () AS GpBitmap PTR
+   DECLARE SUB SetResolution (BYVAL graphics AS GpGraphics PTR, BYVAL dpiX AS SINGLE = 0, BYVAL dpiY AS SINGLE = 0)
 END TYPE
 ' ========================================================================================
 
@@ -770,6 +901,14 @@ PRIVATE CONSTRUCTOR GdiPlusBitmap (BYVAL hInstance AS HINSTANCE, BYVAL pwszBitma
 END CONSTRUCTOR
 ' ========================================================================================
 ' ========================================================================================
+' Creates a new Bitmap object by applying a specified effect to an existing Bitmap object.
+' ========================================================================================
+PRIVATE CONSTRUCTOR GdiPlusBitmap (BYVAL inputBitmap AS GpBitmap PTR, BYVAL effect AS GpEffect PTR)
+   SetLastError(GdipBitmapCreateApplyEffect(@inputBitmap, 1, effect, NULL, NULL, @m_Bitmap, FALSE, NULL, NULL))
+   GDIP_DP("m_Bitmap: " & WSTR(m_Bitmap))
+END CONSTRUCTOR
+' ========================================================================================
+' ========================================================================================
 ' * Cleanup
 ' ========================================================================================
 PRIVATE DESTRUCTOR GdiPlusBitmap
@@ -780,16 +919,30 @@ END DESTRUCTOR
 ' ========================================================================================
 ' Returns a pointer to the GpBitmap object
 ' ========================================================================================
-PRIVATE OPERATOR GdiPlusBitmap.@ () AS GpBitmap PTR
+PRIVATE OPERATOR * (BYREF bmp AS GdiPlusBitmap) AS GpBitmap PTR
+   RETURN bmp.m_Bitmap
+END OPERATOR
+' ========================================================================================
+' ========================================================================================
+' Returns the address of a pointer to the GpBitmap object
+' ========================================================================================
+PRIVATE OPERATOR GdiPlusBitmap.@ () AS GpBitmap PTR PTR
+   RETURN @m_Bitmap
+END OPERATOR
+' ========================================================================================
+' ========================================================================================
+PRIVATE OPERATOR GdiPlusBitmap.CAST () AS GpBitmap PTR
    RETURN m_Bitmap
 END OPERATOR
 ' ========================================================================================
 ' ========================================================================================
-' Returns a pointer to the GpBitmap object
-' ========================================================================================
-PRIVATE OPERATOR * (BYREF bmp AS GdiPlusBitmap) AS GpBitmap PTR
-   RETURN bmp.m_Bitmap
-END OPERATOR
+PRIVATE SUB GdiPlusBitmap.SetResolution (BYVAL graphics AS GpGraphics PTR, BYVAL dpiX AS SINGLE = 0, BYVAL dpiY AS SINGLE = 0)
+   IF dpiX = 0 AND dpiY = 0 THEN
+      GdipGetDpiX(graphics, @dpiX)
+      GdipGetDpiY(graphics, @dpiY)
+   END IF
+   SetLastError(GdipBitmapSetResolution(m_Bitmap, dpiX, dpiY))
+END SUB
 ' ========================================================================================
 
 
@@ -803,7 +956,8 @@ Public:
    m_ImgAttr AS GpImageAttributes PTR
    DECLARE CONSTRUCTOR (BYVAL imgAttr AS GpImageAttributes PTR = NULL)
    DECLARE DESTRUCTOR
-   DECLARE OPERATOR @ () AS GpImageAttributes PTR
+   DECLARE OPERATOR @ () AS GpImageAttributes PTR PTR
+   DECLARE OPERATOR CAST () AS GpImageAttributes PTR
 END TYPE
 ' ========================================================================================
 
@@ -830,15 +984,20 @@ END DESTRUCTOR
 ' ========================================================================================
 ' Returns a pointer to the GpImageAttributes object
 ' ========================================================================================
-PRIVATE OPERATOR GdiPlusImageAttributes.@ () AS GpImageAttributes PTR
-   RETURN m_ImgAttr
+PRIVATE OPERATOR * (BYREF imgAttr AS GdiPlusImageAttributes) AS GpImageAttributes PTR
+   RETURN imgAttr.m_ImgAttr
 END OPERATOR
 ' ========================================================================================
 ' ========================================================================================
-' Returns a pointer to the GpImageAttributes object
+' Returns the address of a pointer to the GpImageAttributes object
 ' ========================================================================================
-PRIVATE OPERATOR * (BYREF imgAttr AS GdiPlusImageAttributes) AS GpImageAttributes PTR
-   RETURN imgAttr.m_ImgAttr
+PRIVATE OPERATOR GdiPlusImageAttributes.@ () AS GpImageAttributes PTR PTR
+   RETURN @m_ImgAttr
+END OPERATOR
+' ========================================================================================
+' ========================================================================================
+PRIVATE OPERATOR GdiPlusImageAttributes.CAST () AS GpImageAttributes PTR
+   RETURN m_ImgAttr
 END OPERATOR
 ' ========================================================================================
 
@@ -850,23 +1009,23 @@ END OPERATOR
 ' ========================================================================================
 TYPE GdiPlusEffect
 Public:
-'   m_Effect AS CGpEffect PTR
    m_Effect AS GpEffect PTR
    m_auxDataSize AS INT_
    m_auxData AS ANY PTR
    m_useAuxData AS BOOLEAN
-   DECLARE CONSTRUCTOR
+   DECLARE CONSTRUCTOR (BYVAL gd AS GUID)
    DECLARE DESTRUCTOR
-'   DECLARE OPERATOR @ () AS CGpEffect PTR
-   DECLARE OPERATOR @ () AS GpEffect PTR
+   DECLARE OPERATOR @ () AS GpEffect PTR PTR
+   DECLARE OPERATOR CAST () AS GpEffect PTR
 END TYPE
 ' ========================================================================================
 
 ' ========================================================================================
 ' Default constructor
 ' ========================================================================================
-PRIVATE CONSTRUCTOR GdiPlusEffect
-   GDIP_DP("")
+PRIVATE CONSTRUCTOR GdiPlusEffect (BYVAL gd AS GUID)
+   SetLastError GdipCreateEffect(gd, @m_Effect)
+   GDIP_DP("m_Effect: " & WSTR(m_Effect))
 END CONSTRUCTOR
 ' ========================================================================================
 ' ========================================================================================
@@ -883,17 +1042,20 @@ END DESTRUCTOR
 ' ========================================================================================
 ' Returns a pointer to the CGpEffect object
 ' ========================================================================================
-'PRIVATE OPERATOR GdiPlusEffect.@ () AS CGpEffect PTR
-PRIVATE OPERATOR GdiPlusEffect.@ () AS GpEffect PTR
-   RETURN m_Effect
+PRIVATE OPERATOR * (BYREF effect AS GdiPlusEffect) AS GpEffect PTR
+   RETURN effect.m_Effect
 END OPERATOR
 ' ========================================================================================
 ' ========================================================================================
-' Returns a pointer to the CGpEffect object
+' Returns the address of a pointer to the GpEffect object
 ' ========================================================================================
-'PRIVATE OPERATOR * (BYREF effect AS GdiPlusEffect) AS CGpEffect PTR
-PRIVATE OPERATOR * (BYREF effect AS GdiPlusEffect) AS GpEffect PTR
-   RETURN effect.m_Effect
+PRIVATE OPERATOR GdiPlusEffect.@ () AS GpEffect PTR PTR
+   RETURN @m_Effect
+END OPERATOR
+' ========================================================================================
+' ========================================================================================
+PRIVATE OPERATOR GdiPlusEffect.CAST () AS GpEffect PTR
+   RETURN m_Effect
 END OPERATOR
 ' ========================================================================================
 
@@ -909,7 +1071,16 @@ Public:
    DECLARE CONSTRUCTOR (BYVAL hdc AS HDC)
    DECLARE CONSTRUCTOR (BYVAL hdc AS HDC, BYVAL hDevice AS HANDLE)
    DECLARE DESTRUCTOR
-   DECLARE OPERATOR @ () AS GpGraphics PTR
+   DECLARE OPERATOR @ () AS GpGraphics PTR PTR
+   DECLARE OPERATOR CAST () AS GpGraphics PTR
+   DECLARE FUNCTION DpiX () AS SINGLE
+   DECLARE FUNCTION DpiY () AS SINGLE
+   DECLARE FUNCTION DpiRatio () AS SINGLE
+   DECLARE FUNCTION DpiRatioX () AS SINGLE
+   DECLARE FUNCTION DpiRatioY () AS SINGLE
+   DECLARE FUNCTION ScaleTransform (BYVAL sx AS SINGLE, BYVAL sy AS SINGLE, BYVAL order AS MatrixOrder = MatrixOrderPrepend) AS GpStatus
+   DECLARE FUNCTION ScaleTransform (BYVAL dpiRatio_ AS SINGLE, BYVAL order AS MatrixOrder = MatrixOrderPrepend) AS GpStatus
+   DECLARE FUNCTION ScaleTransform (BYVAL order AS MatrixOrder = MatrixOrderPrepend) AS GpStatus
 END TYPE
 ' ========================================================================================
 
@@ -940,16 +1111,89 @@ END DESTRUCTOR
 ' ========================================================================================
 ' Returns a pointer to the GpGraphics object
 ' ========================================================================================
-PRIVATE OPERATOR GdiPlusGraphics.@ () AS GpGraphics PTR
-   RETURN m_Graphics
-END OPERATOR
-' ========================================================================================
-' ========================================================================================
-' Returns a pointer to the GpGraphics object
-' ========================================================================================
 PRIVATE OPERATOR * (BYREF graphics AS GdiPlusGraphics) AS GpGraphics PTR
    RETURN graphics.m_Graphics
 END OPERATOR
+' ========================================================================================
+' ========================================================================================
+' Returns the address of a pointer to the GpGraphics object
+' ========================================================================================
+PRIVATE OPERATOR GdiPlusGraphics.@ () AS GpGraphics PTR PTR
+   RETURN @m_Graphics
+END OPERATOR
+' ========================================================================================
+
+' ========================================================================================
+PRIVATE OPERATOR GdiPlusGraphics.CAST () AS GpGraphics PTR
+   RETURN m_Graphics
+END OPERATOR
+' ========================================================================================
+
+' ========================================================================================
+' Get the DPI scaling
+' ========================================================================================
+PRIVATE FUNCTION GdiPlusGraphics.DpiX () AS SINGLE
+   DIM _dpiX AS SINGLE
+   SetLastError(GdipGetDpiX(m_Graphics, @_dpiX))
+   RETURN _dpiX
+END FUNCTION
+' ========================================================================================
+' ========================================================================================
+PRIVATE FUNCTION GdiPlusGraphics.DpiY () AS SINGLE
+   DIM _dpiY AS SINGLE
+   SetLastError(GdipGetDpiX(m_Graphics, @_dpiY))
+   RETURN _dpiY
+END FUNCTION
+' ========================================================================================
+' ========================================================================================
+' Get the DPI scaling ratio
+' ========================================================================================
+PRIVATE FUNCTION GdiPlusGraphics.DpiRatio () AS SINGLE
+   DIM _dpiX AS SINGLE
+   SetLastError(GdipGetDpiX(m_Graphics, @_dpiX))
+   DIM rxRatio AS SINGLE = _dpiX / 96
+   RETURN rxRatio
+END FUNCTION
+' ========================================================================================
+' ========================================================================================
+PRIVATE FUNCTION GdiPlusGraphics.DpiRatioX () AS SINGLE
+   DIM _dpiX AS SINGLE
+   SetLastError(GdipGetDpiX(m_Graphics, @_dpiX))
+   DIM rxRatio AS SINGLE = _dpiX / 96
+   RETURN rxRatio
+END FUNCTION
+' ========================================================================================
+' ========================================================================================
+PRIVATE FUNCTION GdiPlusGraphics.DpiRatioY () AS SINGLE
+   DIM _dpiY AS SINGLE
+   SetLastError(GdipGetDpiY(m_Graphics, @_dpiY))
+   DIM ryRatio AS SINGLE = _dpiY / 96
+   RETURN ryRatio
+END FUNCTION
+' ========================================================================================
+' ========================================================================================
+' Updates this Graphic object's current transformation matrix with the product of itself
+' and a scaling matrix.
+' ========================================================================================
+PRIVATE FUNCTION GdiPlusGraphics.ScaleTransform (BYVAL sx AS SINGLE, BYVAL sy AS SINGLE, BYVAL order AS MatrixOrder = MatrixOrderPrepend) AS GpStatus
+   RETURN GdipScaleWorldTransform(m_Graphics, sx, sy, order)
+END FUNCTION
+' ========================================================================================
+' ========================================================================================
+PRIVATE FUNCTION GdiPlusGraphics.ScaleTransform (BYVAL dpiRatio_ AS SINGLE, BYVAL order AS MatrixOrder = MatrixOrderPrepend) AS GpStatus
+   RETURN GdipScaleWorldTransform(m_Graphics, dpiRatio, dpiRatio_, order)
+END FUNCTION
+' ========================================================================================
+' ========================================================================================
+PRIVATE FUNCTION GdiPlusGraphics.ScaleTransform (BYVAL order AS MatrixOrder = MatrixOrderPrepend) AS GpStatus
+   DIM _dpiX AS SINGLE
+   GdipGetDpiX(m_Graphics, @_dpiX)
+   DIM rxRatio AS SINGLE = _dpiX / 96
+   DIM _dpiY AS SINGLE
+   GdipGetDpiY(m_Graphics, @_dpiY)
+   DIM ryRatio AS SINGLE = _dpiY / 96
+   RETURN GdipScaleWorldTransform(m_Graphics, rxRatio, ryRatio, order)
+END FUNCTION
 ' ========================================================================================
 
 ' ########################################################################################
@@ -967,7 +1211,8 @@ Public:
    DECLARE CONSTRUCTOR (BYVAL fontFamily AS GpFontFamily PTR, BYVAL emSize AS SINGLE, BYVAL nStyle AS INT_ = 0, BYVAL nUnit AS GpUnit = 0)
    DECLARE CONSTRUCTOR (BYVAL pwszFamilyName AS WSTRING PTR, BYVAL emSize AS SINGLE, BYVAL nStyle AS INT_ = 0, BYVAL nUnit AS GpUnit = 0, BYVAL fontCollection AS GpFontCollection PTR = NULL)
    DECLARE DESTRUCTOR
-   DECLARE OPERATOR @ () AS GpFont PTR
+   DECLARE OPERATOR @ () AS GpFont PTR PTR
+   DECLARE OPERATOR CAST () AS GpFont PTR
 END TYPE
 ' ========================================================================================
 
@@ -1052,15 +1297,20 @@ END DESTRUCTOR
 ' ========================================================================================
 ' Returns a pointer to the GpFont object
 ' ========================================================================================
-PRIVATE OPERATOR GdiPlusFont.@ () AS GpFont PTR
-   RETURN m_Font
+PRIVATE OPERATOR * (BYREF font AS GdiPlusFont) AS GpFont PTR
+   RETURN font.m_Font
 END OPERATOR
 ' ========================================================================================
 ' ========================================================================================
-' Returns a pointer to the GpFont object
+' Returns the address of a pointer to the GpFont object
 ' ========================================================================================
-PRIVATE OPERATOR * (BYREF font AS GdiPlusFont) AS GpFont PTR
-   RETURN font.m_Font
+PRIVATE OPERATOR GdiPlusFont.@ () AS GpFont PTR PTR
+   RETURN @m_Font
+END OPERATOR
+' ========================================================================================
+' ========================================================================================
+PRIVATE OPERATOR GdiPlusFont.CAST () AS GpFont PTR
+   RETURN m_Font
 END OPERATOR
 ' ========================================================================================
 
@@ -1075,7 +1325,8 @@ Public:
    DECLARE CONSTRUCTOR (BYVAL fontFamily AS GpFontFamily PTR = NULL)
    DECLARE CONSTRUCTOR (BYVAL pwszName AS WSTRING PTR, BYVAL fontCollection AS GpFontCollection PTR = NULL)
    DECLARE DESTRUCTOR
-   DECLARE OPERATOR @ () AS GpFontFamily PTR
+   DECLARE OPERATOR @ () AS GpFontFamily PTR PTR
+   DECLARE OPERATOR CAST () AS GpFontFamily PTR
 END TYPE
 ' ========================================================================================
 
@@ -1106,15 +1357,20 @@ END DESTRUCTOR
 ' ========================================================================================
 ' Returns a pointer to the GpFontFamily object
 ' ========================================================================================
-PRIVATE OPERATOR GdiPlusFontFamily.@ () AS GpFontFamily PTR
-   RETURN m_FontFamily
+PRIVATE OPERATOR * (BYREF fontFamily AS GdiPlusFontFamily) AS GpFontFamily PTR
+   RETURN fontFamily.m_FontFamily
 END OPERATOR
 ' ========================================================================================
 ' ========================================================================================
-' Returns a pointer to the GpFontFamily object
+' Returns the address of a pointer to the GpFontFamily object
 ' ========================================================================================
-PRIVATE OPERATOR * (BYREF fontFamily AS GdiPlusFontFamily) AS GpFontFamily PTR
-   RETURN fontFamily.m_FontFamily
+PRIVATE OPERATOR GdiPlusFontFamily.@ () AS GpFontFamily PTR PTR
+   RETURN @m_FontFamily
+END OPERATOR
+' ========================================================================================
+' ========================================================================================
+PRIVATE OPERATOR GdiPlusFontFamily.CAST () AS GpFontFamily PTR
+   RETURN m_FontFamily
 END OPERATOR
 ' ========================================================================================
 
@@ -1126,19 +1382,28 @@ END OPERATOR
 ' ========================================================================================
 TYPE GdiPlusGraphicsPath
 Public:
-   m_Path AS GpGraphicsPath PTR
-   DECLARE CONSTRUCTOR (BYVAL nFillMode AS FillMode = FillModeAlternate)
+   m_Path AS GpPath PTR
+   DECLARE CONSTRUCTOR (BYVAL path AS GpPath PTR = NULL)
+   DECLARE CONSTRUCTOR (BYVAL nFillMode AS FillMode)
    DECLARE CONSTRUCTOR (BYVAL pts AS GpPointF PTR, BYVAL types AS BYTE PTR, BYVAL nCount AS LONG, BYVAL nFillMode AS FillMode = FillModeAlternate)
    DECLARE CONSTRUCTOR (BYVAL pts AS GpPoint PTR, BYVAL types AS BYTE PTR, BYVAL nCount AS LONG, BYVAL nFillMode AS FillMode = FillModeAlternate)
    DECLARE DESTRUCTOR
-   DECLARE OPERATOR @ () AS GpGraphicsPath PTR
+   DECLARE OPERATOR @ () AS GpPath PTR PTR
+   DECLARE OPERATOR CAST () AS GpPath PTR
 END TYPE
 ' ========================================================================================
 
+' =====================================================================================
+' Constructors
+' =====================================================================================
+PRIVATE CONSTRUCTOR GdiPlusGraphicsPath (BYVAL path AS GpPath PTR = NULL)
+   GDIP_DP("Clone - Path: " & WSTR(Path))
+   IF path THEN SetLastError(GdipClonePath(path, @m_Path))
+   GDIP_DP("Clone - m_Path: " & WSTR(m_Path))
+END CONSTRUCTOR
+' =====================================================================================
 ' ========================================================================================
-' * Default constructor
-' ========================================================================================
-PRIVATE CONSTRUCTOR GdiPlusGraphicsPath (BYVAL nFillMode AS FillMode = FillModeAlternate)
+PRIVATE CONSTRUCTOR GdiPlusGraphicsPath (BYVAL nFillMode AS FillMode)
    SetLastError(GdipCreatePath(nFillMode, @m_Path))
    GDIP_DP("m_Path: " & WSTR(m_Path))
 END CONSTRUCTOR
@@ -1169,15 +1434,20 @@ END DESTRUCTOR
 ' ========================================================================================
 ' Returns a pointer to the GpGraphicsPath object
 ' ========================================================================================
-PRIVATE OPERATOR GdiPlusGraphicsPath.@ () AS GpGraphicsPath PTR
-   RETURN m_Path
+PRIVATE OPERATOR * (BYREF path AS GdiPlusGraphicsPath) AS GpPath PTR
+   RETURN path.m_Path
 END OPERATOR
 ' ========================================================================================
 ' ========================================================================================
-' Returns a pointer to the GpGraphicsPath object
+' Returns the address of a pointer to the GpGraphicsPath object
 ' ========================================================================================
-PRIVATE OPERATOR * (BYREF path AS GdiPlusGraphicsPath) AS GpGraphicsPath PTR
-   RETURN path.m_Path
+PRIVATE OPERATOR GdiPlusGraphicsPath.@ () AS GpPath PTR PTR
+   RETURN @m_Path
+END OPERATOR
+' ========================================================================================
+' ========================================================================================
+PRIVATE OPERATOR GdiPlusGraphicsPath.CAST () AS GpPath PTR
+   RETURN m_Path
 END OPERATOR
 ' ========================================================================================
 
@@ -1194,7 +1464,8 @@ Public:
    DECLARE CONSTRUCTOR (BYVAL rcf AS GpRectF PTR, BYVAL dstplg AS GpPointF PTR)
    DECLARE CONSTRUCTOR (BYVAL rc AS GpRect PTR, BYVAL dstplg AS GpPoint PTR)
    DECLARE DESTRUCTOR
-   DECLARE OPERATOR @ () AS GpMatrix PTR
+   DECLARE OPERATOR CAST () AS GpMatrix PTR
+   DECLARE OPERATOR @ () AS GpMatrix PTR PTR
 END TYPE
 ' ========================================================================================
 
@@ -1247,84 +1518,20 @@ END DESTRUCTOR
 ' ========================================================================================
 ' Returns a pointer to the GpMatrix object
 ' ========================================================================================
-PRIVATE OPERATOR GdiPlusMatrix.@ () AS GpMatrix PTR
-   RETURN m_Matrix
-END OPERATOR
-' ========================================================================================
-' ========================================================================================
-' Returns a pointer to the GpMatrix object
-' ========================================================================================
 PRIVATE OPERATOR * (BYREF matrix AS GdiPlusMatrix) AS GpMatrix PTR
    RETURN matrix.m_Matrix
 END OPERATOR
 ' ========================================================================================
-
-' ########################################################################################
-' GdiPlusPath object
-' ########################################################################################
-
 ' ========================================================================================
-TYPE GdiPlusPath
-Public:
-   m_Path AS GpPath PTR
-   DECLARE CONSTRUCTOR (BYVAL path AS GpPath PTR = NULL)
-   DECLARE CONSTRUCTOR (BYVAL nFillMode AS FillMode = FillModeAlternate)
-   DECLARE CONSTRUCTOR (BYVAL pts AS GpPointF PTR, BYVAL types AS BYTE PTR, BYVAL nCount AS LONG, BYVAL nFillMode AS FillMode = FillModeAlternate)
-   DECLARE CONSTRUCTOR (BYVAL pts AS GpPoint PTR, BYVAL types AS BYTE PTR, BYVAL nCount AS LONG, BYVAL nFillMode AS FillMode = FillModeAlternate)
-   DECLARE DESTRUCTOR
-   DECLARE OPERATOR @ () AS GpPath PTR
-END TYPE
-' ========================================================================================
-
-' =====================================================================================
-' Constructors
-' =====================================================================================
-PRIVATE CONSTRUCTOR GdiPlusPath (BYVAL path AS GpPath PTR = NULL)
-   IF path THEN SetLastError(GdipClonePath(path, @m_Path))
-   GDIP_DP("m_Path: " & WSTR(m_Path))
-END CONSTRUCTOR
-' =====================================================================================
-' =====================================================================================
-PRIVATE CONSTRUCTOR GdiPlusPath (BYVAL nFillMode AS FillMode = FillModeAlternate)
-   SetLastError(GdipCreatePath(nFillMode, @m_Path))
-   GDIP_DP("m_Path: " & WSTR(m_Path))
-END CONSTRUCTOR
-' =====================================================================================
-' =====================================================================================
-' Creates a GraphicsPath object based on an array of points, an array of types, and a fill mode.
-' Default value for fillMode: FillModeAlternate(0).
-' =====================================================================================
-PRIVATE CONSTRUCTOR GdiPlusPath (BYVAL pts AS GpPointF PTR, BYVAL types AS BYTE PTR, BYVAL nCount AS LONG, BYVAL nFillMode AS FillMode = FillModeAlternate)
-   SetLastError(GdipCreatePath2(pts, types, nCount, nFillmode, @m_Path))
-   GDIP_DP("m_Path: " & WSTR(m_Path))
-END CONSTRUCTOR
-' =====================================================================================
-' =====================================================================================
-PRIVATE CONSTRUCTOR GdiPlusPath (BYVAL pts AS GpPoint PTR, BYVAL types AS BYTE PTR, BYVAL nCount AS LONG, BYVAL nFillMode AS FillMode = FillModeAlternate)
-   GDIP_DP("m_Path: " & WSTR(m_Path))
-   SetLastError(GdipCreatePath2I(pts, types, nCount, nFillmode, @m_Path))
-END CONSTRUCTOR
-' =====================================================================================
-' ========================================================================================
-' * Cleanup
-' ========================================================================================
-PRIVATE DESTRUCTOR GdiPlusPath
-   GDIP_DP("m_Path: " & WSTR(m_Path))
-   IF m_Path THEN SetLastError(GdipDeletePath(m_Path))
-END DESTRUCTOR
-' ========================================================================================
-' ========================================================================================
-' Returns a pointer to the GpPath object
-' ========================================================================================
-PRIVATE OPERATOR GdiPlusPath.@ () AS GpPath PTR
-   RETURN m_Path
+PRIVATE OPERATOR GdiPlusMatrix.CAST () AS GpMatrix PTR
+   RETURN m_Matrix
 END OPERATOR
 ' ========================================================================================
 ' ========================================================================================
-' Returns a pointer to the GpPath object
+' Returns the address of a pointer to the GpMatrix object
 ' ========================================================================================
-PRIVATE OPERATOR * (BYREF path AS GdiPlusPath) AS GpPath PTR
-   RETURN path.m_Path
+PRIVATE OPERATOR GdiPlusMatrix.@ () AS GpMatrix PTR PTR
+   RETURN @m_Matrix
 END OPERATOR
 ' ========================================================================================
 
@@ -1339,7 +1546,8 @@ Public:
    m_PathIretator AS GpPathIterator PTR
    DECLARE CONSTRUCTOR (BYVAL path AS GpPath PTR)
    DECLARE DESTRUCTOR
-   DECLARE OPERATOR @ () AS GpPathIterator PTR
+   DECLARE OPERATOR @ () AS GpPathIterator PTR PTR
+   DECLARE OPERATOR CAST () AS GpPathIterator PTR
 END TYPE
 ' ========================================================================================
 
@@ -1362,15 +1570,20 @@ END DESTRUCTOR
 ' ========================================================================================
 ' Returns a pointer to the GpPathIterator object
 ' ========================================================================================
-PRIVATE OPERATOR GdiPlusPathIterator.@ () AS GpPathIterator PTR
-   RETURN m_PathIretator
+PRIVATE OPERATOR * (BYREF pathIterator AS GdiPlusPathIterator) AS GpPathIterator PTR
+   RETURN pathIterator.m_PathIretator
 END OPERATOR
 ' ========================================================================================
 ' ========================================================================================
-' Returns a pointer to the GpPathIterator object
+' Returns the address of a pointer to the GpPathIterator object
 ' ========================================================================================
-PRIVATE OPERATOR * (BYREF pathIterator AS GdiPlusPathIterator) AS GpPathIterator PTR
-   RETURN pathIterator.m_PathIretator
+PRIVATE OPERATOR GdiPlusPathIterator.@ () AS GpPathIterator PTR PTR
+   RETURN @m_PathIretator
+END OPERATOR
+' ========================================================================================
+' ========================================================================================
+PRIVATE OPERATOR GdiPlusPathIterator.CAST () AS GpPathIterator PTR
+   RETURN m_PathIretator
 END OPERATOR
 ' ========================================================================================
 
@@ -1385,9 +1598,10 @@ Public:
    m_Pen AS GpPen PTR
    DECLARE CONSTRUCTOR (BYVAL pen AS GpPen PTR = NULL)
    DECLARE CONSTRUCTOR (BYVAL colour AS ARGB, BYVAL nWidth AS SINGLE = 1.0, BYVAL unit AS GpUnit = UnitWorld)
-   DECLARE CONSTRUCTOR (BYVAL brush AS GpBrush PTR, BYVAL nWidth AS SINGLE = 1.0, BYVAL unit AS GpUnit = UnitWorld)
+   DECLARE CONSTRUCTOR (BYVAL brush AS GpBrush PTR, BYVAL nWidth AS SINGLE, BYVAL unit AS GpUnit = UnitWorld)
    DECLARE DESTRUCTOR
-   DECLARE OPERATOR @ () AS GpPen PTR
+   DECLARE OPERATOR @ () AS GpPen PTR PTR
+   DECLARE OPERATOR CAST () AS GpPen PTR
 END TYPE
 ' ========================================================================================
 
@@ -1410,8 +1624,8 @@ END CONSTRUCTOR
 ' Creates a Pen object that uses the attributes of a brush and a real number to set the
 ' width of this Pen object.
 ' =====================================================================================
-PRIVATE CONSTRUCTOR GdiPlusPen (BYVAL brush AS GpBrush PTR, BYVAL nWidth AS SINGLE = 1.0, BYVAL unit AS GpUnit = UnitWorld)
-   SetLastError(GdipCreatePen2(brush, unit, UnitWorld, @m_Pen))
+PRIVATE CONSTRUCTOR GdiPlusPen (BYVAL brush AS GpBrush PTR, BYVAL nWidth AS SINGLE, BYVAL unit AS GpUnit = UnitWorld)
+   SetLastError(GdipCreatePen2(brush, nWidth, unit, @m_Pen))
    GDIP_DP("m_Pen: " & WSTR(m_Pen))
 END CONSTRUCTOR
 ' =====================================================================================
@@ -1426,15 +1640,20 @@ END DESTRUCTOR
 ' ========================================================================================
 ' Returns a pointer to the GpPen object
 ' ========================================================================================
-PRIVATE OPERATOR GdiPlusPen.@ () AS GpPen PTR
-   RETURN m_Pen
+PRIVATE OPERATOR * (BYREF pen AS GdiPlusPen) AS GpPen PTR
+   RETURN pen.m_Pen
 END OPERATOR
 ' ========================================================================================
 ' ========================================================================================
-' Returns a pointer to the GpPen object
+' Returns the address of a pointer to the GpPen object
 ' ========================================================================================
-PRIVATE OPERATOR * (BYREF pen AS GdiPlusPen) AS GpPen PTR
-   RETURN pen.m_Pen
+PRIVATE OPERATOR GdiPlusPen.@ () AS GpPen PTR PTR
+   RETURN @m_Pen
+END OPERATOR
+' ========================================================================================
+' ========================================================================================
+PRIVATE OPERATOR GdiPlusPen.CAST () AS GpPen PTR
+   RETURN m_Pen
 END OPERATOR
 ' ========================================================================================
 
@@ -1447,27 +1666,32 @@ END OPERATOR
 TYPE GdiPlusRegion
 Public:
    m_Region AS GpRegion PTR
-   DECLARE CONSTRUCTOR
+   DECLARE CONSTRUCTOR (BYVAL region AS GpRegion PTR = NULL)
    DECLARE CONSTRUCTOR (BYVAL rcf AS GpRectF PTR)
    DECLARE CONSTRUCTOR (BYVAL rc AS GpRect PTR)
    DECLARE CONSTRUCTOR (BYVAL x AS SINGLE, BYVAL y AS SINGLE, BYVAL nWidth AS SINGLE, BYVAL nHeight AS SINGLE)
    DECLARE CONSTRUCTOR (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidth AS INT_, BYVAL nHeight AS INT_)
-   DECLARE CONSTRUCTOR (BYVAL path AS GpPath PTR)
    DECLARE CONSTRUCTOR (BYVAL regionData AS BYTE PTR, BYVAL nSize AS LONG)
    DECLARE CONSTRUCTOR (BYVAL hRgn AS HRGN)
    DECLARE DESTRUCTOR
-   DECLARE OPERATOR @ () AS GpRegion PTR
+   DECLARE OPERATOR @ () AS GpRegion PTR PTR
+   DECLARE OPERATOR CAST () AS GpRegion PTR
+   DECLARE SUB FromPath (BYVAL pah AS GpPath PTR)
 END TYPE
 ' ========================================================================================
 
-' ========================================================================================
-' Constructors
-' ========================================================================================
-' ========================================================================================
-PRIVATE CONSTRUCTOR GdiPlusRegion
+' =====================================================================================
+' Default constructor
+' =====================================================================================
+PRIVATE CONSTRUCTOR GdiPlusRegion (BYVAL region AS GpRegion PTR = NULL)
+   IF region THEN
+      SetLastError(GdipCloneRegion(region, @m_Region))
+   ELSE
       SetLastError(GdipCreateRegion(@m_Region))
+   END IF
+   GDIP_DP("m_Region: " & WSTR(m_Region))
 END CONSTRUCTOR
-' ========================================================================================
+' =====================================================================================
 ' ========================================================================================
 PRIVATE CONSTRUCTOR GdiPlusRegion (BYVAL rcf AS GpRectF PTR)
    SetLastError(GdipCreateRegionRect(rcf, @m_Region))
@@ -1494,12 +1718,12 @@ PRIVATE CONSTRUCTOR GdiPlusRegion (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL nWidt
    GDIP_DP("m_Region: " & WSTR(m_Region))
 END CONSTRUCTOR
 ' ========================================================================================
-' =====================================================================================
-PRIVATE CONSTRUCTOR GdiPlusRegion (BYVAL path AS GpPath PTR)
-   SetLastError(GdipCreateRegionPath(path, @m_Region))
-   GDIP_DP("m_Region: " & WSTR(m_Region))
-END CONSTRUCTOR
-' =====================================================================================
+'' =====================================================================================
+'PRIVATE CONSTRUCTOR GdiPlusRegion (BYVAL path AS GpPath PTR)
+'   SetLastError(GdipCreateRegionPath(path, @m_Region))
+'   GDIP_DP("m_Region: " & WSTR(m_Region))
+'END CONSTRUCTOR
+'' =====================================================================================
 ' =====================================================================================
 PRIVATE CONSTRUCTOR GdiPlusRegion (BYVAL regionData AS BYTE PTR, BYVAL nSize AS LONG)
    SetLastError(GdipCreateRegionRgnData(regionData, nSize, @m_Region))
@@ -1523,17 +1747,31 @@ END DESTRUCTOR
 ' ========================================================================================
 ' Returns a pointer to the GpRegion object
 ' ========================================================================================
-PRIVATE OPERATOR GdiPlusRegion.@ () AS GpRegion PTR
-   RETURN m_Region
-END OPERATOR
-' ========================================================================================
-' ========================================================================================
-' Returns a pointer to the GpRegion object
-' ========================================================================================
 PRIVATE OPERATOR * (BYREF region AS GdiPlusRegion) AS GpRegion PTR
    RETURN region.m_Region
 END OPERATOR
 ' ========================================================================================
+' ========================================================================================
+' Returns the address of a pointer to the GpRegion object
+' ========================================================================================
+PRIVATE OPERATOR GdiPlusRegion.@ () AS GpRegion PTR PTR
+   RETURN @m_Region
+END OPERATOR
+' ========================================================================================
+' ========================================================================================
+PRIVATE OPERATOR GdiPlusRegion.CAST () AS GpRegion PTR
+   RETURN m_Region
+END OPERATOR
+' ========================================================================================
+' =====================================================================================
+' Creates a region from a path
+' A separate function is needed because using a constructor conflicts with the default one.
+' =====================================================================================
+PRIVATE SUB GdiPlusRegion.FromPath (BYVAL path AS GpPath PTR)
+   SetLastError(GdipCreateRegionPath(path, @m_Region))
+   GDIP_DP("m_Region: " & WSTR(m_Region))
+END SUB
+' =====================================================================================
 
 
 ' ########################################################################################
@@ -1541,35 +1779,40 @@ END OPERATOR
 ' ########################################################################################
 
 ' ========================================================================================
-TYPE GdiPlusSringFormat
+TYPE GdiPlusStringFormat
 Public:
    m_StringFormat AS GpStringFormat PTR
    DECLARE CONSTRUCTOR (BYVAL stringFormat AS GpStringFormat PTR = NULL)
    DECLARE CONSTRUCTOR (BYVAL formatAttributes AS INT_, BYVAL language AS LANGID)
    DECLARE DESTRUCTOR
-   DECLARE OPERATOR @ () AS GpStringFormat PTR
+   DECLARE OPERATOR @ () AS GpStringFormat PTR PTR
+   DECLARE OPERATOR CAST () AS GpStringFormat PTR
 END TYPE
 ' ========================================================================================
 
 ' =====================================================================================
-' Creates and initializes an StringFormat object from another StringFormat object.
+' Creates and initializes a default StringFormat object or clones it from another StringFormat object.
 ' =====================================================================================
-PRIVATE CONSTRUCTOR GdiPlusSringFormat (BYVAL stringFormat AS GpStringFormat PTR = NULL)
+PRIVATE CONSTRUCTOR GdiPlusStringFormat (BYVAL stringFormat AS GpStringFormat PTR = NULL)
    GDIP_DP(WSTR(stringFormat))
-   IF stringFormat THEN SetLastError(GdipCloneStringFormat(stringFormat, @m_StringFormat))
+   IF stringFormat THEN
+      SetLastError(GdipCloneStringFormat(stringFormat, @m_StringFormat))
+   ELSE
+      SetLastError(GdipCreateStringFormat(0, LANG_NEUTRAL, @m_StringFormat))
+   END IF
 END CONSTRUCTOR
 ' =====================================================================================
 ' =====================================================================================
 ' Creates a StringFormat object based on string format flags and a language.
 ' =====================================================================================
-PRIVATE CONSTRUCTOR GdiPlusSringFormat (BYVAL formatFlags AS INT_ = 0, BYVAL language AS LANGID = LANG_NEUTRAL)
+PRIVATE CONSTRUCTOR GdiPlusStringFormat (BYVAL formatFlags AS INT_ = 0, BYVAL language AS LANGID = LANG_NEUTRAL)
    SetLastError(GdipCreateStringFormat(formatFlags, language, @m_StringFormat))
 END CONSTRUCTOR
 ' ========================================================================================
 ' ========================================================================================
 ' Cleanup
 ' ========================================================================================
-PRIVATE DESTRUCTOR GdiPlusSringFormat
+PRIVATE DESTRUCTOR GdiPlusStringFormat
    GDIP_DP("m_StringFormat: " & WSTR(m_StringFormat))
    IF m_StringFormat THEN SetLastError(GdipDeleteStringFormat(m_StringFormat))
 END DESTRUCTOR
@@ -1577,15 +1820,20 @@ END DESTRUCTOR
 ' ========================================================================================
 ' Returns a pointer to the GpStringFormat object
 ' ========================================================================================
-PRIVATE OPERATOR GdiPlusSringFormat.@ () AS GpStringFormat PTR
-   RETURN m_StringFormat
+PRIVATE OPERATOR * (BYREF fmt AS GdiPlusStringFormat) AS GpStringFormat PTR
+   RETURN fmt.m_StringFormat
 END OPERATOR
 ' ========================================================================================
 ' ========================================================================================
-' Returns a pointer to the GpStringFormat object
+' Returns the address of a pointer to the GpStringFormat object
 ' ========================================================================================
-PRIVATE OPERATOR * (BYREF fmt AS GdiPlusSringFormat) AS GpStringFormat PTR
-   RETURN fmt.m_StringFormat
+PRIVATE OPERATOR GdiPlusStringFormat.@ () AS GpStringFormat PTR PTR
+   RETURN @m_StringFormat
+END OPERATOR
+' ========================================================================================
+' ========================================================================================
+PRIVATE OPERATOR GdiPlusStringFormat.CAST () AS GpStringFormat PTR
+   RETURN m_StringFormat
 END OPERATOR
 ' ========================================================================================
 

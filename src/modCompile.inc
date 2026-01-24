@@ -174,7 +174,7 @@ function code_Compile( byval wID as long ) as boolean
         gCompile.CompileFlags = AfxStrRemove( gCompile.CompileFlags, " -O3" )
         gCompile.CompileFlags = AfxStrRemove( gCompile.CompileFlags, " -Os" )
         gCompile.CompileFlags = AfxStrRemove( gCompile.CompileFlags, " -Ofast" )
-        ' If gas already exists then no need to replace chosen backend. Only do
+        ' If gcc already exists then no need to replace chosen backend. Only do
         ' the replacements if gcc is not found.
         if instr( gCompile.CompileFlags, " -gen gcc" ) = 0 then
             ' Replace llvm, gas, gas64 with gcc (ensure replacement string is same size as search string)
@@ -183,7 +183,7 @@ function code_Compile( byval wID as long ) as boolean
             gCompile.CompileFlags = AfxStrReplace( gCompile.CompileFlags, " -gen gas", " -gen gcc" )
             gCompile.CompileFlags = AfxStrReplace( gCompile.CompileFlags, " -gen llvm", " -gen gcc " )
         end if
-        gCompile.CompileFlags = gCompile.CompileFlags & " -g -nostrip "
+        gCompile.CompileFlags = gCompile.CompileFlags & " -g -exx -nostrip "
     end if
 
     ' Iterate the optional semi colon separated list of compiler include paths

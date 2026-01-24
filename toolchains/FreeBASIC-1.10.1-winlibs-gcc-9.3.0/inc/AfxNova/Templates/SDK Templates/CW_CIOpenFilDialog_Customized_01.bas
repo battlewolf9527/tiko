@@ -3,7 +3,7 @@
 ' File: CW_CIOpenFileDialog_Customized_01.bas
 ' Contents: Open/save file dialogs
 ' Compiler: FreeBasic 32 & 64 bit
-' Copyright (c) 2016 José© Roca. Freeware. Use at your own risk.
+' Copyright (c) 2025 José Roca. Freeware. Use at your own risk.
 ' THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER
 ' EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF
 ' MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE.
@@ -16,8 +16,7 @@
 #include once "AfxNova/CIFileDialogCustomize.inc"
 USING AfxNova
 
-CONST IDC_RICHEDIT = 1001
-CONST IDC_TEST = 1002
+CONST IDC_TEST = 1001
 
 DECLARE FUNCTION wWinMain (BYVAL hInstance AS HINSTANCE, _
                            BYVAL hPrevInstance AS HINSTANCE, _
@@ -83,7 +82,7 @@ FUNCTION WndProc (BYVAL hwnd AS HWND, BYVAL uMsg AS UINT, BYVAL wParam AS WPARAM
          END IF
 
       CASE WM_USER + 999
-         ' // Set the focus and show the line an column in the status bar
+         ' // Set the focus
          IF wParam THEN SetFocus(cast(HWND, wParam))
          EXIT FUNCTION
 
@@ -151,7 +150,7 @@ FUNCTION WndProc (BYVAL hwnd AS HWND, BYVAL uMsg AS UINT, BYVAL wParam AS WPARAM
                ' *** Single selection ***
                ' // Get the result
                IF hr = S_OK THEN
-                  OutputDebugStringW(pofd.GetResult)
+                  OutputDebugStringW(pofd.GetResultString)
                END IF
                ' *** Multiple selection ***
                DIM dwsRes AS DWSTRING = pofd.GetResultsString

@@ -725,13 +725,6 @@ function frmHelpViewer_Show( byval hWndParent as HWND ) as LRESULT
     SetWindowPlacement( pWindow->hWindow, @WinPla )
 
     dim as long nWidth = pWindow->UnScaleX(gConfig.HelpLeftPanelWidth)
-'    HWND_FRMHELPVIEWER_LEFTPANEL = _ 
-'        pWindow->AddControl("LISTBOX", , IDC_FRMHELPVIEWER_LEFTPANEL, "", 0, 0, nWidth, 0, _
-'        WS_CHILD or WS_VISIBLE or WS_CLIPSIBLINGS or WS_CLIPCHILDREN or WS_TABSTOP or _
-'        LBS_NOINTEGRALHEIGHT or LBS_OWNERDRAWFIXED or LBS_NOTIFY, _
-'        WS_EX_LEFT or WS_EX_RIGHTSCROLLBAR, , _
-'        cast(SUBCLASSPROC, @frmHelpViewerListBox_SubclassProc), _
-'        IDC_FRMHELPVIEWER_LEFTPANEL, cast(DWORD_PTR, @pWindow))
 
     HWND_FRMHELPVIEWER_LEFTPANEL = _ 
         pWindow->AddControl("LISTBOX", , IDC_FRMHELPVIEWER_LEFTPANEL, "", 0, 0, nWidth, 0, _

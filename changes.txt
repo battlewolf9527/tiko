@@ -4,6 +4,8 @@ Version 1.3.0
 - Added: New "Zoom Reset" menu option located under the "View" menu.
 - Added: Confirmation popup message for confirmation to clear all bookmarks.
 - Added: Editor Option: Margin click toggles Breakpoint rather than Bookmark
+- Added: Build option: "Compile into *.asm / *.c / *.ll files only, do not assemble or link (-r)"
+- Added: Build option: "Preserve generated intermediate *.asm / *.c / *.ll files (-R)"
 - Changed: Tiko source code updated from Afx to AfxNova (José Roca's framework library).
 - Changed: The default Build Configurations for 64 bit now use GCC rather than GAS64.
 - Changed: Clicking in editor left margin now toggles BreakPoint rather than Bookmark.
